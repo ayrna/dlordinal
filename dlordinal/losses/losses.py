@@ -236,46 +236,60 @@ class WKLoss(_WeightedLoss):
         return result
 
 class MSLoss(_Loss):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, num_classes : int, **kwargs) -> None:
+        """
+
+        Parameters
+        ----------
+        num_classes : int
+            Number of classes
+        """
+        
         super().__init__(**kwargs)
         
-    def compute_sensitivities(y_true = torch.Tensor, y_pred = torch.Tensor):
+        self.num_classes = num_classes
+        
+    def compute_sensitivities(self, input = torch.Tensor, target = torch.Tensor):
         """
         Parameters
         ----------
-        y_true : torch.Tensor
-            Grount truth labels
-        y_pred : torch.Tensor
+        input : torch.Tensor
             Predicted labels
+        target : torch.Tensor
+            Ground truth labels
 
         Returns:
         sensitivities : torch.Tensor
             Sensitivities tensor
         """
         
-        diff = (1.0 - torch.pow(y_true - y_pred, 2)) / 2.0 # [0,1]        
-        diff_class = torch.sum(diff, axis=1) # TP
-        sum = torch.sum(diff_class) # total sum of that vector
-        sensitivities = diff_class / sum # vector of size N with    
+        # get number of classes from yt_true
+        # num_classes = torch.max(target).item() + 1
+        target = torch.nn.functional.one_hot(target, num_classes= self.num_classes)
+        
+        diff = (1.0 - torch.pow(target - input, 2)) / 2.0 # [0,1]   
+        diff_class = torch.sum(diff, axis=1) # Obtain the error for each class
+        sum = torch.sum(diff_class) # total error
+        sensitivities = diff_class / sum   
         
         return sensitivities
         
-    def forward(self, y_true: torch.Tensor, y_pred: torch.Tensor):
+    def forward(self, input: torch.Tensor, target: torch.Tensor):
         """
         Parameters
         ----------
-        y_true : torch.Tensor 
-            Grount truth labels
-        y_pred : torch.Tensor
+        input : torch.Tensor 
             Predicted labels
+        target : torch.Tensor
+            Ground truth labels
 
         Returns
         -------
         mean_sensitivities : torch.Tensor
             Mean sensitivities tensor
         """
-        
-        sensitivities = self.compute_sensitivities(y_true, y_pred)
+
+        sensitivities = self.compute_sensitivities(input, target)
         
         return torch.mean(sensitivities)
 
