@@ -264,7 +264,6 @@ class MSLoss(_Loss):
         """
         
         # get number of classes from yt_true
-        # num_classes = torch.max(target).item() + 1
         target = torch.nn.functional.one_hot(target, num_classes= self.num_classes)
         
         diff = (1.0 - torch.pow(target - input, 2)) / 2.0 # [0,1]   
@@ -333,11 +332,11 @@ class MSAndQWKLoss(_WeightedLoss):
 
 
 class OrdinalEcocDistanceLoss(_WeightedLoss):
-    def __init__(self, n_classes: int, device, class_weights: Optional[torch.Tensor] = None) -> None:
+    def __init__(self, num_classes: int, device, class_weights: Optional[torch.Tensor] = None, **kwargs) -> None:
         """
         Parameters
         ----------
-        n_classes : int
+        num_classes : int
             Number of classes
         device : torch.device
             Contains the device on which the model is running
@@ -345,28 +344,30 @@ class OrdinalEcocDistanceLoss(_WeightedLoss):
             Contains the weights for each class
         """
         
-        self.target_class = np.ones((n_classes, n_classes-1), dtype=np.float32)
-        self.target_class[np.triu_indices(n_classes, 0, n_classes-1)] = 0.0
+        super().__init__(**kwargs)
+        
+        self.target_class = np.ones((num_classes, num_classes-1), dtype=np.float32)
+        self.target_class[np.triu_indices(num_classes, 0, num_classes-1)] = 0.0
         self.target_class = torch.tensor(self.target_class, dtype=torch.float32, device=device, requires_grad=False)
         self.mse = 0
         
-        if class_weights is not None:
-            assert class_weights.shape == (n_classes,)
-            class_weights = class_weights.float().to(device)
+        self.class_weights = class_weights
+        
+        if self.class_weights is not None:
+            assert self.class_weights.shape == (num_classes,)
+            self.class_weights = self.class_weights.float().to(device)
             self.mse = MSELoss(reduction='none')
         else:
             self.mse = MSELoss(reduction='sum')
             
-    def forward(self, target: torch.Tensor, net_output: torch.Tensor, class_weights: Optional[torch.Tensor] = None):
+    def forward(self, input: torch.Tensor, target: torch.Tensor):
         """
         Parameters
         ----------
         target : torch.Tensor
-            Contains the target labels
-        net_output : torch.Tensor
-            Contains the output of the network
-        class_weights : Optional[torch.Tensor]
-            Contains the weights for each class
+            Ground truth labels
+        input : torch.Tensor
+            Predicted labels
 
         Returns
         -------
@@ -375,10 +376,12 @@ class OrdinalEcocDistanceLoss(_WeightedLoss):
             Else the sum of the MSE loss
         """
         
-        if class_weights is not None:
-            target_vector = self.target_class[target]
-            weights = class_weights[target]  # type: ignore
-            return (self.mse(net_output, target_vector).sum(dim=1) * weights).sum()
+        target_indices = target.long()
+        
+        if self.class_weights is not None:
+            target_vector = self.target_class[target_indices]
+            weights = self.class_weights[target_indices]  # type: ignore
+            return (self.mse(input, target_vector).sum(dim=1) * weights).sum()
         else:
-            target_vector = self.target_class[target]
-            return self.mse(net_output, target_vector)
+            target_vector = self.target_class[target_indices]
+            return self.mse(input, target_vector)

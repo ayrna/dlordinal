@@ -1,6 +1,6 @@
 from .losses import (BetaCrossEntropyLoss, BinomialCrossEntropyLoss,
                      ExponentialCrossEntropyLoss, PoissonCrossEntropyLoss,
-                     UnimodalCrossEntropyLoss, WKLoss, MSLoss)
+                     UnimodalCrossEntropyLoss, WKLoss, MSLoss, OrdinalEcocDistanceLoss)
 
 __all__ = [
     'UnimodalCrossEntropyLoss',
@@ -9,5 +9,6 @@ __all__ = [
     'BinomialCrossEntropyLoss',
     'ExponentialCrossEntropyLoss',
     'WKLoss',
-    'MSLoss'
+    'MSLoss',
+    'OrdinalEcocDistanceLoss'
 ]
