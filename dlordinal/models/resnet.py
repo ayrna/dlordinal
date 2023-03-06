@@ -6,8 +6,8 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
 
-from ..layers import OrdinalFullyConnected
-from .experimentmodel import ExperimentModel
+from ..layers import OrdinalFullyConnected, activation_function_by_name
+from .experiment_model import ExperimentModel
 
 
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
@@ -133,7 +133,7 @@ class ResNet(ExperimentModel):
         block: Type[Union[BasicBlock, Bottleneck]],
         layers: List[int],
         *,
-        activation_function: Callable[[], nn.Module],
+        activation_function: Union[str, Callable[[], nn.Module]],
         classifier: Callable[[int, int], nn.Module] = nn.Linear,
         num_classes: int = 1000,
         zero_init_residual: bool = False,
@@ -143,6 +143,9 @@ class ResNet(ExperimentModel):
         norm_layer: Optional[Callable[..., nn.Module]] = None
     ) -> None:
         super(ResNet, self).__init__()
+        if isinstance(activation_function, str):
+            activation_function = activation_function_by_name[activation_function]
+        
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
@@ -243,7 +246,7 @@ class ResNet(ExperimentModel):
         return self.forward(x)
     
     
-class ResNetOrdinalECOC(ResNet): # para este modelo habria que crear una carpeta de modelos y meterlo ahi
+class ResNetOrdinalECOC(ResNet):
     target_class: torch.Tensor
 
     def __init__(self, *args, **kwargs) -> None:
@@ -271,13 +274,17 @@ cfgs = {
     '152': (Bottleneck, [3, 8, 36, 3]),
 }
 
-def _resnetecoc(cfg: str, **kwargs) -> ResNet:
-    return ResNetOrdinalECOC(*cfgs[cfg], **kwargs)
+def resnet18_ecoc(**kwargs) -> ResNet:
+    return ResNetOrdinalECOC(*cfgs['18'], **kwargs)
 
-resnetecoc_models = {
-    'resnet18': partial(_resnetecoc, cfg='18'),
-    'resnet34': partial(_resnetecoc, cfg='34'),
-    'resnet50': partial(_resnetecoc, cfg='50'),
-    'resnet101': partial(_resnetecoc, cfg='101'),
-    'resnet152': partial(_resnetecoc, cfg='152'),
-}
+def resnet34_ecoc(**kwargs) -> ResNet:
+    return ResNetOrdinalECOC(*cfgs['34'], **kwargs)
+
+def resnet50_ecoc(**kwargs) -> ResNet:
+    return ResNetOrdinalECOC(*cfgs['50'], **kwargs)
+
+def resnet101_ecoc(**kwargs) -> ResNet:
+    return ResNetOrdinalECOC(*cfgs['101'], **kwargs)
+
+def resnet152_ecoc(**kwargs) -> ResNet:
+    return ResNetOrdinalECOC(*cfgs['152'], **kwargs)
