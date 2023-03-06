@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
 
-from ..layers import OrdinalFullyConnected, activation_function_by_name
+from ..layers import ResNetOrdinalFullyConnected, activation_function_by_name
 from .experiment_model import ExperimentModel
 
 
@@ -252,7 +252,7 @@ class ResNetOrdinalECOC(ResNet):
     def __init__(self, *args, **kwargs) -> None:
         if 'classifier' in kwargs:
             raise TypeError("Cannot specify classifier for OBD classifier")
-        kwargs['classifier'] = OrdinalFullyConnected
+        kwargs['classifier'] = ResNetOrdinalFullyConnected
         super(ResNetOrdinalECOC, self).__init__(*args, **kwargs)
 
         num_classes = kwargs.get('num_classes', 1000)

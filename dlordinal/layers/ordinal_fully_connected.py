@@ -1,14 +1,39 @@
-from torch import nn
-import torch
+from typing import Callable
 
-class OrdinalFullyConnected(nn.Module): # Esto habria que meterlo en la carpeta de layers y que no se le muestre al usuario pero si que se use internamente
+import torch
+from torch import nn
+
+
+class ResNetOrdinalFullyConnected(nn.Module): # Esto habria que meterlo en la carpeta de layers y que no se le muestre al usuario pero si que se use internamente
     classifiers: nn.ModuleList
     
     def __init__(self, input_size: int, num_classes: int):
-        super(OrdinalFullyConnected, self).__init__()
+        super(ResNetOrdinalFullyConnected, self).__init__()
         self.classifiers = nn.ModuleList(
             [nn.Linear(input_size, 1) for _ in range(num_classes-1)]
         )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        xs = [classifier(x) for classifier in self.classifiers]
+        x = torch.cat(xs, dim=1)
+        x = torch.sigmoid(x)
+        return x
+    
+class VGGOrdinalFullyConnected(nn.Module):
+    classifiers: nn.ModuleList
+    
+    def __init__(self, input_size: int, num_classes: int, activation_function: Callable[[], nn.Module]):
+        super(VGGOrdinalFullyConnected, self).__init__()
+        hidden_size = 4096 // (num_classes - 1)
+        self.classifiers = nn.ModuleList([nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            activation_function(),
+            nn.Dropout(),
+            nn.Linear(hidden_size, hidden_size),
+            activation_function(),
+            nn.Dropout(),
+            nn.Linear(hidden_size, 1),
+        ) for _ in range(num_classes-1)])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         xs = [classifier(x) for classifier in self.classifiers]
