@@ -1,5 +1,4 @@
 
-from functools import partial
 from itertools import chain
 from typing import Callable, List, Union, cast
 

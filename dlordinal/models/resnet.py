@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Callable, List, Optional, Type, Union
 
 import numpy as np
