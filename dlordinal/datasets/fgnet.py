@@ -1,22 +1,20 @@
 import os
 import os.path
+import re
 import shutil
+from pathlib import Path
+from typing import Union
 
+import numpy as np
+import pandas as pd
+from skimage.io import imread, imsave
+from skimage.transform import resize
+from skimage.util import img_as_ubyte
+from sklearn.model_selection import train_test_split
 from torchvision.datasets.utils import download_and_extract_archive
 from torchvision.datasets.vision import VisionDataset
-
-from typing import Union
-from pathlib import Path
-import numpy as np
-from sklearn.model_selection import train_test_split
-
-# Convert FGNet imports
-import pandas as pd
-from skimage.transform import resize
-from skimage.io import imread, imsave
-from skimage.util import img_as_ubyte
 from tqdm import tqdm
-import re
+
 
 class FGNet(VisionDataset):
     def __init__(
