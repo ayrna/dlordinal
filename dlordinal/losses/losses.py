@@ -75,7 +75,7 @@ class UnimodalCrossEntropyLoss(CrossEntropyLoss):
 
         y_prob = self.get_buffer('cls_probs')[target]
         target_oh = one_hot(target, self.num_classes)
-
+        
         y_true = (1.0 - self.eta) * target_oh + self.eta * y_prob
 
         return super().forward(input, y_true)
@@ -109,10 +109,10 @@ class BetaCrossEntropyLoss(UnimodalCrossEntropyLoss):
                                 for i in range(num_classes)]).float()
                             
 
-class ExponentialCrossEntropyLoss(UnimodalCrossEntropyLoss):
+class ExponentialRegularisedCrossEntropyLoss(UnimodalCrossEntropyLoss):
     """Exponential unimodal regularised cross entropy loss.
     """
-    def __init__(self, num_classes: int = 5, eta: float = 0.85, **kwargs):
+    def __init__(self, num_classes: int = 5, eta: float = 0.85, p: float = 1, **kwargs):
         """
         Parameters
         ----------
@@ -125,7 +125,7 @@ class ExponentialCrossEntropyLoss(UnimodalCrossEntropyLoss):
         super().__init__(num_classes, eta, **kwargs)
 
         # Precompute class probabilities for each label
-        self.cls_probs = torch.tensor(get_exponential_probabilities(num_classes)).float()
+        self.cls_probs = torch.tensor(get_exponential_probabilities(num_classes, p)).float()
 
 class BinomialCrossEntropyLoss(UnimodalCrossEntropyLoss):
     """Binomial unimodal regularised cross entropy loss.

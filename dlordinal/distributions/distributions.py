@@ -181,13 +181,15 @@ def get_binomial_probabilities(n):
 
 	return np.array(probs)
 
-def get_exponential_probabilities(n, tau=1.0):
+def get_exponential_probabilities(n, p=1.0, tau=1.0):
 	"""Get probabilities from exponential distribution for n classes.
 
 	Parameters
 	----------
 	n : int
 		Number of classes.
+	p : float, default=1.0
+		Exponent parameter.
 	tau: float, default=1.0
 		Scaling parameter.
 
@@ -210,6 +212,6 @@ def get_exponential_probabilities(n, tau=1.0):
 	probs = []
 
 	for true_class in range(0, n):
-		probs.append(-np.abs(np.arange(0, n) - true_class) / tau)
+		probs.append(-np.abs(np.arange(0, n) - true_class)**p / tau)
 
 	return softmax(np.array(probs), axis=1)
