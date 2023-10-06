@@ -1,13 +1,23 @@
-from .losses import (BetaCrossEntropyLoss, BinomialCrossEntropyLoss,
-                     ExponentialRegularisedCrossEntropyLoss, PoissonCrossEntropyLoss,
-                     UnimodalCrossEntropyLoss, WKLoss, OrdinalEcocDistanceLoss)
+from .losses import (
+    BetaCrossEntropyLoss,
+    BinomialCrossEntropyLoss,
+    CustomTargetsCrossEntropyLoss,
+    ExponentialRegularisedCrossEntropyLoss,
+    GeneralTriangularCrossEntropyLoss,
+    OrdinalEcocDistanceLoss,
+    PoissonCrossEntropyLoss,
+    TriangularCrossEntropyLoss,
+    WKLoss,
+)
 
 __all__ = [
-    'UnimodalCrossEntropyLoss',
-    'BetaCrossEntropyLoss',
-    'PoissonCrossEntropyLoss',
-    'BinomialCrossEntropyLoss',
-    'ExponentialRegularisedCrossEntropyLoss',
-    'WKLoss',
-    'OrdinalEcocDistanceLoss'
+    "CustomTargetsCrossEntropyLoss",
+    "BetaCrossEntropyLoss",
+    "PoissonCrossEntropyLoss",
+    "BinomialCrossEntropyLoss",
+    "ExponentialRegularisedCrossEntropyLoss",
+    "WKLoss",
+    "OrdinalEcocDistanceLoss",
+    "TriangularCrossEntropyLoss",
+    "GeneralTriangularCrossEntropyLoss",
 ]

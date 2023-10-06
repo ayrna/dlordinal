@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.special import gamma, hyp2f1
 
+from .utils import get_intervals
+
 
 def beta_inc(a, b):
     """Compute the incomplete beta function.
@@ -71,28 +73,6 @@ def beta_dist(x, p, q, a=1.0):
     """
 
     return (x ** (a * p)) / (p * beta_inc(p, q)) * hyp2f1(p, 1 - q, p + 1, x**a)
-
-
-def get_intervals(n):
-    """Get n evenly-spaced intervals in [0,1].
-
-    Parameters
-    ----------
-    n : int
-            Number of intervals.
-
-    Returns
-    -------
-    intervals: list
-            List of intervals.
-    """
-
-    points = np.linspace(1e-9, 1 - 1e-9, n + 1)
-    intervals = []
-    for i in range(0, points.size - 1):
-        intervals.append((points[i], points[i + 1]))
-
-    return intervals
 
 
 def get_beta_probabilities(n, p, q, a=1.0):

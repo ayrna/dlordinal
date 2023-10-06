@@ -11,7 +11,9 @@ from ..distributions import (
     get_beta_probabilities,
     get_binomial_probabilities,
     get_exponential_probabilities,
+    get_general_triangular_probabilities,
     get_poisson_probabilities,
+    get_triangular_probabilities,
 )
 
 # Params [a,b] for beta distribution
@@ -125,7 +127,7 @@ _beta_params_sets = {
 }
 
 
-class UnimodalCrossEntropyLoss(CrossEntropyLoss):
+class CustomTargetsCrossEntropyLoss(torch.nn.Module):
     """Base class to implement a unimodal regularised cross entropy loss.
     Vargas, V. M., Gutiérrez, P. A., & Hervás-Martínez, C. (2022).
     Unimodal regularisation based on beta distribution for deep ordinal regression.
@@ -134,7 +136,17 @@ class UnimodalCrossEntropyLoss(CrossEntropyLoss):
     Implementations must redefine the cls_probs attribute.
     """
 
-    def __init__(self, num_classes: int = 5, eta: float = 0.85, **kwargs):
+    def __init__(
+        self,
+        cls_probs: Tensor,
+        eta: float = 0.85,
+        weight: Optional[Tensor] = None,
+        size_average=None,
+        ignore_index: int = -100,
+        reduce=None,
+        reduction: str = "mean",
+        label_smoothing: float = 0.0,
+    ):
         """
         Parameters
         ----------
@@ -144,12 +156,19 @@ class UnimodalCrossEntropyLoss(CrossEntropyLoss):
             Parameter that controls the influence of the regularisation.
         """
 
-        super().__init__(**kwargs)
-        self.num_classes = num_classes
+        self.num_classes = cls_probs.size(0)
         self.eta = eta
+        self.ce_loss = CrossEntropyLoss(
+            weight=weight,
+            size_average=size_average,
+            ignore_index=ignore_index,
+            reduce=reduce,
+            reduction=reduction,
+            label_smoothing=label_smoothing,
+        )
 
         # Default class probs initialized to ones
-        self.register_buffer("cls_probs", torch.ones(num_classes, num_classes).float())
+        self.register_buffer("cls_probs", cls_probs.float())
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
         """Method that is called to compute the loss.
@@ -172,22 +191,16 @@ class UnimodalCrossEntropyLoss(CrossEntropyLoss):
 
         y_true = (1.0 - self.eta) * target_oh + self.eta * y_prob
 
-        return super().forward(input, y_true)
+        return self.ce_loss(input, y_true)
 
 
-class BetaCrossEntropyLoss(UnimodalCrossEntropyLoss):
+class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     """Beta unimodal regularised cross entropy loss.
     It takes the parameters for the beta distribution from the _beta_params_set
     dictionary.
     """
 
-    def __init__(
-        self,
-        num_classes: int = 5,
-        params_set: str = "standard",
-        eta: float = 1.0,
-        **kwargs
-    ):
+    def __init__(self, num_classes: int = 5, params_set: str = "standard", **kwargs):
         """
         Parameters
         ----------
@@ -199,12 +212,7 @@ class BetaCrossEntropyLoss(UnimodalCrossEntropyLoss):
         eta : float, default=1.0
             Parameter that controls the influence of the regularisation.
         """
-
-        super().__init__(num_classes, eta, **kwargs)
-        self.params = _beta_params_sets[params_set]
-
-        # Precompute class probabilities for each label
-        self.cls_probs = torch.tensor(
+        cls_probs = torch.tensor(
             [
                 get_beta_probabilities(
                     num_classes,
@@ -216,10 +224,26 @@ class BetaCrossEntropyLoss(UnimodalCrossEntropyLoss):
             ]
         ).float()
 
+        super().__init__(cls_probs, **kwargs)
+        self.params = _beta_params_sets[params_set]
 
-class ExponentialRegularisedCrossEntropyLoss(UnimodalCrossEntropyLoss):
-    """Exponential unimodal regularised cross entropy loss."""
 
+class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
+    def __init__(self, num_classes: int = 5, alpha2: float = 0.05, **kwargs):
+        super().__init__(num_classes, 1.0, **kwargs)
+
+        self.cls_probs = torch.tensor(get_triangular_probabilities(num_classes, alpha2))
+
+
+class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
+    def __init__(self, num_classes: int, alphas: np.ndarray, **kwargs):
+        super().__init__(num_classes, 1.0, **kwargs)
+
+        r = get_general_triangular_probabilities(num_classes, alphas, verbose=3)
+        self.cls_probs = torch.tensor(r)
+
+
+class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     def __init__(self, num_classes: int = 5, eta: float = 0.85, p: float = 1, **kwargs):
         """
         Parameters
@@ -238,7 +262,7 @@ class ExponentialRegularisedCrossEntropyLoss(UnimodalCrossEntropyLoss):
         ).float()
 
 
-class BinomialCrossEntropyLoss(UnimodalCrossEntropyLoss):
+class BinomialCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     """Binomial unimodal regularised cross entropy loss."""
 
     def __init__(self, num_classes: int = 5, eta: float = 0.85, **kwargs):
@@ -257,7 +281,7 @@ class BinomialCrossEntropyLoss(UnimodalCrossEntropyLoss):
         self.cls_probs = torch.tensor(get_binomial_probabilities(num_classes)).float()
 
 
-class PoissonCrossEntropyLoss(UnimodalCrossEntropyLoss):
+class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     def __init__(self, num_classes: int = 5, eta: float = 0.85, **kwargs):
         """
         Parameters
