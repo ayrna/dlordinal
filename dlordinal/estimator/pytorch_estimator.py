@@ -5,12 +5,12 @@ import torch
 from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
 
-"""
-    PytorchEstimator is a class that implements a Pytorch estimator.
-"""
-
 
 class PytorchEstimator(BaseEstimator):
+    """
+    PytorchEstimator is a class that implements a Pytorch estimator.
+    """
+
     def __init__(
         self,
         model: torch.nn.Module,
@@ -20,6 +20,22 @@ class PytorchEstimator(BaseEstimator):
         max_iter: int,
         **kwargs,
     ):
+        """
+        Parameters
+        ----------
+        model : torch.nn.Module
+            A Pytorch model.
+        loss_fn : torch.nn.Module
+            A Pytorch loss function.
+        optimizer : torch.optim.Optimizer
+            A Pytorch optimizer.
+        device : torch.device
+            A Pytorch device.
+        max_iter : int
+            The maximum number of iterations.
+        **kwargs : dict
+            Additional keyword arguments.
+        """
         self.kwargs = kwargs
         self.model = model
         self.loss_fn = loss_fn
@@ -27,15 +43,24 @@ class PytorchEstimator(BaseEstimator):
         self.device = device
         self.max_iter = max_iter
 
-    """
-        fit() is a method that trains the model.
-    """
-
     def fit(
         self,
         X: Union[DataLoader, torch.Tensor],
         y: Optional[Union[torch.Tensor, None]] = None,
     ):
+        """
+        Description
+        ----------
+        fit() is a method that fits the model to the training data.
+
+        Parameters
+        ----------
+        X : Union[DataLoader, torch.Tensor]
+            The training data.
+        y : Optional[Union[torch.Tensor, None]], optional
+            The training labels, by default None
+        """
+
         # Check if X is a DataLoader
         if isinstance(X, DataLoader):
             if y is None:
@@ -76,12 +101,20 @@ class PytorchEstimator(BaseEstimator):
 
         return self
 
-    """
-        _fit() is a private method that performs a forward pass, computes the loss 
-        and performs backpropagation.
-    """
-
     def _fit(self, X, y):
+        """
+        Description
+        ----------
+        _fit() is a private method that performs a forward pass, computes the loss
+        and performs backpropagation.
+
+        Parameters
+        ----------
+        X : torch.Tensor
+            The training data.
+        y : torch.Tensor
+            The training labels.
+        """
         X, y = X.to(self.device), y.to(self.device)
 
         # Forward pass
@@ -93,11 +126,17 @@ class PytorchEstimator(BaseEstimator):
         loss.backward()
         self.optimizer.step()
 
-    """
-        predict_proba() is a method that predicts the probability of each class.
-    """
-
     def predict_proba(self, X: Union[DataLoader, torch.Tensor]):
+        """
+        Description
+        ----------
+        predict_proba() is a method that predicts the probability of each class.
+
+        Parameters
+        ----------
+        X : Union[DataLoader, torch.Tensor]
+            The data to predict.
+        """
         if X is None:
             raise ValueError("X must be a DataLoader or a torch Tensor")
 
@@ -126,20 +165,32 @@ class PytorchEstimator(BaseEstimator):
             else:
                 raise ValueError("X must be a DataLoader or a torch Tensor")
 
-    """
+    def _predict_proba(self, X):
+        """
+        Description
+        ----------
         _predict_proba() is a private method that predicts the probability
         of each class.
-    """
 
-    def _predict_proba(self, X):
+        Parameters
+        ----------
+        X : torch.Tensor
+            The data to predict.
+        """
         X = X.to(self.device)
         pred = self.model(X)
         return pred
 
-    """
-        predict() is a method that predicts the class of each sample.
-    """
-
     def predict(self, X: Union[DataLoader, torch.Tensor]):
+        """
+        Description
+        ----------
+        predict() is a method that predicts the class of each sample.
+
+        Parameters
+        ----------
+        X : Union[DataLoader, torch.Tensor]
+            The data to predict.
+        """
         pred = self.predict_proba(X)
         return torch.argmax(pred, dim=1)
