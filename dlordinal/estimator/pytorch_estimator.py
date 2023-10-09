@@ -49,8 +49,6 @@ class PytorchEstimator(BaseEstimator):
         y: Optional[Union[torch.Tensor, None]] = None,
     ):
         """
-        Description
-        ----------
         fit() is a method that fits the model to the training data.
 
         Parameters
@@ -103,8 +101,6 @@ class PytorchEstimator(BaseEstimator):
 
     def _fit(self, X, y):
         """
-        Description
-        ----------
         _fit() is a private method that performs a forward pass, computes the loss
         and performs backpropagation.
 
@@ -128,8 +124,6 @@ class PytorchEstimator(BaseEstimator):
 
     def predict_proba(self, X: Union[DataLoader, torch.Tensor]):
         """
-        Description
-        ----------
         predict_proba() is a method that predicts the probability of each class.
 
         Parameters
@@ -167,8 +161,6 @@ class PytorchEstimator(BaseEstimator):
 
     def _predict_proba(self, X):
         """
-        Description
-        ----------
         _predict_proba() is a private method that predicts the probability
         of each class.
 
@@ -183,8 +175,6 @@ class PytorchEstimator(BaseEstimator):
 
     def predict(self, X: Union[DataLoader, torch.Tensor]):
         """
-        Description
-        ----------
         predict() is a method that predicts the class of each sample.
 
         Parameters
