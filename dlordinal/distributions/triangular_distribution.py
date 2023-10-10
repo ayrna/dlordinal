@@ -6,6 +6,19 @@ from .utils import get_intervals, triangular_cdf
 
 
 def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0):
+    """
+    Get the probabilities for the triangular distribution.
+
+    Parameters
+    ----------
+    n : int
+        Number of classes.
+    alpha2 : float, optional
+        Alpha2 value, by default 0.01.
+    verbose : int, optional
+        Verbosity level, by default 0.
+    """
+
     def compute_alpha1(alpha2):
         c_plus = (1 - 2 * alpha2) * (2 * alpha2 + math.sqrt(2 * alpha2))
         c_minus = (1 - 2 * alpha2) * (2 * alpha2 - math.sqrt(2 * alpha2))

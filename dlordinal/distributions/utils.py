@@ -26,6 +26,17 @@ def get_intervals(n):
 def triangular_cdf(x: float, a: float, b: float, c: float):
     """
     Triangular distribution CDF.
+
+    Parameters
+    ----------
+    x : float
+        Value.
+    a : float
+        Lower bound.
+    b : float
+        Upper bound.
+    c : float
+        Mode.
     """
     if x <= a:
         return 0

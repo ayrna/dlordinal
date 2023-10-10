@@ -8,6 +8,19 @@ from .utils import get_intervals, triangular_cdf
 
 
 def get_general_triangular_probabilities(n: int, alphas: np.ndarray, verbose: int = 0):
+    """
+    Get the probabilities for the general triangular distribution.
+
+    Parameters
+    ----------
+    n : int
+        Number of classes.
+    alphas : np.ndarray
+        Array of alpha values.
+    verbose : int, optional
+        Verbosity level, by default 0.
+    """
+
     def abc1(n, alpha):
         a = 0
         b = 1.0 / ((1.0 - math.sqrt(alpha)) * n)
