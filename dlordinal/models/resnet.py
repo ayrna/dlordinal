@@ -12,7 +12,21 @@ from .experiment_model import ExperimentModel
 def conv3x3(
     in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1
 ) -> nn.Conv2d:
-    """3x3 convolution with padding"""
+    """3x3 convolution with padding
+
+    Parameters
+    ----------
+    in_planes : int
+        Number of input planes.
+    out_planes : int
+        Number of output planes.
+    stride : int
+        Stride.
+    groups : int
+        Number of groups.
+    dilation : int
+        Dilation.
+    """
     return nn.Conv2d(
         in_planes,
         out_planes,
@@ -26,11 +40,25 @@ def conv3x3(
 
 
 def conv1x1(in_planes: int, out_planes: int, stride: int = 1) -> nn.Conv2d:
-    """1x1 convolution"""
+    """1x1 convolution
+
+    Parameters
+    ----------
+    in_planes : int
+        Number of input planes.
+    out_planes : int
+        Number of output planes.
+    stride : int
+        Stride.
+    """
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
 class BasicBlock(nn.Module):
+    """
+    BasicBlock implements the basic block of ResNet.
+    """
+
     expansion: int = 1
 
     def __init__(
@@ -45,6 +73,29 @@ class BasicBlock(nn.Module):
         dilation: int = 1,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
+        """
+        Parameters
+        ----------
+        inplanes : int
+            Number of input planes.
+        planes : int
+            Number of output planes.
+        activation_function : Callable[[], nn.Module]
+            Activation function.
+        stride : int
+            Stride.
+        downsample : Optional[nn.Module]
+            Downsample.
+        groups : int
+            Number of groups.
+        base_width : int
+            Base width.
+        dilation : int
+            Dilation.
+        norm_layer : Optional[Callable[..., nn.Module]]
+            Normalization layer.
+        """
+
         super(BasicBlock, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -62,6 +113,12 @@ class BasicBlock(nn.Module):
         self.stride = stride
 
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+        """
         identity = x
 
         out = self.conv1(x)
@@ -81,11 +138,14 @@ class BasicBlock(nn.Module):
 
 
 class Bottleneck(nn.Module):
-    # Bottleneck in torchvision places the stride for downsampling at 3x3 convolution(self.conv2)
-    # while original implementation places the stride at the first 1x1 convolution(self.conv1)
-    # according to "Deep residual learning for image recognition"https://arxiv.org/abs/1512.03385.
-    # This variant is also known as ResNet V1.5 and improves accuracy according to
-    # https://ngc.nvidia.com/catalog/model-scripts/nvidia:resnet_50_v1_5_for_pytorch.
+    """
+    Bottleneck in torchvision places the stride for downsampling at 3x3
+    convolution(self.conv2) while original implementation places the stride at the
+    first 1x1 convolution(self.conv1) according to "Deep residual learning for image
+    recognition"https://arxiv.org/abs/1512.03385. This variant is also known as
+    ResNet V1.5 and improves accuracy according to
+    https://ngc.nvidia.com/catalog/model-scripts/nvidia:resnet_50_v1_5_for_pytorch.
+    """
 
     expansion: int = 4
 
@@ -101,6 +161,29 @@ class Bottleneck(nn.Module):
         dilation: int = 1,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
+        """
+        Parameters
+        ----------
+        inplanes : int
+            Number of input planes.
+        planes : int
+            Number of output planes.
+        activation_function : Callable[[], nn.Module]
+            Activation function.
+        stride : int
+            Stride.
+        downsample : Optional[nn.Module]
+            Downsample.
+        groups : int
+            Number of groups.
+        base_width : int
+            Base width.
+        dilation : int
+            Dilation.
+        norm_layer : Optional[Callable[..., nn.Module]]
+            Normalization layer.
+        """
+
         super(Bottleneck, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -117,6 +200,12 @@ class Bottleneck(nn.Module):
         self.stride = stride
 
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+        """
         identity = x
 
         out = self.conv1(x)
@@ -140,6 +229,10 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(ExperimentModel):
+    """
+    ResNet implements the ResNet architecture.
+    """
+
     def __init__(
         self,
         block: Type[Union[BasicBlock, Bottleneck]],
@@ -154,6 +247,31 @@ class ResNet(ExperimentModel):
         replace_stride_with_dilation: Optional[List[bool]] = None,
         norm_layer: Optional[Callable[..., nn.Module]] = None
     ) -> None:
+        """
+        Parameters
+        ----------
+        block : Type[Union[BasicBlock, Bottleneck]]
+            Block type.
+        layers : List[int]
+            List of layers.
+        activation_function : Union[str, Callable[[], nn.Module]]
+            Activation function.
+        classifier : Callable[[int, int], nn.Module]
+            Classifier.
+        num_classes : int
+            Number of classes.
+        zero_init_residual : bool
+            Zero init residual.
+        groups : int
+            Number of groups.
+        width_per_group : int
+            Width per group.
+        replace_stride_with_dilation : Optional[List[bool]]
+            Replace stride with dilation.
+        norm_layer : Optional[Callable[..., nn.Module]]
+            Normalization layer.
+        """
+
         super(ResNet, self).__init__()
         if isinstance(activation_function, str):
             activation_function = activation_function_by_name[activation_function]
@@ -298,9 +416,18 @@ class ResNet(ExperimentModel):
         return x
 
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+        """
         return self._forward_impl(x)
 
     def regularized_parameters(self) -> List[nn.parameter.Parameter]:
+        """
+        Get the regularized parameters.
+        """
         return list(self.parameters())
 
     def on_batch_end(self):
@@ -311,9 +438,21 @@ class ResNet(ExperimentModel):
 
 
 class ResNetOrdinalECOC(ResNet):
+    """
+    ResNetOrdinalECOC implements the ResNet architecture with ECOC classifier.
+    """
+
     target_class: torch.Tensor
 
     def __init__(self, *args, **kwargs) -> None:
+        """
+        Parameters
+        ----------
+        *args
+            Positional arguments.
+        **kwargs
+            Keyword arguments.
+        """
         if "classifier" in kwargs:
             raise TypeError("Cannot specify classifier for OBD classifier")
         kwargs["classifier"] = ResNetOrdinalFullyConnected
@@ -327,6 +466,12 @@ class ResNetOrdinalECOC(ResNet):
         self.target_class = torch.tensor(target_class).float()
 
     def scores(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+        """
         x = self.forward(x)
         return -torch.cdist(x, self.target_class.to(x.device))
 
@@ -341,20 +486,35 @@ cfgs = {
 
 
 def resnet18_ecoc(**kwargs) -> ResNet:
+    """
+    ResNet18 with ECOC classifier.
+    """
     return ResNetOrdinalECOC(*cfgs["18"], **kwargs)
 
 
 def resnet34_ecoc(**kwargs) -> ResNet:
+    """
+    ResNet34 with ECOC classifier.
+    """
     return ResNetOrdinalECOC(*cfgs["34"], **kwargs)
 
 
 def resnet50_ecoc(**kwargs) -> ResNet:
+    """
+    ResNet50 with ECOC classifier.
+    """
     return ResNetOrdinalECOC(*cfgs["50"], **kwargs)
 
 
 def resnet101_ecoc(**kwargs) -> ResNet:
+    """
+    ResNet101 with ECOC classifier.
+    """
     return ResNetOrdinalECOC(*cfgs["101"], **kwargs)
 
 
 def resnet152_ecoc(**kwargs) -> ResNet:
+    """
+    ResNet152 with ECOC classifier.
+    """
     return ResNetOrdinalECOC(*cfgs["152"], **kwargs)
