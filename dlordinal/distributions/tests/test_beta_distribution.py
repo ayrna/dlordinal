@@ -11,7 +11,7 @@ def test_beta_inc():
     result = beta_inc(2.0, 3.0)
     print(result)
     expected_result = 0.08333333333333333
-    assert abs(result - expected_result) < 1e-6
+    assert result == pytest.approx(expected_result, rel=1e-6)
 
     # Case 2: Avoid division by 0
     with pytest.raises(ValueError):
@@ -32,19 +32,19 @@ def test_beta_distribution():
     a = 1.0
     result = beta_dist(x, p, q, a)
     expected_result = 0.6875
-    assert abs(result - expected_result) < 1e-6
+    assert result == pytest.approx(expected_result, rel=1e-6)
 
     # Case 2: Custom scaling parameter
     a = 2.0
     result = beta_dist(x, p, q, a)
     expected_result = 0.26171875
-    assert abs(result - expected_result) < 1e-6
+    assert result == pytest.approx(expected_result, rel=1e-6)
 
     # Case 3: Check probabilities with custom x
     x_array = np.linspace(0, 1, num=101)
     for x in x_array:
         result = beta_dist(x, p, q, a)
-        assert result >= 0 or result <= 1
+        assert result >= 0.0 or result <= 1.0
 
 
 @pytest.mark.parametrize("x", [-1.0, 2.0])
@@ -85,7 +85,7 @@ def test_beta_probabilities():
     ]
 
     for r, e in zip(result, expected_result):
-        assert abs(r - e) < 1e-6
+        assert r == pytest.approx(e, rel=1e-6)
 
 
 if __name__ == "__main__":
