@@ -35,10 +35,13 @@ class StickBreakingLayer(Module):
             Logits of the stick breaking layer
         """
 
-        # Clamps all elements in input into the range [ min, max ]. Letting min_value and max_value be min and max, respectively
+        # Clamps all elements in input into the range [ min, max ]. Letting min_value
+        # and max_value be min and max, respectively
         x = torch.clamp(x, 0.1, 0.9)
         comp = 1.0 - x
-        # cumprod is the cumulative product of the elements of the input tensor in the given dimension dim.
+
+        # cumprod is the cumulative product of the elements of the input tensor in
+        # the given dimension dim.
         cumprod = torch.cumprod(comp, axis=1)
         logits = torch.log(x * cumprod)
         return logits

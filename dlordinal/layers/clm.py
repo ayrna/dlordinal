@@ -26,7 +26,8 @@ class CLM(Module):
         link_function : str
             The link function to use. Can be 'logit', 'probit' or 'cloglog'.
         min_distance : float, default=0.0
-            If > 0, the minimum distance between thresholds is constrained using this value.
+            If > 0, the minimum distance between thresholds is constrained using this
+            value.
         """
 
         super().__init__()
