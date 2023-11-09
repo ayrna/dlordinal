@@ -2,6 +2,7 @@ from typing import Optional, Union
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
 
@@ -171,7 +172,8 @@ class PytorchEstimator(BaseEstimator):
         """
         X = X.to(self.device)
         pred = self.model(X)
-        return pred
+        probabilities = F.softmax(pred, dim=1)
+        return probabilities
 
     def predict(self, X: Union[DataLoader, torch.Tensor]):
         """
