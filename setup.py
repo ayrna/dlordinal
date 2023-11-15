@@ -28,6 +28,7 @@ setup(
         "tqdm",
         "pathlib",
         "Pillow",
+        "pytest",
     ],
     zip_safe=False,
 )

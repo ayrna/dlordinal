@@ -1,10 +1,12 @@
+from typing import Optional, Tuple, cast
+
 import numpy as np
 import pandas as pd
 import torch
+from numpy.typing import ArrayLike
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
-from typing import Optional, Tuple, cast
-from numpy.typing import ArrayLike
+
 
 class FeatureDataset(Dataset):
     """Dataset torch implementation for a standard dataset that contains several features
@@ -13,8 +15,6 @@ class FeatureDataset(Dataset):
 
     Example
     -------
-    from dlmisc.dataset import FeatureDataset
-    from torch.utils.data import DataLoader
     >>> train_data = FeatureDataset("train.csv")
     >>> train_data.normalize_X()
     >>> train_data.normalize_y()
@@ -56,16 +56,21 @@ class FeatureDataset(Dataset):
         Parameters
         ----------
         v : ArrayLike
-        
+
         """
-        
+
         if isinstance(v, pd.Series):
-            v = v.values # type: ignore
-        if len(v.shape) == 1: # type: ignore
-            v = np.reshape(v, (-1,1))
+            v = v.values  # type: ignore
+        if len(v.shape) == 1:  # type: ignore
+            v = np.reshape(v, (-1, 1))
         return v
 
-    def _get_normalized(self, v: np.ndarray, mean: Optional[ArrayLike] = None, scale: Optional[ArrayLike] = None) -> Tuple[np.ndarray, ArrayLike, ArrayLike]:
+    def _get_normalized(
+        self,
+        v: np.ndarray,
+        mean: Optional[ArrayLike] = None,
+        scale: Optional[ArrayLike] = None,
+    ) -> Tuple[np.ndarray, ArrayLike, ArrayLike]:
         sc = StandardScaler()
         if mean is not None and scale is not None:
             sc.mean_ = mean
@@ -74,7 +79,9 @@ class FeatureDataset(Dataset):
             sc.fit(v)
         return sc.transform(v), sc.mean_, sc.scale_
 
-    def normalize_X(self, mean: Optional[ArrayLike] = None, scale: Optional[ArrayLike] = None):
+    def normalize_X(
+        self, mean: Optional[ArrayLike] = None, scale: Optional[ArrayLike] = None
+    ):
         """Standardize the features of the dataset.
         If mean and scale are not provided, they are computed from the dataset.
         If they are provided, they are used to standardize the dataset.
@@ -99,10 +106,12 @@ class FeatureDataset(Dataset):
         >>> test_data.normalize_X(train_data.X_mean, train_data.X_scale)
         """
 
-        self.X, self.X_mean, self.X_scale = self._get_normalized(self.get_valid_shape_array(self.X), mean, scale)
+        self.X, self.X_mean, self.X_scale = self._get_normalized(
+            self.get_valid_shape_array(self.X), mean, scale
+        )
         self.X = torch.tensor(self.X, dtype=torch.float)
         return self
-        
+
     def normalize_y(self, mean: ArrayLike = None, scale: ArrayLike = None):
         """Standardize the target variable of the dataset.
         If mean and scale are not provided, they are computed from the dataset.
@@ -128,10 +137,12 @@ class FeatureDataset(Dataset):
         >>> test_data.normalize_y(train_data.y_mean, train_data.y_scale)
         """
 
-        self.targets, self.y_mean, self.y_scale = self._get_normalized(self.get_valid_shape_array(self.targets), mean, scale)
+        self.targets, self.y_mean, self.y_scale = self._get_normalized(
+            self.get_valid_shape_array(self.targets), mean, scale
+        )
         self.targets = torch.tensor(self.targets, dtype=torch.float)
         return self
-            
+
     def __len__(self):
         return len(self.targets)
 
