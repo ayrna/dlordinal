@@ -45,3 +45,8 @@ def test_non_regularized_parameters():
     assert all(
         isinstance(p, nn.parameter.Parameter) for p in non_regularized_parameters
     )
+
+
+if __name__ == "__main__":
+    test_predict()
+    test_non_regularized_parameters()
