@@ -7,19 +7,24 @@ from sympy.core.add import Add
 from .utils import get_intervals, triangular_cdf
 
 
-def get_general_triangular_probabilities(n: int, alphas: np.ndarray, verbose: int = 0):
+def get_general_triangular_params(n: int, alphas: np.ndarray, verbose: int = 0):
     """
-    Get the probabilities for the general triangular distribution.
+    Get the parameters for the general triangular distribution.
 
     Parameters
     ----------
     n : int
         Number of classes.
     alphas : np.ndarray
-        Array of alpha values.
+        Array of alphas.
     verbose : int, optional
         Verbosity level, by default 0.
     """
+    alphas = np.array(alphas)
+    if not isinstance(alphas, np.ndarray) or alphas.shape != (2 * n,):
+        raise ValueError(
+            f"alphas must be a numpy array of shape (2 * n,), but got {alphas.shape}"
+        )
 
     def abc1(n, alpha):
         a = 0
@@ -76,26 +81,64 @@ def get_general_triangular_probabilities(n: int, alphas: np.ndarray, verbose: in
             if s_a < (j - 1) / n and s_b > j / n:
                 return s_a, s_b, c
 
+        raise ValueError(f"Could not find solution for {j=}, {alpha2j_1=}, {alpha2j=}")
+
     if verbose >= 3:
         print(f"{abc1(n,alphas[2])=}, {abcJ(n,alphas[2*n-1])=}")
         for i in range(2, n):
             print(f"{i=}  {abcj(n,i,alphas[2*i-1],alphas[2*i])}")
 
+    params = []
+
+    # Compute params for each interval (class)
+    for j in range(1, n + 1):
+        j_params = {}
+        if j == 1:
+            a, b, c = abc1(n, alphas[2])
+            j_params["alpha2j_1"] = 0
+            j_params["alpha2j"] = alphas[2]
+        elif j == n:
+            a, b, c = abcJ(n, alphas[2 * n - 1])
+            j_params["alpha2j_1"] = alphas[2 * n - 1]
+            j_params["alpha2j"] = 0
+        else:
+            a, b, c = abcj(n, j, alphas[2 * j - 1], alphas[2 * j])
+            j_params["alpha2j_1"] = alphas[2 * j - 1]
+            j_params["alpha2j"] = alphas[2 * j]
+
+        j_params["a"] = a
+        j_params["b"] = b
+        j_params["c"] = c
+        params.append(j_params)
+
+    return params
+
+
+def get_general_triangular_probabilities(n: int, alphas: np.ndarray, verbose: int = 0):
+    """
+    Get the probabilities for the general triangular distribution.
+
+    Parameters
+    ----------
+    n : int
+        Number of classes.
+    alphas : np.ndarray
+        Array of alphas.
+    verbose : int, optional
+        Verbosity level, by default 0.
+    """
+
     intervals = get_intervals(n)
     probs = []
 
     # Compute probability for each interval (class) using the distribution function.
-    for j in range(1, n + 1):
-        j_probs = []
-        if j == 1:
-            a, b, c = abc1(n, alphas[2])
-        elif j == n:
-            a, b, c = abcJ(n, alphas[2 * n - 1])
-        else:
-            a, b, c = abcj(n, j, alphas[2 * j - 1], alphas[2 * j])
+    params = get_general_triangular_params(n, alphas, verbose)
 
-        if verbose >= 1:
-            print(f"Class: {j}, {a=}, {b=}, {c=}, (j-1)/n={(j-1)/n}, (j/n)={j/n}")
+    for param in params:
+        a = param["a"]
+        b = param["b"]
+        c = param["c"]
+        j_probs = []
 
         for interval in intervals:
             j_probs.append(

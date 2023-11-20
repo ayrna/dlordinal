@@ -325,7 +325,8 @@ class ResNet(ExperimentModel):
             dilate=replace_stride_with_dilation[2],
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier = classifier(512 * block.expansion, num_classes)
+        self.num_classes = num_classes
+        self.classifier = classifier(512 * block.expansion, self.num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):

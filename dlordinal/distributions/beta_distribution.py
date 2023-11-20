@@ -20,36 +20,13 @@ def beta_inc(a, b):
             The value of the incomplete beta function.
     """
 
+    if a <= 0:
+        raise ValueError(f"{a=} can not be negative")
+
+    if b <= 0:
+        raise ValueError(f"{b=} can not be negative")
+
     return (gamma(a) * gamma(b)) / gamma(a + b)
-
-
-def beta(x, p, q, a=1.0):
-    """Compute the beta density function for value x with parameters p, q and a.
-
-    Parameters
-    ----------
-    x : float
-            Value to compute the density function for.
-    p: float
-            First parameter of the beta distribution.
-    q: float
-            Second parameter of the beta distribution.
-    a: float, default=1.0
-            Scaling parameter.
-
-    Returns
-    -------
-    beta: float
-            The value of the beta density function.
-    """
-
-    return (
-        gamma(p + q)
-        / (gamma(p) * gamma(q))
-        * a
-        * x ** (a * p - 1)
-        * (1 - x**a) ** (q - 1)
-    )
 
 
 def beta_dist(x, p, q, a=1.0):
@@ -71,6 +48,12 @@ def beta_dist(x, p, q, a=1.0):
     beta: float
             The value of the beta distribution function.
     """
+
+    if x < 0 or x > 1:
+        raise ValueError(f"{x=} must be in the interval [0,1]")
+
+    if a <= 0:
+        raise ValueError(f"{a=} can not be negative or 0")
 
     return (x ** (a * p)) / (p * beta_inc(p, q)) * hyp2f1(p, 1 - q, p + 1, x**a)
 

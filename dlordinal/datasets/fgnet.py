@@ -92,6 +92,9 @@ class FGNet(VisionDataset):
                 test_images_path,
             )
 
+    def __str__(self) -> str:
+        return "FGNet"
+
     def download(self) -> None:
         """
         Download the FGNet dataset and extract it.
