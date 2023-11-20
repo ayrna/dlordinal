@@ -17,7 +17,7 @@ setup(
         "scipy",
         "matplotlib",
         "seaborn",
-        "skimage",
+        "scikit-image",
         "tqdm",
         "Pillow",
         "pytest",
