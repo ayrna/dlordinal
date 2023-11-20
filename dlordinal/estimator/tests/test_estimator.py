@@ -38,7 +38,6 @@ def create_example_dataloader(batch_size, num_samples, input_size):
 
 
 def calculate_loss(model, loss_fn, dataloader):
-    losses = []
     model.eval()
     total_loss = 0.0
 
