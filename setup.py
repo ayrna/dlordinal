@@ -11,8 +11,8 @@ setup(
     install_requires=[
         "scikit-learn",
         "numpy",
-        "torch==1.10.2",
-        "torchvision==0.11.3",
+        "torch",
+        "torchvision",
         "pandas",
         "scipy",
         "matplotlib",
