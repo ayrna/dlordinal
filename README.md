@@ -1,3 +1,8 @@
+|Codecov|_
+
+.. |Codecov| image:: https://codecov.io/gh/ayrna/dlordinal/branch/master/graph/badge.svg?token=Pk8G9gg3y9
+.. _Codecov: https://codecov.io/gh/ayrna/dlordinal
+
 # Deep learning utilities library
 ## Installation
 

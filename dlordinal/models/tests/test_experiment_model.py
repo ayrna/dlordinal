@@ -7,9 +7,7 @@ import torch.nn as nn
 from torch import nn
 from torch.nn import functional as F
 
-from ..experiment_model import (
-    ExperimentModel,
-)  # Reemplaza "your_module" con la ruta real de tu módulo
+from ..experiment_model import ExperimentModel
 
 
 class MockExperimentModel(ExperimentModel):
