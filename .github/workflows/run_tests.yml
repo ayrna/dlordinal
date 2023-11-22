@@ -33,6 +33,8 @@ jobs:
         pytest --cov=dlordinal --cov-report=xml
 
   codecov:
+    if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'codecov actions') }}
+
     needs: tests
     runs-on: ubuntu-22.04
 
