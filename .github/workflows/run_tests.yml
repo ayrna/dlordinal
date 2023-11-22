@@ -28,7 +28,7 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest -v
+        python -m pytest --cov=dlordinal --cov-report=xml  --timeout 1800
 
   codecov:
     needs: tests
