@@ -31,7 +31,7 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest --cov=dlordinal --cov-report=xml:./coverage.xml
+        pytest --cov=dlordinal --cov-report=xml:/home/runner/work/dlordinal/dlordinal/coverage.xml
 
   codecov:
     needs: tests
