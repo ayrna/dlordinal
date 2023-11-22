@@ -31,7 +31,7 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest --cov=dlordinal --cov-report=xml:/home/runner/work/dlordinal/dlordinal/coverage.xml
+        pytest --cov=dlordinal --cov-report=xml
 
   codecov:
     needs: tests
@@ -40,7 +40,7 @@ jobs:
     steps:
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
-      with:
-        file: /home/runner/work/dlordinal/dlordinal/coverage.xml
+      # with:
+      #   file: /home/runner/work/dlordinal/dlordinal/coverage.xml
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
