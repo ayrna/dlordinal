@@ -33,13 +33,11 @@ jobs:
         pytest --cov=dlordinal --cov-report=xml
 
   codecov:
-    if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'codecov actions') }}
-
     needs: tests
     runs-on: ubuntu-22.04
 
     steps:
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v1
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
