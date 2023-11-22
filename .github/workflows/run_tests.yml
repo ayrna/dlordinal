@@ -26,11 +26,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install codecov
         pip install pytest-cov
+        pip install coverage
         pip install .
 
     - name: Run tests
       run: |
-        pytest --cov=dlordinal --cov-report=xml
+        pytest --cov=dlordinal --cov-report=xml:/github/workspace/coverage.xml
 
   codecov:
     needs: tests
