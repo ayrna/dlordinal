@@ -19,89 +19,21 @@ def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0)
         Verbosity level, by default 0.
     """
 
+    print(f"Computing triangular probabilities for {n=} and {alpha2=}...")
+
     def compute_alpha1(alpha2):
-        c_plus = (1 - 2 * alpha2) * (2 * alpha2 + math.sqrt(2 * alpha2))
         c_minus = (1 - 2 * alpha2) * (2 * alpha2 - math.sqrt(2 * alpha2))
 
-        results = []
-
-        try:
-            results.append(pow((1 + math.sqrt(1 - 4 * c_plus)) / 2, 2))
-        except:
-            pass
-        try:
-            results.append(pow((1 - math.sqrt(1 - 4 * c_plus)) / 2, 2))
-        except:
-            pass
-        try:
-            results.append(pow((1 + math.sqrt(1 - 4 * c_minus)) / 2, 2))
-        except:
-            pass
-        try:
-            results.append(pow((1 - math.sqrt(1 - 4 * c_minus)) / 2, 2))
-        except:
-            pass
-
-        results.sort()
-        assert len(results) > 0  # and results[0] < alpha2
-        return results[0]
+        return pow((1 - math.sqrt(1 - 4 * c_minus)) / 2, 2)
 
     def compute_alpha3(alpha2):
-        results = []
-        try:
-            c1 = (
-                pow((n - 1) / n, 2)
-                * (1 - 2 * alpha2)
-                * (math.sqrt(2 * alpha2) * (-1 + math.sqrt(2 * alpha2)))
-            )
+        c1 = (
+            pow((n - 1) / n, 2)
+            * (1 - 2 * alpha2)
+            * (math.sqrt(2 * alpha2) * (-1 + math.sqrt(2 * alpha2)))
+        )
 
-            # Solutions corresponding to the Equation 3
-            try:
-                results.append(pow((-1 + math.sqrt(1 + 4 * c1)) / 2, 2))
-            except:
-                pass
-            try:
-                results.append(pow((-1 - math.sqrt(1 + 4 * c1)) / 2, 2))
-            except:
-                pass
-            try:
-                results.append(pow((1 + math.sqrt(1 - 4 * c1)) / 2, 2))
-            except:
-                pass
-            try:
-                results.append(pow((1 - math.sqrt(1 - 4 * c1)) / 2, 2))
-            except:
-                pass
-
-            c2 = (
-                -pow((n - 1) / n, 2)
-                * (1 - 2 * alpha2)
-                * (math.sqrt(2 * alpha2) * (1 + math.sqrt(2 * alpha2)))
-            )
-
-            # Solutions corresponding to the Equation 4
-            try:
-                results.append(pow((-1 + math.sqrt(1 - 4 * c2)) / 2, 2))
-            except:
-                pass
-            try:
-                results.append(pow((-1 - math.sqrt(1 - 4 * c2)) / 2, 2))
-            except:
-                pass
-            try:
-                results.append(pow((-1 + math.sqrt(1 + 4 * c2)) / 2, 2))
-            except:
-                pass
-            try:
-                results.append(pow((-1 - math.sqrt(1 + 4 * c2)) / 2, 2))
-            except:
-                pass
-        except:
-            pass
-
-        results.sort()
-        assert len(results) > 0 and 0 < results[0] < 1
-        return results[0]
+        return pow((1 - math.sqrt(1 - 4 * c1)) / 2, 2)
 
     alpha1 = compute_alpha1(alpha2)
     alpha3 = compute_alpha3(alpha2)
@@ -143,26 +75,6 @@ def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0)
             else (num1 - num2) / den
         )
 
-    def nj(n):
-        num1 = 2 * alpha2
-        num2 = math.sqrt(2 * alpha2)
-        den = 2.0 * n * (1 - 2 * alpha2)
-
-        # +-
-        return (
-            (num1 + num2) / den if (num1 + num2) / den >= 0.0 else (num1 - num2) / den
-        )
-
-    def mj(n):
-        num1 = 2 * alpha2
-        num2 = math.sqrt(2 * alpha2)
-        den = 2.0 * n * (1 - 2 * alpha2)
-
-        # +-
-        return (
-            (num1 + num2) / den if (num1 + num2) / den >= 0.0 else (num1 - num2) / den
-        )
-
     def aJ(n):
         aJ_plus = 1.0 + 1.0 / (n * (math.sqrt(alpha3) - 1.0))
         aJ_minus = 1.0 + 1.0 / (-n * (math.sqrt(alpha3) - 1.0))
@@ -174,11 +86,9 @@ def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0)
         return num / den
 
     if verbose >= 3:
-        print(
-            f"{b1(n)=}, {m1(n)=}, {aJ(n)=}, {nJ(n)=}, {aj(n, 1)=}, {bj(n,1)=}, {nj(n)=}, {mj(n)=}"
-        )
+        print(f"{b1(n)=}, {m1(n)=}, {aJ(n)=}, {nJ(n)=}, {aj(n, 1)=}, {bj(n,1)=}")
         for i in range(1, n + 1):
-            print(f"{i=}  {aj(n, i)=}, {bj(n,i)=}, {nj(n)=}, {mj(n)=}")
+            print(f"{i=}  {aj(n, i)=}, {bj(n,i)=}")
 
     intervals = get_intervals(n)
     probs = []

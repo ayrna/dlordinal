@@ -40,9 +40,9 @@ def triangular_cdf(x: float, a: float, b: float, c: float):
     """
     if x <= a:
         return 0
-    if a < x < c:
+    elif a < x < c:
         return pow(x - a, 2) / ((b - a) * (c - a))
-    if c < x < b:
+    elif c < x < b:
         return 1 - pow(b - x, 2) / ((b - a) * (b - c))
-    if b <= x:
+    else:  # b <= x
         return 1
