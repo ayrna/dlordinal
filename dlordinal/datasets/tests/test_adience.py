@@ -155,6 +155,8 @@ def test_track_progress(adience_instance):
 def test_process_and_split(adience_instance, monkeypatch):
     global temp_dir
 
+    assert isinstance(temp_dir, tempfile.TemporaryDirectory)
+
     df1 = pd.DataFrame.from_dict(
         {
             "user_id": ["30601258@N03", "30601258@N03"],
