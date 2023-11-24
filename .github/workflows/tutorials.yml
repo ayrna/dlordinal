@@ -3,10 +3,11 @@ name: PR Examples
 on:
   push:
     branches:
-      - master
+      - main
+      - development
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - "tutorials/**"
       - "aeon/**"
@@ -17,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  run-notebook-examples:
+  run-notebook-tutorials:
     runs-on: ubuntu-22.04
 
     steps:
@@ -39,5 +40,5 @@ jobs:
 
 
       - name: Run example notebooks
-        run: build_tools/run_examples.sh
+        run: build_tools/run_tutorials.sh
         shell: bash

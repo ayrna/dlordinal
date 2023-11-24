@@ -24,3 +24,6 @@ github_checks:
 # paths to ignore
 ignore:
   - ".github/"
+  - ".binder/"
+  - "build_tools/"
+  - "tutorials/"
