@@ -834,7 +834,7 @@ class MSAndQWKLoss(torch.nn.Module):
             Is the weight for qwk in comparaison with MS. It must be between 1 and 0
         """
 
-        super.__init__()
+        super().__init__()
 
         self.alpha = alpha
         self.num_classes = num_classes
@@ -857,10 +857,10 @@ class MSAndQWKLoss(torch.nn.Module):
         qwk = WKLoss(self.num_classes)
         qwk_result = qwk(y_true, y_pred)
 
-        ms = MSLoss()
+        ms = MSLoss(self.num_classes)
         ms_result = ms(y_true, y_pred)
 
-        return self.alpa * qwk_result + (1 - self.alpha) * ms_result
+        return self.alpha * qwk_result + (1 - self.alpha) * ms_result
 
 
 class OrdinalEcocDistanceLoss(torch.nn.Module):
