@@ -34,7 +34,6 @@ jobs:
           pip install notebook
           pip install jupyterlab
 
-
       - name: Run example notebooks
         run: build_tools/run_tutorials.sh
         shell: bash

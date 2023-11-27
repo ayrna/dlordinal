@@ -1,4 +1,4 @@
-# This Dockerfile is used to build aeon when launching binder.
+# This Dockerfile is used to build dlordinal when launching binder.
 # Find out more at: https://mybinder.readthedocs.io/en/latest/index.html
 
 # Load jupyter python 3.9 image
@@ -21,7 +21,8 @@ RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
 WORKDIR ${HOME}
 
-# Install extra requirements and aeon based on master branch
+# Install extra requirements and dlordinal based on master branch
 RUN pip install --upgrade pip --no-cache-dir
 RUN pip install llvmlite --ignore-installed
-RUN pip install .[binder]
+RUN pip install notebook
+RUN pip install jupyterlab
