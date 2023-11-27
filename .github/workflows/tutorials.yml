@@ -34,6 +34,9 @@ jobs:
           pip install notebook
           pip install jupyterlab
 
+      - name: Grant execute permissions to run_tutorials.sh
+        run: chmod +x build_tools/run_tutorials.sh
+
       - name: Run example notebooks
         run: build_tools/run_tutorials.sh
         shell: bash
