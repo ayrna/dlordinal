@@ -33,6 +33,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install notebook
           pip install jupyterlab
+          pip install .
 
       - name: Grant execute permissions to run_tutorials.sh
         run: chmod +x build_tools/run_tutorials.sh
