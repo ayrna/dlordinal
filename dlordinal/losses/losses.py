@@ -679,25 +679,25 @@ class WKLoss(torch.nn.Module):
     de La Torre, J., Puig, D., & Valls, A. (2018).
     Weighted kappa loss function for multi-class classification of ordinal data in deep
     learning. Pattern Recognition Letters, 105, 144-154.
+
+    Parameters
+    ----------
+    num_classes : int
+        Number of classes.
+    penalization_type : str, default='quadratic'
+        The penalization type of WK loss to use (quadratic or linear).
+    weight : np.ndarray, default=None
+        The weight matrix that is applied to the cost matrix.
     """
+
+    cost_matrix: Tensor
 
     def __init__(
         self,
         num_classes: int,
         penalization_type: str = "quadratic",
-        weight: Optional[np.ndarray] = None,
+        weight: Optional[Tensor] = None,
     ) -> None:
-        """
-        Parameters
-        ----------
-        num_classes : int
-            Number of classes.
-        penalization_type : str, default='quadratic'
-            The penalization type of WK loss to use (quadratic or linear).
-        weight : np.ndarray, default=None
-            The weight matrix that is applied to the cost matrix.
-        """
-
         super().__init__()
 
         # Create cost matrix and register as buffer
@@ -716,12 +716,17 @@ class WKLoss(torch.nn.Module):
                 / (num_classes - 1) ** 2.0
             )
 
-        if weight is not None:
-            cost_matrix = cost_matrix * (1.0 / weight)
+        self.weight = weight
+        if isinstance(weight, np.ndarray):
+            weight = torch.tensor(weight, dtype=torch.float)
 
-        self.register_buffer(
-            "cost_matrix", torch.tensor(cost_matrix, dtype=torch.float)
-        )
+        cost_matrix = torch.tensor(cost_matrix, dtype=torch.float)
+
+        if self.weight is not None:
+            tiled_weight = torch.tile(self.weight, (num_classes, 1)).T
+            cost_matrix = cost_matrix * tiled_weight
+
+        self.register_buffer("cost_matrix", cost_matrix)
 
         self.num_classes = num_classes
 
@@ -740,7 +745,9 @@ class WKLoss(torch.nn.Module):
             The WK loss.
         """
 
-        costs = self.cost_matrix[target]  # type: ignore
+        input = torch.nn.functional.softmax(input, dim=1)
+
+        costs = self.cost_matrix[target]
 
         numerator = costs * input
         numerator = torch.sum(numerator)
@@ -752,7 +759,7 @@ class WKLoss(torch.nn.Module):
         a = torch.reshape(
             torch.matmul(self.cost_matrix, torch.reshape(sum_prob, shape=[-1, 1])),
             shape=[-1],
-        )  # type: ignore
+        )
 
         b = torch.reshape(n / torch.sum(n), shape=[-1])
 
@@ -766,20 +773,52 @@ class WKLoss(torch.nn.Module):
         return result
 
 
-class MSLoss(torch.nn.Module):
-    def __init__(self, num_classes: int) -> None:
-        """
-        Parameters
-        ----------
-        num_classes : int
-            Number of classes
-        """
+class MSLoss(torch.nn.modules.loss._WeightedLoss):
+    """
+    Mean Sensitivity loss implementation.
 
-        super().__init__()
+    Parameters
+    ----------
+    num_classes : int
+        Number of classes
+
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `J`, where `J` is the number of classes.
+        Otherwise, it is treated as if having all ones.
+
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed.
+    """
+
+    def __init__(
+        self,
+        num_classes: int,
+        weight: Optional[Tensor] = None,
+        reduction: str = "mean",
+    ) -> None:
+        super().__init__(
+            weight=weight, size_average=None, reduce=None, reduction=reduction
+        )
 
         self.num_classes = num_classes
 
-    def compute_sensitivities(self, input=torch.Tensor, target=torch.Tensor):
+        if weight is not None and weight.shape != (num_classes,):
+            raise ValueError(
+                f"Weight shape {weight.shape} is not compatible"
+                + "with num_classes {num_classes}"
+            )
+
+        if reduction not in ["mean", "sum", "none"]:
+            raise ValueError(
+                f"Reduction {reduction} is not supported."
+                + " Please use 'mean', 'sum' or 'none'"
+            )
+
+    def compute_sensitivities(self, input: torch.Tensor, target: torch.Tensor):
         """
         Parameters
         ----------
@@ -797,7 +836,7 @@ class MSLoss(torch.nn.Module):
         target = torch.nn.functional.one_hot(target, num_classes=self.num_classes)
 
         diff = (1.0 - torch.pow(target - input, 2)) / 2.0  # [0,1]
-        diff_class = torch.sum(diff, axis=1)  # Obtain the error for each class
+        diff_class = torch.sum(diff, dim=1)  # Obtain the error for each class
         sum = torch.sum(diff_class)  # total error
         sensitivities = diff_class / sum
 
@@ -818,28 +857,88 @@ class MSLoss(torch.nn.Module):
             Mean sensitivities tensor
         """
 
+        input = torch.nn.functional.softmax(input, dim=1)
+
         sensitivities = self.compute_sensitivities(input, target)
 
-        return torch.mean(sensitivities)
+        if self.weight is not None:
+            weight_tiled = torch.tile(self.weight, (sensitivities.shape[0], 1))
+            per_instance_weight = torch.sum(target * weight_tiled, dim=1)
+            sensitivities = sensitivities * per_instance_weight
+
+        if self.reduction == "mean":
+            reduced_sensitivities = torch.mean(sensitivities)
+        elif self.reduction == "sum":
+            reduced_sensitivities = torch.sum(sensitivities)
+        else:
+            reduced_sensitivities = sensitivities
+
+        return reduced_sensitivities
 
 
-class MSAndQWKLoss(torch.nn.Module):
-    def __init__(self, num_classes: int, alpha: 0.5) -> None:
-        """
-        Parameters
-        ----------
-        num_classes : int
-            Number of classes
-        alpha 0.5:
-            Is the weight for qwk in comparaison with MS. It must be between 1 and 0
-        """
+class MSAndWKLoss(torch.nn.modules.loss._WeightedLoss):
+    """
+    Loss function that combines the MSLoss and the WKLoss.
 
-        super().__init__()
+    Parameters
+    ----------
+    num_classes : int
+        Number of classes
+    C: float, defaul=0.5
+        Weights the QWK loss (C) and the MS loss (1-C). Must be between 0 and 1.
+    qwk_penalization_type : str, default='quadratic'
+        The penalization type of WK loss to use (quadratic or linear).
+        See WKLoss for more details.
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `J`, where `J` is the number of classes.
+        Otherwise, it is treated as if having all ones.
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed.
+    """
 
-        self.alpha = alpha
+    def __init__(
+        self,
+        num_classes: int,
+        C: float = 0.5,
+        qwk_penalization_type: str = "quadratic",
+        weight: Optional[Tensor] = None,
+        reduction: str = "mean",
+    ) -> None:
+        super().__init__(
+            weight=weight, size_average=None, reduce=None, reduction=reduction
+        )
+
         self.num_classes = num_classes
+        self.C = C
+        self.qwk_penalization_type = qwk_penalization_type
 
-    def forward(self, y_true=torch.Tensor, y_pred=torch.Tensor):
+        if weight is not None and weight.shape != (num_classes,):
+            raise ValueError(
+                f"Weight shape {weight.shape} is not compatible"
+                + "with num_classes {num_classes}"
+            )
+
+        if C < 0 or C > 1:
+            raise ValueError(f"C must be between 0 and 1, but is {C}")
+
+        if reduction not in ["mean", "sum", "none"]:
+            raise ValueError(
+                f"Reduction {reduction} is not supported."
+                + " Please use 'mean', 'sum' or 'none'"
+            )
+
+        self.qwk = WKLoss(
+            self.num_classes,
+            penalization_type=self.qwk_penalization_type,
+            weight=weight,
+        )
+        self.ms = MSLoss(self.num_classes, weight=weight)
+
+    def forward(self, y_true: torch.Tensor, y_pred: torch.Tensor):
         """
         Parameters
         ----------
@@ -854,13 +953,10 @@ class MSAndQWKLoss(torch.nn.Module):
             The weighted sum of MS and QWK loss
         """
 
-        qwk = WKLoss(self.num_classes)
-        qwk_result = qwk(y_true, y_pred)
+        qwk_result = self.qwk(y_true, y_pred)
+        ms_result = self.ms(y_true, y_pred)
 
-        ms = MSLoss(self.num_classes)
-        ms_result = ms(y_true, y_pred)
-
-        return self.alpha * qwk_result + (1 - self.alpha) * ms_result
+        return self.C * qwk_result + (1 - self.C) * ms_result
 
 
 class OrdinalEcocDistanceLoss(torch.nn.Module):
