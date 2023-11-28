@@ -1,4 +1,4 @@
-name: PR Examples
+name: Run tutorials
 
 on:
   push:
@@ -37,6 +37,6 @@ jobs:
       - name: Grant execute permissions to run_tutorials.sh
         run: chmod +x build_tools/run_tutorials.sh
 
-      - name: Run example notebooks
+      - name: Run tutorial notebooks
         run: build_tools/run_tutorials.sh
         shell: bash
