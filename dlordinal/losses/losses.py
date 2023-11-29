@@ -773,14 +773,15 @@ class WKLoss(torch.nn.Module):
         return result
 
 
-class MSLoss(torch.nn.modules.loss._WeightedLoss):
+class MCELoss(torch.nn.modules.loss._WeightedLoss):
     """
-    Mean Sensitivity loss implementation.
+    Mean squared error per class loss function. Computes the mean squared error for each
+    class and reduces it using the specified `reduction`.
 
     Parameters
     ----------
     num_classes : int
-        Number of classes
+        Number of classes.
 
     weight : Optional[Tensor], default=None
         A manual rescaling weight given to each class. If given, has to be a Tensor
@@ -818,8 +819,10 @@ class MSLoss(torch.nn.modules.loss._WeightedLoss):
                 + " Please use 'mean', 'sum' or 'none'"
             )
 
-    def compute_sensitivities(self, input: torch.Tensor, target: torch.Tensor):
+    def compute_per_class_mse(self, input: torch.Tensor, target: torch.Tensor):
         """
+        Computes the MSE for each class independently.
+
         Parameters
         ----------
         input : torch.Tensor
@@ -828,19 +831,31 @@ class MSLoss(torch.nn.modules.loss._WeightedLoss):
             Ground truth labels
 
         Returns:
-        sensitivities : torch.Tensor
-            Sensitivities tensor
+        mses : torch.Tensor
+            MSE values
         """
 
-        # get number of classes from yt_true
-        target = torch.nn.functional.one_hot(target, num_classes=self.num_classes)
+        if input.shape != target.shape:
+            target = torch.nn.functional.one_hot(target, num_classes=self.num_classes)
 
-        diff = (1.0 - torch.pow(target - input, 2)) / 2.0  # [0,1]
-        diff_class = torch.sum(diff, dim=1)  # Obtain the error for each class
-        sum = torch.sum(diff_class)  # total error
-        sensitivities = diff_class / sum
+        if input.shape != target.shape:
+            raise ValueError(
+                f"Input shape {input.shape} is not compatible with target shape "
+                + f"{target.shape}"
+            )
 
-        return sensitivities
+        # Compute the squared error for each class
+        per_class_se = torch.pow(target - input, 2)
+
+        # Apply class weights if defined
+        if self.weight is not None:
+            tiled_weight = torch.tile(self.weight, (per_class_se.shape[0], 1))
+            per_class_se = per_class_se * tiled_weight
+
+        # Compute the mean squared error for each class
+        per_class_mse = torch.mean(per_class_se, dim=0)
+
+        return per_class_mse
 
     def forward(self, input: torch.Tensor, target: torch.Tensor):
         """
@@ -853,39 +868,37 @@ class MSLoss(torch.nn.modules.loss._WeightedLoss):
 
         Returns
         -------
-        mean_sensitivities : torch.Tensor
-            Mean sensitivities tensor
+        reduced_mse : torch.Tensor
+            MSE per class reduced using the specified `reduction`. If reduction is `none`,
+            then a tensor with the MSE for each class is returned.
         """
 
         input = torch.nn.functional.softmax(input, dim=1)
+        target_oh = torch.nn.functional.one_hot(target, num_classes=self.num_classes)
 
-        sensitivities = self.compute_sensitivities(input, target)
-
-        if self.weight is not None:
-            weight_tiled = torch.tile(self.weight, (sensitivities.shape[0], 1))
-            per_instance_weight = torch.sum(target * weight_tiled, dim=1)
-            sensitivities = sensitivities * per_instance_weight
+        per_class_mse = self.compute_per_class_mse(input, target_oh)
 
         if self.reduction == "mean":
-            reduced_sensitivities = torch.mean(sensitivities)
+            reduced_mse = torch.mean(per_class_mse)
         elif self.reduction == "sum":
-            reduced_sensitivities = torch.sum(sensitivities)
+            reduced_mse = torch.sum(per_class_mse)
         else:
-            reduced_sensitivities = sensitivities
+            reduced_mse = per_class_mse
 
-        return reduced_sensitivities
+        return reduced_mse
 
 
-class MSAndWKLoss(torch.nn.modules.loss._WeightedLoss):
+class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
     """
-    Loss function that combines the MSLoss and the WKLoss.
+    The loss function integrates both MCELoss and WKLoss, concurrently minimising
+    error distances while preventing the omission of classes from predictions.
 
     Parameters
     ----------
     num_classes : int
         Number of classes
     C: float, defaul=0.5
-        Weights the QWK loss (C) and the MS loss (1-C). Must be between 0 and 1.
+        Weights the WK loss (C) and the MCE loss (1-C). Must be between 0 and 1.
     qwk_penalization_type : str, default='quadratic'
         The penalization type of WK loss to use (quadratic or linear).
         See WKLoss for more details.
@@ -936,7 +949,7 @@ class MSAndWKLoss(torch.nn.modules.loss._WeightedLoss):
             penalization_type=self.qwk_penalization_type,
             weight=weight,
         )
-        self.ms = MSLoss(self.num_classes, weight=weight)
+        self.mce = MCELoss(self.num_classes, weight=weight)
 
     def forward(self, y_true: torch.Tensor, y_pred: torch.Tensor):
         """
@@ -950,13 +963,13 @@ class MSAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         Returns
         -------
         loss : torch.Tensor
-            The weighted sum of MS and QWK loss
+            The weighted sum of MCE and QWK loss
         """
 
         qwk_result = self.qwk(y_true, y_pred)
-        ms_result = self.ms(y_true, y_pred)
+        mce_result = self.mce(y_true, y_pred)
 
-        return self.C * qwk_result + (1 - self.C) * ms_result
+        return self.C * qwk_result + (1 - self.C) * mce_result
 
 
 class OrdinalEcocDistanceLoss(torch.nn.Module):
