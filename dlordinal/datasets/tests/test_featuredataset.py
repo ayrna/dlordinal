@@ -9,7 +9,6 @@ from ..featuredataset import FeatureDataset
 
 @pytest.fixture
 def sample_data(tmp_path):
-    # Crea un archivo CSV de ejemplo para utilizar en los tests
     data = {
         "feature1": [1, 2, 3, 4, 5],
         "feature2": [2, 4, 6, 8, 10],
@@ -27,13 +26,11 @@ def test_feature_dataset_creation(sample_data):
 
 
 def test_feature_dataset(sample_data):
-    # Instancia FeatureDataset con el archivo de datos de ejemplo
     dataset = FeatureDataset(sample_data)
 
-    # Verifica que la longitud del dataset sea correcta
     assert len(dataset) == 5
 
-    # Verifica que los elementos de X y targets sean correctos antes de normalizar
+    # Check that the elements of X and targets are correct before normalising
     assert torch.allclose(
         dataset.X,
         torch.tensor([[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0], [5.0, 10.0]]),
@@ -43,10 +40,9 @@ def test_feature_dataset(sample_data):
         dataset.targets, torch.tensor([0.0, 1.0, 0.0, 1.0, 0.0]), atol=1e-4
     )
 
-    # Normaliza X sin proporcionar mean y scale
     dataset.normalize_X()
 
-    # Verifica que X, X_mean y X_scale sean correctos después de normalizar X
+    # Check that X, X_mean and X_scale are correct after normalising X
     assert torch.allclose(
         dataset.X,
         torch.tensor(
@@ -69,10 +65,9 @@ def test_feature_dataset(sample_data):
         scale, torch.tensor([1.4142, 2.8284], dtype=scale.dtype), atol=1e-4
     )
 
-    # Normaliza targets sin proporcionar mean y scale
     dataset.normalize_y()
 
-    # Verifica que targets, y_mean y y_scale sean correctos después de normalizar y
+    # Check that targets, y_mean and y_scale are correct after normalising y
     assert torch.allclose(
         dataset.targets,
         torch.tensor([[-0.8165], [1.2247], [-0.8165], [1.2247], [-0.8165]]),
@@ -85,7 +80,7 @@ def test_feature_dataset(sample_data):
     assert torch.allclose(mean, torch.tensor(0.4000, dtype=mean.dtype), atol=1e-4)
     assert torch.allclose(scale, torch.tensor(0.4899, dtype=scale.dtype), atol=1e-4)
 
-    # Verifica que los elementos de X y targets sean correctos después de normalizar
+    # Check that the elements of X and targets are correct after normalising
     assert torch.allclose(
         dataset.X,
         torch.tensor(
@@ -105,8 +100,3 @@ def test_feature_dataset(sample_data):
         torch.tensor([[-0.8165], [1.2247], [-0.8165], [1.2247], [-0.8165]]),
         atol=1e-4,
     )
-
-
-if __name__ == "__main__":
-    test_feature_dataset_creation()
-    test_feature_dataset()

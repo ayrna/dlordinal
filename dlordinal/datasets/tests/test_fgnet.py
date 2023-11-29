@@ -3,9 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from ..fgnet import FGNet  # Asegúrate de importar la clase FGNet desde tu módulo
+from ..fgnet import FGNet
 
-# Ruta temporal para pruebas
 TMP_DIR = "./tmp_test_dir_fgnet"
 
 
@@ -83,15 +82,3 @@ def test_clean_up():
     path = Path(TMP_DIR)
     if path.exists():
         shutil.rmtree(path)
-
-
-# Ejecutar las pruebas
-if __name__ == "__main__":
-    test_download()
-    test_process()
-    test_split()
-    test_find_category()
-    test_get_age_from_filename()
-    test_load_data()
-    test_process_images_from_df()
-    test_split_dataframe()
