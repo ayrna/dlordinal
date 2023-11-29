@@ -192,7 +192,7 @@ def test_adience_instance(adience_instance):
     assert isinstance(adience_instance, Adience)
 
 
-def test_assign_range(adience_instance):
+def test_assign_range_integers(adience_instance):
     assert adience_instance.assign_range("1") == 0
     assert adience_instance.assign_range("5") == 1
     assert adience_instance.assign_range("10") == 2
@@ -202,6 +202,21 @@ def test_assign_range(adience_instance):
     assert adience_instance.assign_range("50") == 6
     assert adience_instance.assign_range("70") == 7
     assert adience_instance.assign_range("101") is None
+
+
+def test_assing_range_tuples(adience_instance):
+    assert adience_instance.assign_range("(0, 2)") == 0
+    assert adience_instance.assign_range("(4, 6)") == 1
+    assert adience_instance.assign_range("(8, 13)") == 2
+    assert adience_instance.assign_range("(15, 20)") == 3
+    assert adience_instance.assign_range("(25, 32)") == 4
+    assert adience_instance.assign_range("(38, 43)") == 5
+    assert adience_instance.assign_range("(48, 53)") == 6
+    assert adience_instance.assign_range("(60, 100)") == 7
+
+
+def test_assign_range_none(adience_instance):
+    assert adience_instance.assign_range("None") is None
 
 
 def test_image_path_from_row(adience_instance):
