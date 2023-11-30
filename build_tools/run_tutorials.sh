@@ -13,7 +13,7 @@ shopt -s lastpipe
 notebooks=()
 runtimes=()
 
-# Loop over all notebooks in the examples directory.
+# Loop over all notebooks in the tutorials directory.
 find "tutorials/" -name "*.ipynb" -print0 |
     while IFS= read -r -d "" notebook; do
         # Skip notebooks in the excluded list.

@@ -21,7 +21,7 @@ RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
 WORKDIR ${HOME}
 
-# Install extra requirements and dlordinal based on master branch
+# Install extra requirements and dlordinal based on main branch
 RUN pip install --upgrade pip --no-cache-dir
 RUN pip install llvmlite --ignore-installed
 RUN pip install notebook
