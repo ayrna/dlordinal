@@ -51,7 +51,8 @@ class FeatureDataset(Dataset):
         self.classes = torch.tensor(np.unique(y), dtype=torch.float)
 
     def get_valid_shape_array(self, v: ArrayLike):
-        """Convert the input ArrayLike object to a 2D numpy array with shape (n, 1) if it is a 1D array.
+        """Convert the input ArrayLike object to a 2D numpy array with shape (n, 1)
+        if it is a 1D array.
 
         Parameters
         ----------

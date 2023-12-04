@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="dlordinal",
-    version="0.1",
+    version="0.1.0",
     description="Deep learning for ordinal classification",
     author="Francisco Bérchez, Víctor Vargas",
     author_email="i72bemof@uco.es, vvargas@uco.es",
