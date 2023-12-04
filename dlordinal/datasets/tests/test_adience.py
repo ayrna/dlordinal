@@ -1,9 +1,8 @@
 import os
-import pdb
 import tarfile
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pandas as pd
 import pytest
@@ -81,16 +80,87 @@ def adience_instance():
         "fold_4_data.txt",
     ]
 
+    tabulador = "\t"
+
     for file in list_folds_files:
         with open(folds_path / file, "w") as f:
             f.write(
-                "user_id\toriginal_image\tface_id\tage\tgender\tx\ty\tdx\tdy\ttilt_ang\tfiducial_yaw_angle\tfiducial_score\n"
+                "user_id"
+                + tabulador
+                + "original_image"
+                + tabulador
+                + "face_id"
+                + tabulador
+                + "age"
+                + tabulador
+                + "gender"
+                + tabulador
+                + "x"
+                + tabulador
+                + "y"
+                + tabulador
+                + "dx"
+                + tabulador
+                + "dy"
+                + tabulador
+                + "tilt_ang"
+                + tabulador
+                + "fiducial_yaw_angle"
+                + tabulador
+                + "fiducial_score"
+                + "\n"
             )
             f.write(
-                "30601258@N03\t10399646885_67c7d20df9_o.jpg\t1\t(25, 32)\tf\t0\t414\t1086\t1383\t-115\t30\t17\n"
+                "30601258@N03"
+                + tabulador
+                + "10399646885_67c7d20df9_o.jpg"
+                + tabulador
+                + "1"
+                + tabulador
+                + "(25, 32)"
+                + tabulador
+                + "f"
+                + tabulador
+                + "0"
+                + tabulador
+                + "414"
+                + tabulador
+                + "1086"
+                + tabulador
+                + "1383"
+                + tabulador
+                + "-115"
+                + tabulador
+                + "30"
+                + tabulador
+                + "17"
+                + "\n"
             )
             f.write(
-                "7153718@N04\t10424815813_e94629b1ec_o.jpg\t2\t(25, 32)\tm\t301\t105\t640\t641\t0\t0\t94\n"
+                "7153718@N04"
+                + tabulador
+                + "10424815813_e94629b1ec_o.jpg"
+                + tabulador
+                + "2"
+                + tabulador
+                + "(25, 32)"
+                + tabulador
+                + "m"
+                + tabulador
+                + "301"
+                + tabulador
+                + "105"
+                + tabulador
+                + "640"
+                + tabulador
+                + "641"
+                + tabulador
+                + "0"
+                + tabulador
+                + "0"
+                + tabulador
+                + "94"
+                + "\n"
             )
 
     adience_instance = Adience(
@@ -122,7 +192,7 @@ def test_adience_instance(adience_instance):
     assert isinstance(adience_instance, Adience)
 
 
-def test_assign_range(adience_instance):
+def test_assign_range_integers(adience_instance):
     assert adience_instance.assign_range("1") == 0
     assert adience_instance.assign_range("5") == 1
     assert adience_instance.assign_range("10") == 2
@@ -132,6 +202,21 @@ def test_assign_range(adience_instance):
     assert adience_instance.assign_range("50") == 6
     assert adience_instance.assign_range("70") == 7
     assert adience_instance.assign_range("101") is None
+
+
+def test_assing_range_tuples(adience_instance):
+    assert adience_instance.assign_range("(0, 2)") == 0
+    assert adience_instance.assign_range("(4, 6)") == 1
+    assert adience_instance.assign_range("(8, 13)") == 2
+    assert adience_instance.assign_range("(15, 20)") == 3
+    assert adience_instance.assign_range("(25, 32)") == 4
+    assert adience_instance.assign_range("(38, 43)") == 5
+    assert adience_instance.assign_range("(48, 53)") == 6
+    assert adience_instance.assign_range("(60, 100)") == 7
+
+
+def test_assign_range_none(adience_instance):
+    assert adience_instance.assign_range("None") is None
 
 
 def test_image_path_from_row(adience_instance):
@@ -224,11 +309,3 @@ def test_process_and_split(adience_instance, monkeypatch):
             assert file.suffix == ".jpg"
 
     assert len(files_partition) == adience_instance.number_partitions
-
-
-if __name__ == "__main__":
-    test_adience_instance()
-    test_assign_range()
-    test_image_path_from_row()
-    test_track_progress()
-    test_process_and_split()

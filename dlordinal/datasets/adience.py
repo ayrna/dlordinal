@@ -159,7 +159,6 @@ class Adience:
                 continue
             src_image = self.images_path / row.path
             dst_image.parent.mkdir(exist_ok=True, parents=True)
-            # subprocess.run(['convert', '-resize', 'x128', str(src_image), str(dst_image)])
 
             # open the source image
             with Image.open(src_image) as img:
