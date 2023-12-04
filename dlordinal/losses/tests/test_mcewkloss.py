@@ -14,7 +14,7 @@ def test_mcewkloss_basic():
     C = 0.5
     penalization_type = "quadratic"
 
-    loss = MCEAndWKLoss(num_classes, C=C, qwk_penalization_type=penalization_type)
+    loss = MCEAndWKLoss(num_classes, C=C, wk_penalization_type=penalization_type)
 
     input_data = torch.tensor(
         [
@@ -41,7 +41,7 @@ def test_mcewkloss_exactvalue():
     C = 0.5
     penalization_type = "quadratic"
 
-    loss = MCEAndWKLoss(num_classes, C=C, qwk_penalization_type=penalization_type)
+    loss = MCEAndWKLoss(num_classes, C=C, wk_penalization_type=penalization_type)
 
     input_data = torch.tensor(
         [
@@ -75,9 +75,9 @@ def test_mcewkloss_weights():
         dtype=torch.float,
     )
 
-    loss = MCEAndWKLoss(num_classes, C=C, qwk_penalization_type=penalization_type)
+    loss = MCEAndWKLoss(num_classes, C=C, wk_penalization_type=penalization_type)
     loss_weighted = MCEAndWKLoss(
-        num_classes, C=C, qwk_penalization_type=penalization_type, weight=weight
+        num_classes, C=C, wk_penalization_type=penalization_type, weight=weight
     )
 
     input_data = torch.tensor(
@@ -116,7 +116,7 @@ def test_mcewkloss_combination():
     C = 0.5
     penalization_type = "quadratic"
 
-    loss = MCEAndWKLoss(num_classes, C=C, qwk_penalization_type=penalization_type)
+    loss = MCEAndWKLoss(num_classes, C=C, wk_penalization_type=penalization_type)
     mce_loss = MCELoss(num_classes)
     wk_loss = WKLoss(num_classes, penalization_type=penalization_type)
 

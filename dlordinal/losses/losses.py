@@ -899,7 +899,7 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         Number of classes
     C: float, defaul=0.5
         Weights the WK loss (C) and the MCE loss (1-C). Must be between 0 and 1.
-    qwk_penalization_type : str, default='quadratic'
+    wk_penalization_type : str, default='quadratic'
         The penalization type of WK loss to use (quadratic or linear).
         See WKLoss for more details.
     weight : Optional[Tensor], default=None
@@ -917,7 +917,7 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         self,
         num_classes: int,
         C: float = 0.5,
-        qwk_penalization_type: str = "quadratic",
+        wk_penalization_type: str = "quadratic",
         weight: Optional[Tensor] = None,
         reduction: str = "mean",
     ) -> None:
@@ -927,7 +927,7 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
 
         self.num_classes = num_classes
         self.C = C
-        self.qwk_penalization_type = qwk_penalization_type
+        self.wk_penalization_type = wk_penalization_type
 
         if weight is not None and weight.shape != (num_classes,):
             raise ValueError(
@@ -944,9 +944,9 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
                 + " Please use 'mean', 'sum' or 'none'"
             )
 
-        self.qwk = WKLoss(
+        self.wk = WKLoss(
             self.num_classes,
-            penalization_type=self.qwk_penalization_type,
+            penalization_type=self.wk_penalization_type,
             weight=weight,
         )
         self.mce = MCELoss(self.num_classes, weight=weight)
@@ -966,10 +966,10 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
             The weighted sum of MCE and QWK loss
         """
 
-        qwk_result = self.qwk(y_true, y_pred)
+        wk_result = self.wk(y_true, y_pred)
         mce_result = self.mce(y_true, y_pred)
 
-        return self.C * qwk_result + (1 - self.C) * mce_result
+        return self.C * wk_result + (1 - self.C) * mce_result
 
 
 class OrdinalEcocDistanceLoss(torch.nn.Module):
