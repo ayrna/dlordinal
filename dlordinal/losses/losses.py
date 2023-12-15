@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 from torch.nn import CrossEntropyLoss
 from torch.nn.functional import one_hot
-from torch.nn.modules.loss import MSELoss, _Loss, _WeightedLoss
+from torch.nn.modules.loss import MSELoss
 
 from ..distributions import (
     get_beta_probabilities,
@@ -15,6 +15,7 @@ from ..distributions import (
     get_poisson_probabilities,
     get_triangular_probabilities,
 )
+from .wkloss import WKLoss
 
 # Params [a,b] for beta distribution
 _beta_params_sets = {
@@ -660,103 +661,103 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         )
 
 
-class WKLoss(torch.nn.Module):
-    """Weighted Kappa loss implementation.
-    de La Torre, J., Puig, D., & Valls, A. (2018).
-    Weighted kappa loss function for multi-class classification of ordinal data in deep
-    learning. Pattern Recognition Letters, 105, 144-154.
+# class WKLoss(torch.nn.Module):
+#     """Weighted Kappa loss implementation.
+#     de La Torre, J., Puig, D., & Valls, A. (2018).
+#     Weighted kappa loss function for multi-class classification of ordinal data in deep
+#     learning. Pattern Recognition Letters, 105, 144-154.
 
-    Parameters
-    ----------
-    num_classes : int
-        Number of classes.
-    penalization_type : str, default='quadratic'
-        The penalization type of WK loss to use (quadratic or linear).
-    weight : np.ndarray, default=None
-        The weight matrix that is applied to the cost matrix.
-    """
+#     Parameters
+#     ----------
+#     num_classes : int
+#         Number of classes.
+#     penalization_type : str, default='quadratic'
+#         The penalization type of WK loss to use (quadratic or linear).
+#     weight : np.ndarray, default=None
+#         The weight matrix that is applied to the cost matrix.
+#     """
 
-    cost_matrix: Tensor
+#     cost_matrix: Tensor
 
-    def __init__(
-        self,
-        num_classes: int,
-        penalization_type: str = "quadratic",
-        weight: Optional[Tensor] = None,
-    ) -> None:
-        super().__init__()
+#     def __init__(
+#         self,
+#         num_classes: int,
+#         penalization_type: str = "quadratic",
+#         weight: Optional[Tensor] = None,
+#     ) -> None:
+#         super().__init__()
 
-        # Create cost matrix and register as buffer
-        cost_matrix = np.reshape(
-            np.tile(range(num_classes), num_classes), (num_classes, num_classes)
-        )
+#         # Create cost matrix and register as buffer
+#         cost_matrix = np.reshape(
+#             np.tile(range(num_classes), num_classes), (num_classes, num_classes)
+#         )
 
-        if penalization_type == "quadratic":
-            cost_matrix = (
-                np.power(cost_matrix - np.transpose(cost_matrix), 2)
-                / (num_classes - 1) ** 2.0
-            )
-        else:
-            cost_matrix = (
-                np.abs(cost_matrix - np.transpose(cost_matrix))
-                / (num_classes - 1) ** 2.0
-            )
+#         if penalization_type == "quadratic":
+#             cost_matrix = (
+#                 np.power(cost_matrix - np.transpose(cost_matrix), 2)
+#                 / (num_classes - 1) ** 2.0
+#             )
+#         else:
+#             cost_matrix = (
+#                 np.abs(cost_matrix - np.transpose(cost_matrix))
+#                 / (num_classes - 1) ** 2.0
+#             )
 
-        self.weight = weight
-        if isinstance(weight, np.ndarray):
-            weight = torch.tensor(weight, dtype=torch.float)
+#         self.weight = weight
+#         if isinstance(weight, np.ndarray):
+#             weight = torch.tensor(weight, dtype=torch.float)
 
-        cost_matrix = torch.tensor(cost_matrix, dtype=torch.float)
+#         cost_matrix = torch.tensor(cost_matrix, dtype=torch.float)
 
-        if self.weight is not None:
-            tiled_weight = torch.tile(self.weight, (num_classes, 1)).T
-            cost_matrix = cost_matrix * tiled_weight
+#         if self.weight is not None:
+#             tiled_weight = torch.tile(self.weight, (num_classes, 1)).T
+#             cost_matrix = cost_matrix * tiled_weight
 
-        self.register_buffer("cost_matrix", cost_matrix)
+#         self.register_buffer("cost_matrix", cost_matrix)
 
-        self.num_classes = num_classes
+#         self.num_classes = num_classes
 
-    def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        """
-        Parameters
-        ----------
-        input : torch.Tensor
-            The input tensor.
-        target : torch.Tensor
-            The target tensor.
+#     def forward(self, input: Tensor, target: Tensor) -> Tensor:
+#         """
+#         Parameters
+#         ----------
+#         input : torch.Tensor
+#             The input tensor.
+#         target : torch.Tensor
+#             The target tensor.
 
-        Returns
-        -------
-        loss: Tensor
-            The WK loss.
-        """
+#         Returns
+#         -------
+#         loss: Tensor
+#             The WK loss.
+#         """
 
-        input = torch.nn.functional.softmax(input, dim=1)
+#         input = torch.nn.functional.softmax(input, dim=1)
 
-        costs = self.cost_matrix[target]
+#         costs = self.cost_matrix[target]
 
-        numerator = costs * input
-        numerator = torch.sum(numerator)
+#         numerator = costs * input
+#         numerator = torch.sum(numerator)
 
-        sum_prob = torch.sum(input, dim=0)
-        target_prob = one_hot(target, self.num_classes)
-        n = torch.sum(target_prob, dim=0)
+#         sum_prob = torch.sum(input, dim=0)
+#         target_prob = one_hot(target, self.num_classes)
+#         n = torch.sum(target_prob, dim=0)
 
-        a = torch.reshape(
-            torch.matmul(self.cost_matrix, torch.reshape(sum_prob, shape=[-1, 1])),
-            shape=[-1],
-        )
+#         a = torch.reshape(
+#             torch.matmul(self.cost_matrix, torch.reshape(sum_prob, shape=[-1, 1])),
+#             shape=[-1],
+#         )
 
-        b = torch.reshape(n / torch.sum(n), shape=[-1])
+#         b = torch.reshape(n / torch.sum(n), shape=[-1])
 
-        epsilon = 1e-9
+#         epsilon = 1e-9
 
-        denominator = a * b
-        denominator = torch.sum(denominator) + epsilon
+#         denominator = a * b
+#         denominator = torch.sum(denominator) + epsilon
 
-        result = numerator / denominator
+#         result = numerator / denominator
 
-        return result
+#         return result
 
 
 class MCELoss(torch.nn.modules.loss._WeightedLoss):
@@ -984,7 +985,6 @@ class OrdinalEcocDistanceLoss(torch.nn.Module):
         self.target_class = torch.tensor(
             self.target_class, dtype=torch.float32, device=device, requires_grad=False
         )
-        self.mse = 0
 
         self.class_weights = class_weights
 

@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from ..losses import WKLoss
+from ..wkloss import WKLoss
 
 
 def test_wkloss_creation():
@@ -130,7 +130,7 @@ def test_wkloss_exactloss_quadratic():
     assert isinstance(output, torch.Tensor)
 
     # Verifies that the loss is greater than zero
-    assert output.item() == pytest.approx(0.6403, rel=1e-3)
+    assert output.item() == pytest.approx(1.1249, rel=1e-3)
 
 
 def test_wkloss_exactloss_linear():
@@ -266,75 +266,69 @@ def test_wkloss_penalization_types():
 
 def test_wkloss_weights():
     num_classes = 6
-    penalization_type = "quadratic"
+    penalization_types = ["linear", "quadratic"]
     weight = torch.tensor(
+        [1.0, 1.0, 1.0, 1.0, 1.0, 5.0],
+        dtype=torch.float,
+    )
+    weight2 = torch.tensor(
         [1.0, 1.0, 1.0, 1.0, 1.0, 10.0],
         dtype=torch.float,
     )
-    weight1 = torch.tensor(
-        [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        dtype=torch.float,
-    )
 
-    loss = WKLoss(num_classes, penalization_type, weight=None)
-    loss_weighted = WKLoss(num_classes, penalization_type, weight=weight)
-    loss_weighted1 = WKLoss(num_classes, penalization_type, weight=weight1)
+    for penalization_type in penalization_types:
+        loss = WKLoss(num_classes, penalization_type, weight=None)
+        loss_weighted = WKLoss(num_classes, penalization_type, weight=weight)
+        loss_weighted2 = WKLoss(num_classes, penalization_type, weight=weight2)
 
-    # Input data with error in two samples of class 5 (highest weight)
-    input_data = torch.tensor(
-        [
-            [10000.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 10000.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 10000.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 10000.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 10000.0, 0.0],
-            [0.0, 10000.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 10000.0, 0.0, 0.0, 0.0, 0.0],
-        ]
-    )
+        # Input data with error in two samples of class 5 (highest weight)
+        input_data = torch.tensor(
+            [
+                [10000.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 10000.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 10000.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 10000.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 10000.0, 0.0],
+                [0.0, 10000.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 10000.0, 0.0, 0.0, 0.0, 0.0],
+            ]
+        )
 
-    # Input data with error in two samples of classes 0 and 1 (standard weight)
-    input_data2 = torch.tensor(
-        [
-            [0.0, 10000.0, 0.0, 0.0, 0.0, 0.0],
-            [10000.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 10000.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 10000.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 10000.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 10000.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 10000.0],
-        ]
-    )
+        input_data2 = torch.tensor(
+            [
+                [10000.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 10000.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 10000.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 10000.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 10000.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 10000.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 10000.0],
+            ]
+        )
 
-    target = torch.tensor([0, 1, 2, 3, 4, 5, 5])
+        target = torch.tensor([0, 1, 2, 3, 4, 5, 5])
 
-    output = loss(input_data, target)
-    output_weighted = loss_weighted(input_data, target)
-    output_weighted1 = loss_weighted1(input_data, target)
+        output = loss(input_data, target)
+        output_weighted = loss_weighted(input_data, target)
+        output_weighted2 = loss_weighted2(input_data, target)
 
-    output2 = loss(input_data2, target)
-    output2_weighted = loss_weighted(input_data2, target)
-    output2_weighted1 = loss_weighted1(input_data2, target)
+        output2 = loss(input_data2, target)
+        output2_weighted = loss_weighted(input_data2, target)
+        output2_weighted2 = loss_weighted2(input_data2, target)
 
-    # Test return type
-    assert isinstance(output, torch.Tensor)
-    assert isinstance(output_weighted, torch.Tensor)
-    assert isinstance(output_weighted1, torch.Tensor)
-    assert isinstance(output2, torch.Tensor)
-    assert isinstance(output2_weighted, torch.Tensor)
-    assert isinstance(output2_weighted1, torch.Tensor)
+        # Test return type
+        assert isinstance(output, torch.Tensor)
+        assert isinstance(output_weighted, torch.Tensor)
+        assert isinstance(output_weighted2, torch.Tensor)
 
-    # Test that the loss without weights is equivalent to setting all weights to 1
-    assert output_weighted1.item() == output.item()
-    assert output2_weighted1.item() == output2.item()
+        # Test that using class weight with errors increases the loss
+        assert output_weighted.item() > output.item()
 
-    # Test that using weighting class with errors increases the loss
-    assert output_weighted.item() > output.item()
+        # When using a higher weight in the class with errors, the loss increases
+        assert output_weighted2.item() > output_weighted.item()
 
-    # Test that having errors in a 1-weighted decreases the error when having
-    # another class with a higher weight, compared to the non-weighted alternative
-    assert output2_weighted.item() < output2.item()
+        # When having an error in a class with not highest weight, the loss decreases
+        assert output2_weighted.item() < output2.item()
 
-    # Test that having errors in a class that is not weighted results in a lower loss
-    # than having errors in a class that is weighted
-    assert output_weighted.item() > output2_weighted.item()
+        # If the cost of the other class increases, the loss decreases
+        assert output2_weighted2.item() < output2_weighted.item()
