@@ -9,8 +9,8 @@ from .losses import (
     OrdinalEcocDistanceLoss,
     PoissonCrossEntropyLoss,
     TriangularCrossEntropyLoss,
-    WKLoss,
 )
+from .wkloss import WKLoss
 
 __all__ = [
     "CustomTargetsCrossEntropyLoss",
