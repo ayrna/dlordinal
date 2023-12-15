@@ -13,9 +13,7 @@ class CLM(Module):
     Cumulative link models for deep ordinal classification. Neurocomputing, 401, 48-58.
     """
 
-    def __init__(
-        self, input_shape, num_classes, link_function, min_distance=0.0, **kwargs
-    ):
+    def __init__(self, num_classes, link_function, min_distance=0.0, **kwargs):
         """
         Parameters
         ----------
@@ -31,7 +29,6 @@ class CLM(Module):
         """
 
         super().__init__()
-        self.input_shape = input_shape
         self.num_classes = num_classes
         self.link_function = link_function
         self.min_distance = min_distance
