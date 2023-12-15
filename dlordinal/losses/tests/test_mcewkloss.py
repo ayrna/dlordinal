@@ -1,7 +1,8 @@
 import pytest
 import torch
 
-from ..losses import MCEAndWKLoss, MCELoss, WKLoss
+from ..losses import MCEAndWKLoss, MCELoss
+from ..wkloss import WKLoss
 
 
 def test_mcewkloss_creation():
@@ -63,7 +64,7 @@ def test_mcewkloss_exactvalue():
     # Compute the loss
     output = loss(input_data, target)
 
-    assert output.item() > 0
+    assert output.item() == pytest.approx(0.5625, rel=1e-3)
 
 
 def test_mcewkloss_weights():
