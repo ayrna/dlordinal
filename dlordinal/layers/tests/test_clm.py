@@ -10,7 +10,9 @@ def test_clm_creation():
     link_function = "logit"
     min_distance = 0.0
 
-    clm = CLM(input_shape, num_classes, link_function, min_distance)
+    clm = CLM(
+        num_classes=num_classes, link_function=link_function, min_distance=min_distance
+    )
 
     assert isinstance(clm, CLM)
 
@@ -21,7 +23,9 @@ def test_clm_logit():
     link_function = "logit"
     min_distance = 0.0
 
-    clm = CLM(input_shape, num_classes, link_function, min_distance)
+    clm = CLM(
+        num_classes=num_classes, link_function=link_function, min_distance=min_distance
+    )
     input_data = torch.rand(32, input_shape)
     output = clm(input_data)
 
@@ -35,7 +39,9 @@ def test_clm_probit():
     link_function = "probit"
     min_distance = 0.0
 
-    clm = CLM(input_shape, num_classes, link_function, min_distance)
+    clm = CLM(
+        num_classes=num_classes, link_function=link_function, min_distance=min_distance
+    )
     input_data = torch.rand(16, input_shape)
     output = clm(input_data)
 
@@ -49,16 +55,11 @@ def test_clm_cloglog():
     link_function = "cloglog"
     min_distance = 0.0
 
-    clm = CLM(input_shape, num_classes, link_function, min_distance)
+    clm = CLM(
+        num_classes=num_classes, link_function=link_function, min_distance=min_distance
+    )
     input_data = torch.rand(8, input_shape)
     output = clm(input_data)
 
     assert isinstance(output, torch.Tensor)
     assert clm.link_function == "cloglog"
-
-
-if __name__ == "__main":
-    test_clm_creation()
-    test_clm_logit()
-    test_clm_probit()
-    test_clm_cloglog()
