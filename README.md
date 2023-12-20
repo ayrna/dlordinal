@@ -31,6 +31,11 @@ Please, contact the maintainers (maybe opening an issue) before doing any work t
 
 ### Guidelines for code contributions
 
+* In order to set up the environment for development, install the project in editable mode and include the optional dev requirements:
+```bash
+pip install -e '.[dev]'
+```
+* Install the pre-commit hooks before starting to make any modifications.
 * Write code that is compatible with all supported versions of Python listed in the `pyproject.toml` file.
 * Create tests that cover the common cases and the corner cases of the code.
 * Preserve backwards-compatibility whenever possible, and make clear if something must change.
