@@ -22,8 +22,11 @@ setup(
         "tqdm>=4",
         "Pillow>=8",
     ],
-    tests_require=[
-        "pytest"
-    ],
+    extras_require={
+        "dev": [
+            "pytest",
+            "pre-commit",
+        ]
+    },
     zip_safe=False,
 )
