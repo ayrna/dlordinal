@@ -35,7 +35,10 @@ Please, contact the maintainers (maybe opening an issue) before doing any work t
 ```bash
 pip install -e '.[dev]'
 ```
-* Install the pre-commit hooks before starting to make any modifications.
+* Install the pre-commit hooks before starting to make any modifications:
+```bash
+pre-commit install
+```
 * Write code that is compatible with all supported versions of Python listed in the `pyproject.toml` file.
 * Create tests that cover the common cases and the corner cases of the code.
 * Preserve backwards-compatibility whenever possible, and make clear if something must change.
