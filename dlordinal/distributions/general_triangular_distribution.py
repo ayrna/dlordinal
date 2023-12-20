@@ -61,12 +61,20 @@ def get_general_triangular_params(n: int, alphas: np.ndarray, verbose: int = 0):
 
         try:
             nsol = nsolve([eq1, eq2], [a, b], [1, 1])
+
             if nsol[0] < (j - 1) / n and nsol[1] > j / n:
                 return nsol[0], nsol[1], c
-        except:
+        except ValueError:
             pass
 
-        sol = solve([eq1, eq2], [a, b])
+        try:
+            sol = solve([eq1, eq2], [a, b])
+        except ValueError:
+            raise ValueError(
+                f"Unsatisfiable alpha values {alphas}: could not solve for the"
+                " triangular distribution parameters"
+            )
+
         soln = [tuple(v.evalf() for v in s) for s in sol]
 
         for s in soln:

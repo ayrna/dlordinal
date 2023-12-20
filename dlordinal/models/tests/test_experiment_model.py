@@ -2,7 +2,6 @@ from typing import List
 
 import numpy as np
 import torch
-import torch.nn as nn
 from torch import nn
 
 from ..experiment_model import ExperimentModel

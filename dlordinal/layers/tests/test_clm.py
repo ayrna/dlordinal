@@ -4,7 +4,6 @@ from ..clm import CLM
 
 
 def test_clm_creation():
-    input_shape = 6
     num_classes = 3
     link_function = "logit"
     min_distance = 0.0

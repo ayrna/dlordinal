@@ -76,7 +76,8 @@ class FGNet(VisionDataset):
             self.download()
         if not self._check_integrity_download():
             raise RuntimeError(
-                "Dataset not found or corrupted. You can use download=True to download it"
+                "Dataset not found or corrupted. You can use download=True to"
+                " download it"
             )
 
         if process_data:
