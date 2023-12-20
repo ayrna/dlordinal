@@ -25,7 +25,6 @@ setup(
     extras_require={
         "dev": [
             "pytest",
-            "pre-commit",
         ]
     },
     zip_safe=False,
