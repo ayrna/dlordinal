@@ -1,6 +1,5 @@
 import pytest
 import torch
-import torch.nn as nn
 
 from ..activation_function import activation_function_by_name
 from ..ordinal_fully_connected import (

@@ -1,4 +1,3 @@
-import pytest
 import torch
 
 from ..clm import CLM

@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 import torch
 from torch import cuda
 from torch.utils.data import DataLoader, TensorDataset

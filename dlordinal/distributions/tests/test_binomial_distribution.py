@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from scipy.stats import binom
 
 from ..binomial_distribution import get_binomial_probabilities
 

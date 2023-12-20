@@ -1,6 +1,4 @@
-import pytest
 import torch
-from torch.nn.functional import one_hot
 
 from ..losses import CustomTargetsCrossEntropyLoss
 

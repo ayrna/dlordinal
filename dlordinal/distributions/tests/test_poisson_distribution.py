@@ -1,7 +1,5 @@
 import numpy as np
 import pytest
-from scipy.special import softmax
-from scipy.stats import poisson
 
 from ..poisson_distribution import get_poisson_probabilities
 
