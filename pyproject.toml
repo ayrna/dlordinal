@@ -30,8 +30,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest", "pre-commit"]
 
-[tool.setuptools]
-packages = ["dlordinal"]
+[tool.setuptools.packages.find]
+where = ["dlordinal"]
+exclude = ["*.tests"]
+namespaces = false
 
 [tool.ruff]
 fix = true
