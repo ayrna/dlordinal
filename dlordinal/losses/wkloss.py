@@ -6,7 +6,7 @@ import torch.nn as nn
 
 class WKLoss(nn.Module):
     """
-    Implements Weighted Kappa Loss. Weighted Kappa Loss was introduced by :cite:t:`deLaTorre2018kappa`.
+    Implements Weighted Kappa Loss. Weighted Kappa Loss was introduced by :footcite:t:`deLaTorre2018kappa`.
     Weighted Kappa is widely used in Ordinal Classification Problems. Its
     value lies in :math:`[-\\infty, \\log 2]`, where :math:`\\log 2` means the random prediction
 

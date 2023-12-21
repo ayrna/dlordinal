@@ -7,19 +7,18 @@ from torch import nn
 class ResNetOrdinalFullyConnected(nn.Module):
     """
     ResNetOrdinalFullyConnected implements the ordinal fully connected layer
+
+    Parameters
+    ----------
+    input_size: int
+        Input size
+    num_classes: int
+        Number of classes
     """
 
     classifiers: nn.ModuleList
 
     def __init__(self, input_size: int, num_classes: int):
-        """
-        Parameters
-        ----------
-        input_size: int
-            Input size
-        num_classes: int
-            Number of classes
-        """
         super(ResNetOrdinalFullyConnected, self).__init__()
         self.classifiers = nn.ModuleList(
             [nn.Linear(input_size, 1) for _ in range(num_classes - 1)]
@@ -41,6 +40,15 @@ class ResNetOrdinalFullyConnected(nn.Module):
 class VGGOrdinalFullyConnected(nn.Module):
     """
     VGGOrdinalFullyConnected implements the ordinal fully connected layer
+
+    Parameters
+    ----------
+    input_size: int
+        Input size
+    num_classes: int
+        Number of classes
+    activation_function: Callable[[], nn.Module]
+        Activation function
     """
 
     classifiers: nn.ModuleList
@@ -51,16 +59,6 @@ class VGGOrdinalFullyConnected(nn.Module):
         num_classes: int,
         activation_function: Callable[[], nn.Module],
     ):
-        """
-        Parameters
-        ----------
-        input_size: int
-            Input size
-        num_classes: int
-            Number of classes
-        activation_function: Callable[[], nn.Module]
-            Activation function
-        """
         super(VGGOrdinalFullyConnected, self).__init__()
         hidden_size = 4096 // (num_classes - 1)
         self.classifiers = nn.ModuleList(

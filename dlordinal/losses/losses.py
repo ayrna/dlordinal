@@ -222,7 +222,7 @@ class CustomTargetsCrossEntropyLoss(torch.nn.Module):
 
 
 class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Beta unimodal regularised cross entropy loss from :cite:t:`vargas2022unimodal`.
+    """Beta unimodal regularised cross entropy loss from :footcite:t:`vargas2022unimodal`.
 
     Parameters
     ----------
@@ -304,7 +304,7 @@ class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Triangular unimodal regularised cross entropy loss from :cite:t:`vargas2023softlabelling`.
+    """Triangular unimodal regularised cross entropy loss from :footcite:t:`vargas2023softlabelling`.
 
     Parameters
     ----------
@@ -372,7 +372,7 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Generalised triangular unimodal regularised cross entropy loss from :cite:t:`vargas2023gentri`.
+    """Generalised triangular unimodal regularised cross entropy loss from :footcite:t:`vargas2023gentri`.
 
     Parameters
     ----------
@@ -442,7 +442,7 @@ class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Expontential unimodal regularised cross entropy loss from :cite:t:`liu2020unimodal`.
+    """Expontential unimodal regularised cross entropy loss from :footcite:t:`liu2020unimodal`.
 
     Parameters
     ----------
@@ -451,7 +451,7 @@ class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     eta : float, default=1.0
         Parameter that controls the influence of the regularisation.
     p : float, default=1
-        Exponent parameter. Introduced in :cite:t:`vargas2023exponential` as an
+        Exponent parameter. Introduced in :footcite:t:`vargas2023exponential` as an
         application of the Lp norm.
     weight : Optional[Tensor], default=None
         A manual rescaling weight given to each class. If given, has to be a Tensor
@@ -512,7 +512,7 @@ class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class BinomialCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Binomial unimodal regularised cross entropy loss from :cite:t:`liu2020unimodal`.
+    """Binomial unimodal regularised cross entropy loss from :footcite:t:`liu2020unimodal`.
 
     Parameters
     ----------
@@ -578,7 +578,7 @@ class BinomialCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Poisson unimodal regularised cross entropy loss from :cite:t:`liu2020unimodal`.
+    """Poisson unimodal regularised cross entropy loss from :footcite:t:`liu2020unimodal`.
 
     Parameters
     ----------
@@ -844,7 +844,7 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
 
 
 class OrdinalEcocDistanceLoss(torch.nn.Module):
-    """Ordinal ECOC distance loss from :cite:t:`barbero2023error`.
+    """Ordinal ECOC distance loss from :footcite:t:`barbero2023error`.
 
     Parameters
     ----------
