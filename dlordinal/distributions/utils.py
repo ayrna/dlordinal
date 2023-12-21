@@ -2,17 +2,17 @@ import numpy as np
 
 
 def get_intervals(n):
-    """Get n evenly-spaced intervals in [0,1].
+    """Get n evenly-spaced intervals in :math:`[0,1]`.
 
     Parameters
     ----------
     n : int
-            Number of intervals.
+        Number of intervals.
 
     Returns
     -------
     intervals: list
-            List of intervals.
+        List of intervals.
     """
 
     points = np.linspace(1e-9, 1 - 1e-9, n + 1)

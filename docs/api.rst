@@ -12,3 +12,4 @@ This is the API for the **dlordinal** package.
 
    losses
    datasets
+   distributions

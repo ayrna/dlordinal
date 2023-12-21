@@ -9,13 +9,13 @@ def get_poisson_probabilities(n):
     Parameters
     ----------
     n : int
-            Number of classes.
+        Number of classes.
 
     Returns
     -------
-    probs: 2d array-like
-            Matrix of probabilities where each row represents the true class
-            and each column the probability for class n.
+    probs : 2d array-like
+        Matrix of probabilities where each row represents the true class
+        and each column the probability for class n.
     """
 
     probs = []

@@ -12,7 +12,7 @@ def get_binomial_probabilities(n):
 
     Returns
     -------
-    probs: 2d array-like
+    probs : 2d array-like
             Matrix of probabilities where each row represents the true class
             and each column the probability for class n.
 

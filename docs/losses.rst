@@ -3,8 +3,6 @@
 Loss functions
 ==============
 
-.. _python-api-project:
-
 .. automodule:: dlordinal.losses
     :members:
 
