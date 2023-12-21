@@ -6,12 +6,9 @@ API Reference
 
 This is the API for the **dlordinal** package.
 
-Loss functions
-==============
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
-.. _python-api-project:
-
-.. automodule:: dlordinal.losses
-    :members:
-
-.. bibliography:: references.bib
+   losses
+   datasets

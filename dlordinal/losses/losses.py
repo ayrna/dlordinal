@@ -130,9 +130,6 @@ _beta_params_sets = {
 
 class CustomTargetsCrossEntropyLoss(torch.nn.Module):
     """Base class to implement a unimodal regularised cross entropy loss.
-    Vargas, V. M., Gutiérrez, P. A., & Hervás-Martínez, C. (2022).
-    Unimodal regularisation based on beta distribution for deep ordinal regression.
-    Pattern Recognition, 122, 108310.
 
     Parameters
     ----------
@@ -704,6 +701,7 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
             Ground truth labels
 
         Returns:
+        --------
         mses : torch.Tensor
             MSE values
         """
