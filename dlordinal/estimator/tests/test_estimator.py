@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 import torch
 from torch import cuda
 from torch.utils.data import DataLoader, TensorDataset
@@ -10,7 +9,7 @@ from ..pytorch_estimator import PytorchEstimator
 
 def test_pytorch_estimator_creation():
     # Model
-    model = models.resnet18(pretrained=True)
+    model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
     model.fc = torch.nn.Linear(model.fc.in_features, 6)
 
     # Loss function

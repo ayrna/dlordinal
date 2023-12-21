@@ -1,4 +1,3 @@
-import argparse
 import tarfile
 from pathlib import Path
 from typing import Union
@@ -136,7 +135,8 @@ class Adience:
             notna = fold["age"].notna()
             n_discarded = (~notna).sum()
             print(
-                f"Fold {f}: discarding {n_discarded} entries ({(n_discarded / len(fold)) * 100:.1f}%)"
+                f"Fold {f}: discarding {n_discarded} entries"
+                f" ({(n_discarded / len(fold)) * 100:.1f}%)"
             )
             fold = fold.loc[notna]
             fold = fold.assign(age=fold["age"].astype(int))

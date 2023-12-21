@@ -3,7 +3,6 @@ from typing import Callable, List, Union, cast
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 import torchvision.models.vgg as vgg
 from torch import nn
 
@@ -88,7 +87,8 @@ class VGGOrdinalECOC(ExperimentModel):
         return list(
             chain.from_iterable(
                 chain(
-                    cf[0].parameters(), cf[3].parameters()  # type: ignore
+                    cf[0].parameters(),
+                    cf[3].parameters(),  # type: ignore
                 )  # type: ignore
                 for cf in self.classifier.classifiers
             )
@@ -138,7 +138,7 @@ def make_layers(
 def vgg11_ecoc(
     activation_function: Union[str, Callable[[], nn.Module]],
     batch_norm: bool = False,
-    **kwargs
+    **kwargs,
 ):
     """
     VGG 11-layer model (configuration "A") with ordinal fully connected layer.
@@ -155,14 +155,14 @@ def vgg11_ecoc(
     return VGGOrdinalECOC(
         make_layers(vgg.cfgs["A"], activation_function, batch_norm),
         activation_function=activation_function,
-        **kwargs
+        **kwargs,
     )
 
 
 def vgg13_ecoc(
     activation_function: Union[str, Callable[[], nn.Module]],
     batch_norm: bool = False,
-    **kwargs
+    **kwargs,
 ):
     """
     VGG 13-layer model (configuration "B") with ordinal fully connected layer.
@@ -179,14 +179,14 @@ def vgg13_ecoc(
     return VGGOrdinalECOC(
         make_layers(vgg.cfgs["B"], activation_function, batch_norm),
         activation_function=activation_function,
-        **kwargs
+        **kwargs,
     )
 
 
 def vgg16_ecoc(
     activation_function: Union[str, Callable[[], nn.Module]],
     batch_norm: bool = False,
-    **kwargs
+    **kwargs,
 ):
     """
     VGG 16-layer model (configuration "D") with ordinal fully connected layer.
@@ -203,14 +203,14 @@ def vgg16_ecoc(
     return VGGOrdinalECOC(
         make_layers(vgg.cfgs["D"], activation_function, batch_norm),
         activation_function=activation_function,
-        **kwargs
+        **kwargs,
     )
 
 
 def vgg19_ecoc(
     activation_function: Union[str, Callable[[], nn.Module]],
     batch_norm: bool = False,
-    **kwargs
+    **kwargs,
 ):
     """
     VGG 19-layer model (configuration "E") with ordinal fully connected layer.
@@ -227,5 +227,5 @@ def vgg19_ecoc(
     return VGGOrdinalECOC(
         make_layers(vgg.cfgs["E"], activation_function, batch_norm),
         activation_function=activation_function,
-        **kwargs
+        **kwargs,
     )

@@ -1,9 +1,7 @@
 import numpy as np
 import pytest
-from scipy.special import gamma, hyp2f1
 
 from ..beta_distribution import beta_dist, beta_inc, get_beta_probabilities
-from ..utils import get_intervals
 
 
 def test_beta_inc():

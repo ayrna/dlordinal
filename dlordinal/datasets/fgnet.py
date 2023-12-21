@@ -1,5 +1,3 @@
-import os
-import os.path
 import re
 import shutil
 from pathlib import Path
@@ -78,7 +76,8 @@ class FGNet(VisionDataset):
             self.download()
         if not self._check_integrity_download():
             raise RuntimeError(
-                "Dataset not found or corrupted. You can use download=True to download it"
+                "Dataset not found or corrupted. You can use download=True to"
+                " download it"
             )
 
         if process_data:

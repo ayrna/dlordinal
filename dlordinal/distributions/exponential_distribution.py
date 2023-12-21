@@ -33,6 +33,6 @@ def get_exponential_probabilities(n, p=1.0, tau=1.0):
     probs = []
 
     for true_class in range(0, n):
-        probs.append(-np.abs(np.arange(0, n) - true_class) ** p / tau)
+        probs.append(-(np.abs(np.arange(0, n) - true_class) ** p) / tau)
 
     return softmax(np.array(probs), axis=1)

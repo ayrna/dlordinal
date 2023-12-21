@@ -1,4 +1,3 @@
-import pytest
 import torch
 
 from ..stick_breaking_layer import StickBreakingLayer

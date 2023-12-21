@@ -1,4 +1,3 @@
-import numpy as np
 from scipy.special import gamma, hyp2f1
 
 from .utils import get_intervals

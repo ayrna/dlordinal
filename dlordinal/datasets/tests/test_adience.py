@@ -69,7 +69,7 @@ def adience_instance():
         / "landmark_aligned_face.2050.6486613949_909254ccf9_o.jpg"
     )
 
-    with tarfile.open(temp_path / "fake_data.tar.gz", "w:gz") as tar:
+    with tarfile.open(temp_path / "fake_data.tar.gz", "w:gz"):
         pass
 
     list_folds_files = [
