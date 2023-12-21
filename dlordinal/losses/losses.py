@@ -225,10 +225,7 @@ class CustomTargetsCrossEntropyLoss(torch.nn.Module):
 
 
 class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Beta unimodal regularised cross entropy loss.
-    Vargas, Víctor Manuel et al. (2022). Unimodal regularisation based on beta
-    distribution for deep ordinal regression. Pattern Recognition, 122, 108310.
-    Elsevier.
+    """Beta unimodal regularised cross entropy loss from :cite:t:`vargas2022unimodal`.
 
     Parameters
     ----------
@@ -310,10 +307,7 @@ class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Triangular unimodal regularised cross entropy loss.
-    Víctor Manuel Vargas, Pedro Antonio Gutiérrez, Javier Barbero-Gómez, and
-    César Hervás-Martínez (2023). Soft Labelling Based on Triangular Distributions for
-    Ordinal Classification. Information Fusion, 93, 258--267.
+    """Triangular unimodal regularised cross entropy loss from :cite:t:`vargas2023softlabelling`.
 
     Parameters
     ----------
@@ -381,11 +375,7 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Generalised triangular unimodal regularised cross entropy loss.
-    Víctor Manuel Vargas, Antonio Manuel Durán-Rosal, David Guijo-Rubio,
-    Pedro Antonio Gutiérrez-Peña, and César Hervás-Martínez (2023). Generalised
-    Triangular Distributions for ordinal deep learning: novel proposal and
-    optimisation. Information Sciences, 648, 1--17.
+    """Generalised triangular unimodal regularised cross entropy loss from :cite:t:`vargas2023gentri`.
 
     Parameters
     ----------
@@ -455,10 +445,7 @@ class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Expontential unimodal regularised cross entropy loss.
-    Vargas, Víctor Manuel et al. (2022). Unimodal regularisation based on beta
-    distribution for deep ordinal regression. Pattern Recognition, 122, 108310.
-    Elsevier.
+    """Expontential unimodal regularised cross entropy loss from :cite:t:`liu2020unimodal`.
 
     Parameters
     ----------
@@ -466,6 +453,9 @@ class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         Number of classes.
     eta : float, default=1.0
         Parameter that controls the influence of the regularisation.
+    p : float, default=1
+        Exponent parameter. Introduced in :cite:t:`vargas2023exponential` as an
+        application of the Lp norm.
     weight : Optional[Tensor], default=None
         A manual rescaling weight given to each class. If given, has to be a Tensor
         of size `C`. Otherwise, it is treated as if having all ones.
@@ -525,10 +515,7 @@ class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class BinomialCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Binomial unimodal regularised cross entropy loss.
-    Vargas, Víctor Manuel, et al. (2023). Exponential loss regularisation for
-    encouraging ordinal constraint to shotgun stocks quality assessment. Applied Soft
-    Computing, 138, 110191.
+    """Binomial unimodal regularised cross entropy loss from :cite:t:`liu2020unimodal`.
 
     Parameters
     ----------
@@ -594,9 +581,7 @@ class BinomialCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
 
 class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
-    """Poisson unimodal regularised cross entropy loss
-    Liu, Xiaofeng et al. (2020). Unimodal regularized neuron stick-breaking for
-    ordinal classification. Neurocomputing, 388, 34-44.
+    """Poisson unimodal regularised cross entropy loss from :cite:t:`liu2020unimodal`.
 
     Parameters
     ----------
@@ -661,108 +646,9 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         )
 
 
-# class WKLoss(torch.nn.Module):
-#     """Weighted Kappa loss implementation.
-#     de La Torre, J., Puig, D., & Valls, A. (2018).
-#     Weighted kappa loss function for multi-class classification of ordinal data in deep
-#     learning. Pattern Recognition Letters, 105, 144-154.
-
-#     Parameters
-#     ----------
-#     num_classes : int
-#         Number of classes.
-#     penalization_type : str, default='quadratic'
-#         The penalization type of WK loss to use (quadratic or linear).
-#     weight : np.ndarray, default=None
-#         The weight matrix that is applied to the cost matrix.
-#     """
-
-#     cost_matrix: Tensor
-
-#     def __init__(
-#         self,
-#         num_classes: int,
-#         penalization_type: str = "quadratic",
-#         weight: Optional[Tensor] = None,
-#     ) -> None:
-#         super().__init__()
-
-#         # Create cost matrix and register as buffer
-#         cost_matrix = np.reshape(
-#             np.tile(range(num_classes), num_classes), (num_classes, num_classes)
-#         )
-
-#         if penalization_type == "quadratic":
-#             cost_matrix = (
-#                 np.power(cost_matrix - np.transpose(cost_matrix), 2)
-#                 / (num_classes - 1) ** 2.0
-#             )
-#         else:
-#             cost_matrix = (
-#                 np.abs(cost_matrix - np.transpose(cost_matrix))
-#                 / (num_classes - 1) ** 2.0
-#             )
-
-#         self.weight = weight
-#         if isinstance(weight, np.ndarray):
-#             weight = torch.tensor(weight, dtype=torch.float)
-
-#         cost_matrix = torch.tensor(cost_matrix, dtype=torch.float)
-
-#         if self.weight is not None:
-#             tiled_weight = torch.tile(self.weight, (num_classes, 1)).T
-#             cost_matrix = cost_matrix * tiled_weight
-
-#         self.register_buffer("cost_matrix", cost_matrix)
-
-#         self.num_classes = num_classes
-
-#     def forward(self, input: Tensor, target: Tensor) -> Tensor:
-#         """
-#         Parameters
-#         ----------
-#         input : torch.Tensor
-#             The input tensor.
-#         target : torch.Tensor
-#             The target tensor.
-
-#         Returns
-#         -------
-#         loss: Tensor
-#             The WK loss.
-#         """
-
-#         input = torch.nn.functional.softmax(input, dim=1)
-
-#         costs = self.cost_matrix[target]
-
-#         numerator = costs * input
-#         numerator = torch.sum(numerator)
-
-#         sum_prob = torch.sum(input, dim=0)
-#         target_prob = one_hot(target, self.num_classes)
-#         n = torch.sum(target_prob, dim=0)
-
-#         a = torch.reshape(
-#             torch.matmul(self.cost_matrix, torch.reshape(sum_prob, shape=[-1, 1])),
-#             shape=[-1],
-#         )
-
-#         b = torch.reshape(n / torch.sum(n), shape=[-1])
-
-#         epsilon = 1e-9
-
-#         denominator = a * b
-#         denominator = torch.sum(denominator) + epsilon
-
-#         result = numerator / denominator
-
-#         return result
-
-
 class MCELoss(torch.nn.modules.loss._WeightedLoss):
     """
-    Mean squared error per class loss function. Computes the mean squared error for each
+    Per class mean squared error loss function. Computes the mean squared error for each
     class and reduces it using the specified `reduction`.
 
     Parameters
@@ -960,10 +846,7 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
 
 
 class OrdinalEcocDistanceLoss(torch.nn.Module):
-    """Ordinal ECOC distance loss implementation.
-    Barbero-Gómez, J., Gutiérrez, P. A., & Hervás-Martínez, C. (2022). Error-correcting
-    output codes in the framework of deep ordinal classification. Neural Processing
-    Letters, 1-32. Springer.
+    """Ordinal ECOC distance loss from :cite:t:`barbero2023error`.
 
     Parameters
     ----------
