@@ -15,3 +15,4 @@ This is the API for the **dlordinal** package.
    distributions
    layers
    metrics
+   sklearn_integration
