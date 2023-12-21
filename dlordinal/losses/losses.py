@@ -452,7 +452,7 @@ class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         Parameter that controls the influence of the regularisation.
     p : float, default=1
         Exponent parameter. Introduced in :footcite:t:`vargas2023exponential` as an
-        application of the Lp norm.
+        application of the :math:`L^p` norm.
     weight : Optional[Tensor], default=None
         A manual rescaling weight given to each class. If given, has to be a Tensor
         of size `C`. Otherwise, it is treated as if having all ones.
