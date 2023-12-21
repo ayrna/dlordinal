@@ -1,5 +1,3 @@
-import pytest
-
 from ..utils import get_intervals, triangular_cdf
 
 

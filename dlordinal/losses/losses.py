@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 from torch.nn import CrossEntropyLoss
 from torch.nn.functional import one_hot
-from torch.nn.modules.loss import MSELoss, _Loss, _WeightedLoss
+from torch.nn.modules.loss import MSELoss
 
 from ..distributions import (
     get_beta_probabilities,
@@ -15,6 +15,7 @@ from ..distributions import (
     get_poisson_probabilities,
     get_triangular_probabilities,
 )
+from .wkloss import WKLoss
 
 # Params [a,b] for beta distribution
 _beta_params_sets = {
@@ -132,6 +133,42 @@ class CustomTargetsCrossEntropyLoss(torch.nn.Module):
     Vargas, V. M., Gutiérrez, P. A., & Hervás-Martínez, C. (2022).
     Unimodal regularisation based on beta distribution for deep ordinal regression.
     Pattern Recognition, 122, 108310.
+
+    Parameters
+    ----------
+    cls_probs : Tensor
+        The class probabilities tensor.
+    eta : float, default=1.0
+        Parameter that controls the influence of the regularisation.
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `C`. Otherwise, it is treated as if having all ones.
+    size_average : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged over
+        each loss element in the batch. Note that for some losses, there are
+        multiple elements per sample. If the field :attr:`size_average` is set to
+        ``False``, the losses are instead summed for each minibatch. Ignored when
+        reduce is ``False``. Default: ``True``
+    ignore_index : int, default=-100
+        Specifies a target value that is ignored and does not contribute to the
+        input gradient. When :attr:`size_average` is ``True``, the loss is averaged
+        over non-ignored targets.
+    reduce : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged or
+        summed over observations for each minibatch depending on :attr:`size_average`.
+        When :attr:`reduce` is ``False``, returns a loss per batch element instead
+        and ignores :attr:`size_average`. Default: ``True``
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed. Note: :attr:`size_average` and
+        :attr:`reduce` are in the process of being deprecated, and in the meantime,
+        specifying either of those two args will override :attr:`reduction`.
+        Default: ``'mean'``
+    label_smoothing : float, default=0.0
+        Controls the amount of label smoothing for the loss. Zero means no smoothing.
+        Default: ``0.0``
     """
 
     def __init__(
@@ -145,44 +182,6 @@ class CustomTargetsCrossEntropyLoss(torch.nn.Module):
         reduction: str = "mean",
         label_smoothing: float = 0.0,
     ):
-        """
-        Parameters
-        ----------
-        cls_probs : Tensor
-            The class probabilities tensor.
-        eta : float, default=1.0
-            Parameter that controls the influence of the regularisation.
-        weight : Optional[Tensor], default=None
-            A manual rescaling weight given to each class. If given, has to be a Tensor
-            of size `C`. Otherwise, it is treated as if having all ones.
-        size_average : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged over
-            each loss element in the batch. Note that for some losses, there are
-            multiple elements per sample. If the field :attr:`size_average` is set to
-            ``False``, the losses are instead summed for each minibatch. Ignored when
-            reduce is ``False``. Default: ``True``
-        ignore_index : int, default=-100
-            Specifies a target value that is ignored and does not contribute to the
-            input gradient. When :attr:`size_average` is ``True``, the loss is averaged
-            over non-ignored targets.
-        reduce : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged or
-            summed over observations for each minibatch depending on :attr:`size_average`.
-            When :attr:`reduce` is ``False``, returns a loss per batch element instead
-            and ignores :attr:`size_average`. Default: ``True``
-        reduction : str, default='mean'
-            Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-            ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-            the output will be divided by the number of elements in the output,
-            ``'sum'``: the output will be summed. Note: :attr:`size_average` and
-            :attr:`reduce` are in the process of being deprecated, and in the meantime,
-            specifying either of those two args will override :attr:`reduction`.
-            Default: ``'mean'``
-        label_smoothing : float, default=0.0
-            Controls the amount of label smoothing for the loss. Zero means no smoothing.
-            Default: ``0.0``
-        """
-
         super().__init__()
 
         self.num_classes = cls_probs.size(0)
@@ -230,6 +229,45 @@ class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     Vargas, Víctor Manuel et al. (2022). Unimodal regularisation based on beta
     distribution for deep ordinal regression. Pattern Recognition, 122, 108310.
     Elsevier.
+
+    Parameters
+    ----------
+    num_classes : int, default=5
+        Number of classes.
+    params_set : str, default='standard'
+        The set of parameters to use for the beta distribution (chosen from the
+        _beta_params_set dictionary).
+    eta : float, default=1.0
+        Parameter that controls the influence of the regularisation.
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `C`. Otherwise, it is treated as if having all ones.
+    size_average : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged over
+        each loss element in the batch. Note that for some losses, there are
+        multiple elements per sample. If the field :attr:`size_average` is set to
+        ``False``, the losses are instead summed for each minibatch. Ignored when
+        reduce is ``False``. Default: ``True``
+    ignore_index : int, default=-100
+        Specifies a target value that is ignored and does not contribute to the
+        input gradient. When :attr:`size_average` is ``True``, the loss is averaged
+        over non-ignored targets.
+    reduce : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged or
+        summed over observations for each minibatch depending on :attr:`size_average`.
+        When :attr:`reduce` is ``False``, returns a loss per batch element instead
+        and ignores :attr:`size_average`. Default: ``True``
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed. Note: :attr:`size_average` and
+        :attr:`reduce` are in the process of being deprecated, and in the meantime,
+        specifying either of those two args will override :attr:`reduction`.
+        Default: ``'mean'``
+    label_smoothing : float, default=0.0
+        Controls the amount of label smoothing for the loss. Zero means no smoothing.
+        Default: ``0.0``
     """
 
     def __init__(
@@ -244,47 +282,6 @@ class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         reduction: str = "mean",
         label_smoothing: float = 0.0,
     ):
-        """
-        Parameters
-        ----------
-        num_classes : int, default=5
-            Number of classes.
-        params_set : str, default='standard'
-            The set of parameters to use for the beta distribution (chosen from the
-            _beta_params_set dictionary).
-        eta : float, default=1.0
-            Parameter that controls the influence of the regularisation.
-        weight : Optional[Tensor], default=None
-            A manual rescaling weight given to each class. If given, has to be a Tensor
-            of size `C`. Otherwise, it is treated as if having all ones.
-        size_average : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged over
-            each loss element in the batch. Note that for some losses, there are
-            multiple elements per sample. If the field :attr:`size_average` is set to
-            ``False``, the losses are instead summed for each minibatch. Ignored when
-            reduce is ``False``. Default: ``True``
-        ignore_index : int, default=-100
-            Specifies a target value that is ignored and does not contribute to the
-            input gradient. When :attr:`size_average` is ``True``, the loss is averaged
-            over non-ignored targets.
-        reduce : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged or
-            summed over observations for each minibatch depending on :attr:`size_average`.
-            When :attr:`reduce` is ``False``, returns a loss per batch element instead
-            and ignores :attr:`size_average`. Default: ``True``
-        reduction : str, default='mean'
-            Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-            ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-            the output will be divided by the number of elements in the output,
-            ``'sum'``: the output will be summed. Note: :attr:`size_average` and
-            :attr:`reduce` are in the process of being deprecated, and in the meantime,
-            specifying either of those two args will override :attr:`reduction`.
-            Default: ``'mean'``
-        label_smoothing : float, default=0.0
-            Controls the amount of label smoothing for the loss. Zero means no smoothing.
-            Default: ``0.0``
-        """
-
         self.params = _beta_params_sets[params_set]
 
         # Precompute class probabilities for each label
@@ -317,6 +314,44 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     Víctor Manuel Vargas, Pedro Antonio Gutiérrez, Javier Barbero-Gómez, and
     César Hervás-Martínez (2023). Soft Labelling Based on Triangular Distributions for
     Ordinal Classification. Information Fusion, 93, 258--267.
+
+    Parameters
+    ----------
+    num_classes : int, default=5
+        Number of classes.
+    alpha2 : float, default=0.05
+        Parameter that controls the influence of the regularisation.
+    eta : float, default=1.0
+        Parameter that controls the influence of the regularisation.
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `C`. Otherwise, it is treated as if having all ones.
+    size_average : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged over
+        each loss element in the batch. Note that for some losses, there are
+        multiple elements per sample. If the field :attr:`size_average` is set to
+        ``False``, the losses are instead summed for each minibatch. Ignored when
+        reduce is ``False``. Default: ``True``
+    ignore_index : int, default=-100
+        Specifies a target value that is ignored and does not contribute to the
+        input gradient. When :attr:`size_average` is ``True``, the loss is averaged
+        over non-ignored targets.
+    reduce : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged or
+        summed over observations for each minibatch depending on :attr:`size_average`.
+        When :attr:`reduce` is ``False``, returns a loss per batch element instead
+        and ignores :attr:`size_average`. Default: ``True``
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed. Note: :attr:`size_average` and
+        :attr:`reduce` are in the process of being deprecated, and in the meantime,
+        specifying either of those two args will override :attr:`reduction`.
+        Default: ``'mean'``
+    label_smoothing : float, default=0.0
+        Controls the amount of label smoothing for the loss. Zero means no smoothing.
+        Default: ``0.0``
     """
 
     def __init__(
@@ -331,46 +366,6 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         reduction: str = "mean",
         label_smoothing: float = 0.0,
     ):
-        """
-        Parameters
-        ----------
-        num_classes : int, default=5
-            Number of classes.
-        alpha2 : float, default=0.05
-            Parameter that controls the influence of the regularisation.
-        eta : float, default=1.0
-            Parameter that controls the influence of the regularisation.
-        weight : Optional[Tensor], default=None
-            A manual rescaling weight given to each class. If given, has to be a Tensor
-            of size `C`. Otherwise, it is treated as if having all ones.
-        size_average : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged over
-            each loss element in the batch. Note that for some losses, there are
-            multiple elements per sample. If the field :attr:`size_average` is set to
-            ``False``, the losses are instead summed for each minibatch. Ignored when
-            reduce is ``False``. Default: ``True``
-        ignore_index : int, default=-100
-            Specifies a target value that is ignored and does not contribute to the
-            input gradient. When :attr:`size_average` is ``True``, the loss is averaged
-            over non-ignored targets.
-        reduce : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged or
-            summed over observations for each minibatch depending on :attr:`size_average`.
-            When :attr:`reduce` is ``False``, returns a loss per batch element instead
-            and ignores :attr:`size_average`. Default: ``True``
-        reduction : str, default='mean'
-            Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-            ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-            the output will be divided by the number of elements in the output,
-            ``'sum'``: the output will be summed. Note: :attr:`size_average` and
-            :attr:`reduce` are in the process of being deprecated, and in the meantime,
-            specifying either of those two args will override :attr:`reduction`.
-            Default: ``'mean'``
-        label_smoothing : float, default=0.0
-            Controls the amount of label smoothing for the loss. Zero means no smoothing.
-            Default: ``0.0``
-        """
-
         # Precompute class probabilities for each label
         cls_probs = torch.tensor(get_triangular_probabilities(num_classes, alpha2))
         super().__init__(
@@ -391,6 +386,44 @@ class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     Pedro Antonio Gutiérrez-Peña, and César Hervás-Martínez (2023). Generalised
     Triangular Distributions for ordinal deep learning: novel proposal and
     optimisation. Information Sciences, 648, 1--17.
+
+    Parameters
+    ----------
+    num_classes : int
+        Number of classes.
+    alphas : np.ndarray
+        The alpha parameters for the triangular distribution.
+    eta : float, default=1.0
+        Parameter that controls the influence of the regularisation.
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `C`. Otherwise, it is treated as if having all ones.
+    size_average : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged over
+        each loss element in the batch. Note that for some losses, there are
+        multiple elements per sample. If the field :attr:`size_average` is set to
+        ``False``, the losses are instead summed for each minibatch. Ignored when
+        reduce is ``False``. Default: ``True``
+    ignore_index : int, default=-100
+        Specifies a target value that is ignored and does not contribute to the
+        input gradient. When :attr:`size_average` is ``True``, the loss is averaged
+        over non-ignored targets.
+    reduce : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged or
+        summed over observations for each minibatch depending on :attr:`size_average`.
+        When :attr:`reduce` is ``False``, returns a loss per batch element instead
+        and ignores :attr:`size_average`. Default: ``True``
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed. Note: :attr:`size_average` and
+        :attr:`reduce` are in the process of being deprecated, and in the meantime,
+        specifying either of those two args will override :attr:`reduction`.
+        Default: ``'mean'``
+    label_smoothing : float, default=0.0
+        Controls the amount of label smoothing for the loss. Zero means no smoothing.
+        Default: ``0.0``
     """
 
     def __init__(
@@ -405,46 +438,6 @@ class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         reduction: str = "mean",
         label_smoothing: float = 0.0,
     ):
-        """
-        Parameters
-        ----------
-        num_classes : int
-            Number of classes.
-        alphas : np.ndarray
-            The alpha parameters for the triangular distribution.
-        eta : float, default=1.0
-            Parameter that controls the influence of the regularisation.
-        weight : Optional[Tensor], default=None
-            A manual rescaling weight given to each class. If given, has to be a Tensor
-            of size `C`. Otherwise, it is treated as if having all ones.
-        size_average : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged over
-            each loss element in the batch. Note that for some losses, there are
-            multiple elements per sample. If the field :attr:`size_average` is set to
-            ``False``, the losses are instead summed for each minibatch. Ignored when
-            reduce is ``False``. Default: ``True``
-        ignore_index : int, default=-100
-            Specifies a target value that is ignored and does not contribute to the
-            input gradient. When :attr:`size_average` is ``True``, the loss is averaged
-            over non-ignored targets.
-        reduce : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged or
-            summed over observations for each minibatch depending on :attr:`size_average`.
-            When :attr:`reduce` is ``False``, returns a loss per batch element instead
-            and ignores :attr:`size_average`. Default: ``True``
-        reduction : str, default='mean'
-            Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-            ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-            the output will be divided by the number of elements in the output,
-            ``'sum'``: the output will be summed. Note: :attr:`size_average` and
-            :attr:`reduce` are in the process of being deprecated, and in the meantime,
-            specifying either of those two args will override :attr:`reduction`.
-            Default: ``'mean'``
-        label_smoothing : float, default=0.0
-            Controls the amount of label smoothing for the loss. Zero means no smoothing.
-            Default: ``0.0``
-        """
-
         # Precompute class probabilities for each label
         r = get_general_triangular_probabilities(num_classes, alphas, verbose=3)
         cls_probs = torch.tensor(r)
@@ -466,6 +459,42 @@ class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     Vargas, Víctor Manuel et al. (2022). Unimodal regularisation based on beta
     distribution for deep ordinal regression. Pattern Recognition, 122, 108310.
     Elsevier.
+
+    Parameters
+    ----------
+    num_classes : int, default=5
+        Number of classes.
+    eta : float, default=1.0
+        Parameter that controls the influence of the regularisation.
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `C`. Otherwise, it is treated as if having all ones.
+    size_average : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged over
+        each loss element in the batch. Note that for some losses, there are
+        multiple elements per sample. If the field :attr:`size_average` is set to
+        ``False``, the losses are instead summed for each minibatch. Ignored when
+        reduce is ``False``. Default: ``True``
+    ignore_index : int, default=-100
+        Specifies a target value that is ignored and does not contribute to the
+        input gradient. When :attr:`size_average` is ``True``, the loss is averaged
+        over non-ignored targets.
+    reduce : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged or
+        summed over observations for each minibatch depending on :attr:`size_average`.
+        When :attr:`reduce` is ``False``, returns a loss per batch element instead
+        and ignores :attr:`size_average`. Default: ``True``
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed. Note: :attr:`size_average` and
+        :attr:`reduce` are in the process of being deprecated, and in the meantime,
+        specifying either of those two args will override :attr:`reduction`.
+        Default: ``'mean'``
+    label_smoothing : float, default=0.0
+        Controls the amount of label smoothing for the loss. Zero means no smoothing.
+        Default: ``0.0``
     """
 
     def __init__(
@@ -480,44 +509,6 @@ class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         reduction: str = "mean",
         label_smoothing: float = 0.0,
     ):
-        """
-        Parameters
-        ----------
-        num_classes : int, default=5
-            Number of classes.
-        eta : float, default=1.0
-            Parameter that controls the influence of the regularisation.
-        weight : Optional[Tensor], default=None
-            A manual rescaling weight given to each class. If given, has to be a Tensor
-            of size `C`. Otherwise, it is treated as if having all ones.
-        size_average : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged over
-            each loss element in the batch. Note that for some losses, there are
-            multiple elements per sample. If the field :attr:`size_average` is set to
-            ``False``, the losses are instead summed for each minibatch. Ignored when
-            reduce is ``False``. Default: ``True``
-        ignore_index : int, default=-100
-            Specifies a target value that is ignored and does not contribute to the
-            input gradient. When :attr:`size_average` is ``True``, the loss is averaged
-            over non-ignored targets.
-        reduce : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged or
-            summed over observations for each minibatch depending on :attr:`size_average`.
-            When :attr:`reduce` is ``False``, returns a loss per batch element instead
-            and ignores :attr:`size_average`. Default: ``True``
-        reduction : str, default='mean'
-            Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-            ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-            the output will be divided by the number of elements in the output,
-            ``'sum'``: the output will be summed. Note: :attr:`size_average` and
-            :attr:`reduce` are in the process of being deprecated, and in the meantime,
-            specifying either of those two args will override :attr:`reduction`.
-            Default: ``'mean'``
-        label_smoothing : float, default=0.0
-            Controls the amount of label smoothing for the loss. Zero means no smoothing.
-            Default: ``0.0``
-        """
-
         # Precompute class probabilities for each label
         cls_probs = torch.tensor(get_exponential_probabilities(num_classes, p)).float()
 
@@ -538,6 +529,42 @@ class BinomialCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     Vargas, Víctor Manuel, et al. (2023). Exponential loss regularisation for
     encouraging ordinal constraint to shotgun stocks quality assessment. Applied Soft
     Computing, 138, 110191.
+
+    Parameters
+    ----------
+    num_classes : int, default=5
+        Number of classes.
+    eta : float, default=1.0
+        Parameter that controls the influence of the regularisation.
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `C`. Otherwise, it is treated as if having all ones.
+    size_average : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged over
+        each loss element in the batch. Note that for some losses, there are
+        multiple elements per sample. If the field :attr:`size_average` is set to
+        ``False``, the losses are instead summed for each minibatch. Ignored when
+        reduce is ``False``. Default: ``True``
+    ignore_index : int, default=-100
+        Specifies a target value that is ignored and does not contribute to the
+        input gradient. When :attr:`size_average` is ``True``, the loss is averaged
+        over non-ignored targets.
+    reduce : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged or
+        summed over observations for each minibatch depending on :attr:`size_average`.
+        When :attr:`reduce` is ``False``, returns a loss per batch element instead
+        and ignores :attr:`size_average`. Default: ``True``
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed. Note: :attr:`size_average` and
+        :attr:`reduce` are in the process of being deprecated, and in the meantime,
+        specifying either of those two args will override :attr:`reduction`.
+        Default: ``'mean'``
+    label_smoothing : float, default=0.0
+        Controls the amount of label smoothing for the loss. Zero means no smoothing.
+        Default: ``0.0``
     """
 
     def __init__(
@@ -551,44 +578,6 @@ class BinomialCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         reduction: str = "mean",
         label_smoothing: float = 0.0,
     ):
-        """
-        Parameters
-        ----------
-        num_classes : int, default=5
-            Number of classes.
-        eta : float, default=1.0
-            Parameter that controls the influence of the regularisation.
-        weight : Optional[Tensor], default=None
-            A manual rescaling weight given to each class. If given, has to be a Tensor
-            of size `C`. Otherwise, it is treated as if having all ones.
-        size_average : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged over
-            each loss element in the batch. Note that for some losses, there are
-            multiple elements per sample. If the field :attr:`size_average` is set to
-            ``False``, the losses are instead summed for each minibatch. Ignored when
-            reduce is ``False``. Default: ``True``
-        ignore_index : int, default=-100
-            Specifies a target value that is ignored and does not contribute to the
-            input gradient. When :attr:`size_average` is ``True``, the loss is averaged
-            over non-ignored targets.
-        reduce : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged or
-            summed over observations for each minibatch depending on :attr:`size_average`.
-            When :attr:`reduce` is ``False``, returns a loss per batch element instead
-            and ignores :attr:`size_average`. Default: ``True``
-        reduction : str, default='mean'
-            Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-            ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-            the output will be divided by the number of elements in the output,
-            ``'sum'``: the output will be summed. Note: :attr:`size_average` and
-            :attr:`reduce` are in the process of being deprecated, and in the meantime,
-            specifying either of those two args will override :attr:`reduction`.
-            Default: ``'mean'``
-        label_smoothing : float, default=0.0
-            Controls the amount of label smoothing for the loss. Zero means no smoothing.
-            Default: ``0.0``
-        """
-
         # Precompute class probabilities for each label
         cls_probs = torch.tensor(get_binomial_probabilities(num_classes)).float()
 
@@ -608,6 +597,42 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     """Poisson unimodal regularised cross entropy loss
     Liu, Xiaofeng et al. (2020). Unimodal regularized neuron stick-breaking for
     ordinal classification. Neurocomputing, 388, 34-44.
+
+    Parameters
+    ----------
+    num_classes : int, default=5
+        Number of classes.
+    eta : float, default=1.0
+        Parameter that controls the influence of the regularisation.
+    weight : Optional[Tensor], default=None
+        A manual rescaling weight given to each class. If given, has to be a Tensor
+        of size `C`. Otherwise, it is treated as if having all ones.
+    size_average : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged over
+        each loss element in the batch. Note that for some losses, there are
+        multiple elements per sample. If the field :attr:`size_average` is set to
+        ``False``, the losses are instead summed for each minibatch. Ignored when
+        reduce is ``False``. Default: ``True``
+    ignore_index : int, default=-100
+        Specifies a target value that is ignored and does not contribute to the
+        input gradient. When :attr:`size_average` is ``True``, the loss is averaged
+        over non-ignored targets.
+    reduce : Optional[bool], default=None
+        Deprecated (see :attr:`reduction`). By default, the losses are averaged or
+        summed over observations for each minibatch depending on :attr:`size_average`.
+        When :attr:`reduce` is ``False``, returns a loss per batch element instead
+        and ignores :attr:`size_average`. Default: ``True``
+    reduction : str, default='mean'
+        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
+        the output will be divided by the number of elements in the output,
+        ``'sum'``: the output will be summed. Note: :attr:`size_average` and
+        :attr:`reduce` are in the process of being deprecated, and in the meantime,
+        specifying either of those two args will override :attr:`reduction`.
+        Default: ``'mean'``
+    label_smoothing : float, default=0.0
+        Controls the amount of label smoothing for the loss. Zero means no smoothing.
+        Default: ``0.0``
     """
 
     def __init__(
@@ -621,44 +646,6 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         reduction: str = "mean",
         label_smoothing: float = 0.0,
     ):
-        """
-        Parameters
-        ----------
-        num_classes : int, default=5
-            Number of classes.
-        eta : float, default=1.0
-            Parameter that controls the influence of the regularisation.
-        weight : Optional[Tensor], default=None
-            A manual rescaling weight given to each class. If given, has to be a Tensor
-            of size `C`. Otherwise, it is treated as if having all ones.
-        size_average : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged over
-            each loss element in the batch. Note that for some losses, there are
-            multiple elements per sample. If the field :attr:`size_average` is set to
-            ``False``, the losses are instead summed for each minibatch. Ignored when
-            reduce is ``False``. Default: ``True``
-        ignore_index : int, default=-100
-            Specifies a target value that is ignored and does not contribute to the
-            input gradient. When :attr:`size_average` is ``True``, the loss is averaged
-            over non-ignored targets.
-        reduce : Optional[bool], default=None
-            Deprecated (see :attr:`reduction`). By default, the losses are averaged or
-            summed over observations for each minibatch depending on :attr:`size_average`.
-            When :attr:`reduce` is ``False``, returns a loss per batch element instead
-            and ignores :attr:`size_average`. Default: ``True``
-        reduction : str, default='mean'
-            Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-            ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-            the output will be divided by the number of elements in the output,
-            ``'sum'``: the output will be summed. Note: :attr:`size_average` and
-            :attr:`reduce` are in the process of being deprecated, and in the meantime,
-            specifying either of those two args will override :attr:`reduction`.
-            Default: ``'mean'``
-        label_smoothing : float, default=0.0
-            Controls the amount of label smoothing for the loss. Zero means no smoothing.
-            Default: ``0.0``
-        """
-
         # Precompute class probabilities for each label
         cls_probs = torch.tensor(get_poisson_probabilities(num_classes)).float()
 
@@ -674,103 +661,103 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         )
 
 
-class WKLoss(torch.nn.Module):
-    """Weighted Kappa loss implementation.
-    de La Torre, J., Puig, D., & Valls, A. (2018).
-    Weighted kappa loss function for multi-class classification of ordinal data in deep
-    learning. Pattern Recognition Letters, 105, 144-154.
+# class WKLoss(torch.nn.Module):
+#     """Weighted Kappa loss implementation.
+#     de La Torre, J., Puig, D., & Valls, A. (2018).
+#     Weighted kappa loss function for multi-class classification of ordinal data in deep
+#     learning. Pattern Recognition Letters, 105, 144-154.
 
-    Parameters
-    ----------
-    num_classes : int
-        Number of classes.
-    penalization_type : str, default='quadratic'
-        The penalization type of WK loss to use (quadratic or linear).
-    weight : np.ndarray, default=None
-        The weight matrix that is applied to the cost matrix.
-    """
+#     Parameters
+#     ----------
+#     num_classes : int
+#         Number of classes.
+#     penalization_type : str, default='quadratic'
+#         The penalization type of WK loss to use (quadratic or linear).
+#     weight : np.ndarray, default=None
+#         The weight matrix that is applied to the cost matrix.
+#     """
 
-    cost_matrix: Tensor
+#     cost_matrix: Tensor
 
-    def __init__(
-        self,
-        num_classes: int,
-        penalization_type: str = "quadratic",
-        weight: Optional[Tensor] = None,
-    ) -> None:
-        super().__init__()
+#     def __init__(
+#         self,
+#         num_classes: int,
+#         penalization_type: str = "quadratic",
+#         weight: Optional[Tensor] = None,
+#     ) -> None:
+#         super().__init__()
 
-        # Create cost matrix and register as buffer
-        cost_matrix = np.reshape(
-            np.tile(range(num_classes), num_classes), (num_classes, num_classes)
-        )
+#         # Create cost matrix and register as buffer
+#         cost_matrix = np.reshape(
+#             np.tile(range(num_classes), num_classes), (num_classes, num_classes)
+#         )
 
-        if penalization_type == "quadratic":
-            cost_matrix = (
-                np.power(cost_matrix - np.transpose(cost_matrix), 2)
-                / (num_classes - 1) ** 2.0
-            )
-        else:
-            cost_matrix = (
-                np.abs(cost_matrix - np.transpose(cost_matrix))
-                / (num_classes - 1) ** 2.0
-            )
+#         if penalization_type == "quadratic":
+#             cost_matrix = (
+#                 np.power(cost_matrix - np.transpose(cost_matrix), 2)
+#                 / (num_classes - 1) ** 2.0
+#             )
+#         else:
+#             cost_matrix = (
+#                 np.abs(cost_matrix - np.transpose(cost_matrix))
+#                 / (num_classes - 1) ** 2.0
+#             )
 
-        self.weight = weight
-        if isinstance(weight, np.ndarray):
-            weight = torch.tensor(weight, dtype=torch.float)
+#         self.weight = weight
+#         if isinstance(weight, np.ndarray):
+#             weight = torch.tensor(weight, dtype=torch.float)
 
-        cost_matrix = torch.tensor(cost_matrix, dtype=torch.float)
+#         cost_matrix = torch.tensor(cost_matrix, dtype=torch.float)
 
-        if self.weight is not None:
-            tiled_weight = torch.tile(self.weight, (num_classes, 1)).T
-            cost_matrix = cost_matrix * tiled_weight
+#         if self.weight is not None:
+#             tiled_weight = torch.tile(self.weight, (num_classes, 1)).T
+#             cost_matrix = cost_matrix * tiled_weight
 
-        self.register_buffer("cost_matrix", cost_matrix)
+#         self.register_buffer("cost_matrix", cost_matrix)
 
-        self.num_classes = num_classes
+#         self.num_classes = num_classes
 
-    def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        """
-        Parameters
-        ----------
-        input : torch.Tensor
-            The input tensor.
-        target : torch.Tensor
-            The target tensor.
+#     def forward(self, input: Tensor, target: Tensor) -> Tensor:
+#         """
+#         Parameters
+#         ----------
+#         input : torch.Tensor
+#             The input tensor.
+#         target : torch.Tensor
+#             The target tensor.
 
-        Returns
-        -------
-        loss: Tensor
-            The WK loss.
-        """
+#         Returns
+#         -------
+#         loss: Tensor
+#             The WK loss.
+#         """
 
-        input = torch.nn.functional.softmax(input, dim=1)
+#         input = torch.nn.functional.softmax(input, dim=1)
 
-        costs = self.cost_matrix[target]
+#         costs = self.cost_matrix[target]
 
-        numerator = costs * input
-        numerator = torch.sum(numerator)
+#         numerator = costs * input
+#         numerator = torch.sum(numerator)
 
-        sum_prob = torch.sum(input, dim=0)
-        target_prob = one_hot(target, self.num_classes)
-        n = torch.sum(target_prob, dim=0)
+#         sum_prob = torch.sum(input, dim=0)
+#         target_prob = one_hot(target, self.num_classes)
+#         n = torch.sum(target_prob, dim=0)
 
-        a = torch.reshape(
-            torch.matmul(self.cost_matrix, torch.reshape(sum_prob, shape=[-1, 1])),
-            shape=[-1],
-        )
+#         a = torch.reshape(
+#             torch.matmul(self.cost_matrix, torch.reshape(sum_prob, shape=[-1, 1])),
+#             shape=[-1],
+#         )
 
-        b = torch.reshape(n / torch.sum(n), shape=[-1])
+#         b = torch.reshape(n / torch.sum(n), shape=[-1])
 
-        epsilon = 1e-9
+#         epsilon = 1e-9
 
-        denominator = a * b
-        denominator = torch.sum(denominator) + epsilon
+#         denominator = a * b
+#         denominator = torch.sum(denominator) + epsilon
 
-        result = numerator / denominator
+#         result = numerator / denominator
 
-        return result
+#         return result
 
 
 class MCELoss(torch.nn.modules.loss._WeightedLoss):
@@ -977,22 +964,20 @@ class OrdinalEcocDistanceLoss(torch.nn.Module):
     Barbero-Gómez, J., Gutiérrez, P. A., & Hervás-Martínez, C. (2022). Error-correcting
     output codes in the framework of deep ordinal classification. Neural Processing
     Letters, 1-32. Springer.
+
+    Parameters
+    ----------
+    num_classes : int
+        Number of classes
+    device : torch.device
+        Contains the device on which the model is running
+    class_weights : Optional[torch.Tensor]
+        Contains the weights for each class
     """
 
     def __init__(
         self, num_classes: int, device, class_weights: Optional[torch.Tensor] = None
     ) -> None:
-        """
-        Parameters
-        ----------
-        num_classes : int
-            Number of classes
-        device : torch.device
-            Contains the device on which the model is running
-        class_weights : Optional[torch.Tensor]
-            Contains the weights for each class
-        """
-
         super().__init__()
 
         self.target_class = np.ones((num_classes, num_classes - 1), dtype=np.float32)
@@ -1000,7 +985,6 @@ class OrdinalEcocDistanceLoss(torch.nn.Module):
         self.target_class = torch.tensor(
             self.target_class, dtype=torch.float32, device=device, requires_grad=False
         )
-        self.mse = 0
 
         self.class_weights = class_weights
 

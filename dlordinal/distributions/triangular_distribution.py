@@ -19,7 +19,8 @@ def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0)
         Verbosity level, by default 0.
     """
 
-    print(f"Computing triangular probabilities for {n=} and {alpha2=}...")
+    if verbose >= 1:
+        print(f"Computing triangular probabilities for {n=} and {alpha2=}...")
 
     def compute_alpha1(alpha2):
         c_minus = (1 - 2 * alpha2) * (2 * alpha2 - math.sqrt(2 * alpha2))

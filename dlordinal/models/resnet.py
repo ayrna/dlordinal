@@ -2,7 +2,6 @@ from typing import Callable, List, Optional, Type, Union
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from torch import Tensor, nn
 
 from ..layers import ResNetOrdinalFullyConnected, activation_function_by_name
@@ -245,7 +244,7 @@ class ResNet(ExperimentModel):
         groups: int = 1,
         width_per_group: int = 64,
         replace_stride_with_dilation: Optional[List[bool]] = None,
-        norm_layer: Optional[Callable[..., nn.Module]] = None
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
         """
         Parameters

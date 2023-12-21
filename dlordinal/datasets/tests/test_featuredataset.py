@@ -1,8 +1,6 @@
-import numpy as np
 import pandas as pd
 import pytest
 import torch
-from torch.utils.data import DataLoader
 
 from ..featuredataset import FeatureDataset
 

@@ -1,11 +1,8 @@
 from typing import List
 
 import numpy as np
-import pytest
 import torch
-import torch.nn as nn
 from torch import nn
-from torch.nn import functional as F
 
 from ..experiment_model import ExperimentModel
 
