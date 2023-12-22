@@ -6,7 +6,7 @@ from .losses import (
     GeneralTriangularCrossEntropyLoss,
     MCEAndWKLoss,
     MCELoss,
-    OrdinalEcocDistanceLoss,
+    OrdinalECOCDistanceLoss,
     PoissonCrossEntropyLoss,
     TriangularCrossEntropyLoss,
 )
@@ -21,7 +21,7 @@ __all__ = [
     "WKLoss",
     "MCELoss",
     "MCEAndWKLoss",
-    "OrdinalEcocDistanceLoss",
+    "OrdinalECOCDistanceLoss",
     "TriangularCrossEntropyLoss",
     "GeneralTriangularCrossEntropyLoss",
 ]
