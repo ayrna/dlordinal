@@ -154,7 +154,7 @@ class PytorchEstimator(BaseEstimator):
             elif isinstance(X, torch.Tensor):
                 print("Predicting ...")
                 self.model.eval()
-                return self._predict(X)
+                return self._predict_proba(X)
 
             else:
                 raise ValueError("X must be a DataLoader or a torch Tensor")
