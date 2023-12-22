@@ -6,28 +6,20 @@ from torch.nn import Module
 
 class CLM(Module):
     """
-    Implementation of the cumulative link model as a torch layer.
+    Implementation of the cumulative link model from :footcite:t:`vargas2020clm` as a torch layer.
     Different link functions can be used, including logit, probit and cloglog.
 
-    Vargas, V. M., Gutiérrez, P. A., & Hervás-Martínez, C. (2020).
-    Cumulative link models for deep ordinal classification. Neurocomputing, 401, 48-58.
+    Parameters
+    ----------
+    num_classes : int
+        The number of classes.
+    link_function : str
+        The link function to use. Can be ``'logit'``, ``'probit'`` or ``'cloglog'``.
+    min_distance : float, default=0.0
+       The minimum distance between thresholds
     """
 
     def __init__(self, num_classes, link_function, min_distance=0.0, **kwargs):
-        """
-        Parameters
-        ----------
-        input_shape : int
-            The number of input features.
-        num_classes : int
-            The number of classes.
-        link_function : str
-            The link function to use. Can be 'logit', 'probit' or 'cloglog'.
-        min_distance : float, default=0.0
-            If > 0, the minimum distance between thresholds is constrained using this
-            value.
-        """
-
         super().__init__()
         self.num_classes = num_classes
         self.link_function = link_function

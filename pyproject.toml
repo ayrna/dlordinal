@@ -29,6 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "pre-commit"]
+docs = ["sphinx", "sphinxcontrib-bibtex", "sphinx-rtd-theme"]
 
 [tool.setuptools.packages.find]
 include = ["dlordinal.*"]

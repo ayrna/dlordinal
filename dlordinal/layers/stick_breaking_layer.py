@@ -3,21 +3,17 @@ from torch.nn import Module
 
 
 class StickBreakingLayer(Module):
-    """Base class to implement the stick breaking layer.
-    X. Liu, F. Fan, L. Kong, Z. Diao, W. Xie, J. Lu, J. You, Unimodal
-    regularized neuron stick-breaking for ordinal classification, Neurocomputing
-    388 (7) (2020) 34–44, doi:10.1016/j.neucom.2020.01.025.
+    """Base class to implement the stick breaking layer from :footcite:t:`liu2020unimodal`.
+
+    Parameters
+    ----------
+    input_shape: int
+        Input shape
+    num_classes: int
+        Number of classes
     """
 
     def __init__(self, input_shape: int, num_classes: int) -> None:
-        """
-        Parameters
-        ----------
-        input_shape: int
-            Input shape
-        num_classes: int
-            Number of classes
-        """
         super().__init__()
         self.fcn1 = torch.nn.Linear(input_shape, num_classes)
         self.fcn2 = torch.nn.Sigmoid()

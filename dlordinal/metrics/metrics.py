@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.metrics import confusion_matrix
 from pathlib import Path
-from typing import Callable, Any
+from typing import Callable, Dict, Optional
 import json
 import os
 from sklearn.metrics import recall_score
@@ -19,7 +19,7 @@ def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
     Returns
     -------
-    ms: float
+    ms : float
             Minimum sensitivity.
 
     Examples
@@ -48,7 +48,7 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
 
     Returns
     -------
-    acc: float
+    acc : float
             1-off accuracy.
 
     Examples
@@ -88,7 +88,7 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
     Returns
     -------
-    gmec: float
+    gmec : float
             Geometric mean of the sensitivities of the extreme classes.
 
     Examples
@@ -104,9 +104,9 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def write_metrics_dict_to_file(
-    metrics: dict,
+    metrics: Dict[str, float],
     path_str: str,
-    filter_fn: Callable[[str, Any], bool] = lambda name, value: True,
+    filter_fn: Optional[Callable[[str, float], bool]] = None,
 ) -> None:
     """Writes a dictionary of metrics to a tabular file.
     The dictionary is filtered by the filter function.
@@ -115,15 +115,15 @@ def write_metrics_dict_to_file(
 
     Parameters
     ----------
-    metrics : dict { metric_name: metric_value }
-            Dictionary of metrics.
+    metrics : Dict[str, float]
+            Dictionary of metric names associated with their value.
     path_str : str
             Path to the file that will be saved.
             The directory of the file will be created if it does not exist.
             If the file exists, the metrics will be appended to the file in a new row.
-    filter_fn : Callable[[str, Any], bool]
+    filter_fn : Optional[Callable[[str, bool], bool]]
             Function that filters the metrics.
-            The function takes the name and the value of the metric and returns True if the metric should be saved.
+            The function takes the name and the value of the metric and returns ``True`` if the metric should be saved.
 
     Examples
     --------
@@ -144,6 +144,9 @@ def write_metrics_dict_to_file(
     0.5
     """
 
+    filter_fn: Callable[[str, bool], bool] = (
+        filter_fn if filter_fn is not None else lambda n, v: True
+    )
     path = Path(path_str)
     directory = path.parents[0]
     os.makedirs(directory, exist_ok=True)

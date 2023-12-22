@@ -1,25 +1,25 @@
 import numpy as np
 import pytest
 
-from ..beta_distribution import beta_dist, beta_inc, get_beta_probabilities
+from ..beta_distribution import beta_dist, beta_func, get_beta_probabilities
 
 
 def test_beta_inc():
     # Case 1: Positive Values
-    result = beta_inc(2.0, 3.0)
+    result = beta_func(2.0, 3.0)
     print(result)
     expected_result = 0.08333333333333333
     assert result == pytest.approx(expected_result, rel=1e-6)
 
     # Case 2: Avoid division by 0
     with pytest.raises(ValueError):
-        result = beta_inc(0.0, 0.0)
+        result = beta_func(0.0, 0.0)
 
 
 @pytest.mark.parametrize("a, b", [(-1.0, 2.0), (1.0, -2.0), (-1.0, -2.0)])
 def test_beta_inc_negative_values(a, b):
     with pytest.raises(ValueError):
-        beta_inc(a, b)
+        beta_func(a, b)
 
 
 def test_beta_distribution():

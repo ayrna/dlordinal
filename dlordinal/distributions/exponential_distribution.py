@@ -11,12 +11,12 @@ def get_exponential_probabilities(n, p=1.0, tau=1.0):
             Number of classes.
     p : float, default=1.0
             Exponent parameter.
-    tau: float, default=1.0
+    tau : float, default=1.0
             Scaling parameter.
 
     Returns
     -------
-    probs: 2d array-like
+    probs : 2d array-like
             Matrix of probabilities where each row represents the true class
             and each column the probability for class n.
 
