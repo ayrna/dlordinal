@@ -857,7 +857,7 @@ class OrdinalECOCDistanceLoss(torch.nn.Module):
     """
 
     target_class: Tensor
-    weights: Tensor
+    weights: Optional[Tensor]
 
     def __init__(self, num_classes: int, weights: Optional[Tensor] = None) -> None:
         super().__init__()
@@ -868,6 +868,8 @@ class OrdinalECOCDistanceLoss(torch.nn.Module):
         self.mse = torch.nn.MSELoss(reduction="sum" if weights is None else "none")
         if weights is not None:
             self.register_buffer("weights", weights)
+        else:
+            self.weights = None
 
     def forward(self, input, target):
         """

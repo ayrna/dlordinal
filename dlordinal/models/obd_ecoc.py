@@ -23,10 +23,13 @@ class OBDECOCModel(nn.Module):
         in ``torchvision`` have 1000 as the default
     """
 
+    num_classes: int
+
     def __init__(
         self, num_classes: int, base_classifier: nn.Module, base_n_outputs: int
     ) -> None:
         super().__init__()
+        self.num_classes = num_classes
         self.base_classifier = base_classifier
         self.obd_output = nn.Sequential(
             OrderedDict(
