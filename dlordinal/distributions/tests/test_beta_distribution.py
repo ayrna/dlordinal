@@ -84,11 +84,3 @@ def test_beta_probabilities():
 
     for r, e in zip(result, expected_result):
         assert r == pytest.approx(e, rel=1e-6)
-
-
-if __name__ == "__main__":
-    test_beta_inc()
-    test_beta_inc_negative_values()
-    test_beta_distribution()
-    test_beta_distribution_negative_x()
-    test_beta_probabilities()
