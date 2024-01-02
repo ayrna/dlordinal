@@ -66,5 +66,34 @@ def test_get_triangular_probabilities():
     np.testing.assert_allclose(result, expected_result, rtol=1e-6)
 
 
-if __name__ == "__main__":
-    test_get_triangular_probabilities()
+def test_get_triangular_probabilities_verbose():
+    # Case 1
+    n = 4
+    alpha2 = 0.01
+    verbose = 4
+
+    result = get_triangular_probabilities(n, alpha2, verbose)
+
+    expected_result = [
+        [
+            0.98845495,
+            0.01154505,
+            0.0,
+            0.0,
+        ],
+        [
+            0.01,
+            0.98,
+            0.01,
+            0.0,
+        ],
+        [
+            0.0,
+            0.01,
+            0.98,
+            0.01,
+        ],
+        [0.0, 0.0, 0.00396503, 0.99603496],
+    ]
+
+    np.testing.assert_allclose(result, expected_result, rtol=1e-6)
