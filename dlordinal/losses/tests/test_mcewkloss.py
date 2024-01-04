@@ -1,7 +1,8 @@
 import pytest
 import torch
 
-from ..losses import MCEAndWKLoss, MCELoss
+from ..mceloss import MCELoss
+from ..mcewkloss import MCEAndWKLoss
 from ..wkloss import WKLoss
 
 
