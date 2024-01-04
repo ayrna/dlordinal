@@ -1,6 +1,6 @@
 import torch
 
-from ..losses import BinomialCrossEntropyLoss
+from ..binomial_loss import BinomialCrossEntropyLoss
 
 
 def test_binomial_loss_creation():
@@ -29,8 +29,3 @@ def test_binomial_loss_output():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
-
-
-if __name__ == "__main__":
-    test_binomial_loss_creation()
-    test_binomial_loss_output()
