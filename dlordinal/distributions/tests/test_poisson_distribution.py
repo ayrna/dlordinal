@@ -57,7 +57,3 @@ def test_get_poisson_probabilities():
 
     # Individual probabilities should be within [0, 1]
     assert np.all(result >= 0) and np.all(result <= 1)
-
-
-if __name__ == "__main__":
-    test_get_poisson_probabilities()
