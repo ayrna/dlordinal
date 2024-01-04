@@ -1,6 +1,6 @@
 import torch
 
-from ..losses import BetaCrossEntropyLoss
+from ..beta_loss import BetaCrossEntropyLoss
 
 
 def test_beta_loss_creation():
@@ -28,8 +28,3 @@ def test_beta_loss_output():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
-
-
-if __name__ == "__main":
-    test_beta_loss_creation()
-    test_beta_loss_output()
