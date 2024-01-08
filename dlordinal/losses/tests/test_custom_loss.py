@@ -1,6 +1,6 @@
 import torch
 
-from ..losses import CustomTargetsCrossEntropyLoss
+from ..custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 
 # Auxiliar function to get a test class
@@ -30,8 +30,3 @@ def test_custom_loss_forward():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
-
-
-if __name__ == "__main__":
-    test_custom_loss_creation()
-    test_custom_loss_forward()

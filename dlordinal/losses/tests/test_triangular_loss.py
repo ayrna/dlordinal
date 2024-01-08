@@ -1,6 +1,6 @@
 import torch
 
-from ..losses import TriangularCrossEntropyLoss
+from ..triangular_loss import TriangularCrossEntropyLoss
 
 
 def test_triangular_loss_creation():
@@ -28,8 +28,3 @@ def test_triangular_loss_output():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
-
-
-if __name__ == "__main__":
-    test_triangular_loss_creation()
-    test_triangular_loss_output()

@@ -1,7 +1,7 @@
 import torch
 from torch import cuda
 
-from ..losses import OrdinalECOCDistanceLoss
+from ..ordinal_ecoc_distance_loss import OrdinalECOCDistanceLoss
 
 
 def test_ordinal_ecoc_distance_loss_creation():
@@ -35,8 +35,3 @@ def test_ordinal_ecoc_distance_loss_output():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
-
-
-if __name__ == "__main__":
-    test_ordinal_ecoc_distance_loss_creation()
-    test_ordinal_ecoc_distance_loss_output()

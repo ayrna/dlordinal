@@ -1,6 +1,6 @@
 import torch
 
-from ..losses import ExponentialRegularisedCrossEntropyLoss
+from ..exponential_loss import ExponentialRegularisedCrossEntropyLoss
 
 
 def test_exponential_loss_creation():
@@ -28,8 +28,3 @@ def test_exponential_loss_output():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
-
-
-if __name__ == "__main__":
-    test_exponential_loss_creation()
-    test_exponential_loss_output()
