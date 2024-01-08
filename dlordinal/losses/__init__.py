@@ -5,7 +5,7 @@ from .exponential_loss import ExponentialRegularisedCrossEntropyLoss
 from .general_triangular_loss import GeneralTriangularCrossEntropyLoss
 from .mceloss import MCELoss
 from .mcewkloss import MCEAndWKLoss
-from .ordinal_ecoc_distance_loss import OrdinalEcocDistanceLoss
+from .ordinal_ecoc_distance_loss import OrdinalECOCDistanceLoss
 from .poisson_loss import PoissonCrossEntropyLoss
 from .triangular_loss import TriangularCrossEntropyLoss
 from .wkloss import WKLoss
@@ -19,7 +19,7 @@ __all__ = [
     "WKLoss",
     "MCELoss",
     "MCEAndWKLoss",
-    "OrdinalEcocDistanceLoss",
+    "OrdinalECOCDistanceLoss",
     "TriangularCrossEntropyLoss",
     "GeneralTriangularCrossEntropyLoss",
 ]
