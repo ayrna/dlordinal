@@ -9,7 +9,7 @@
 project = "dlordinal"
 copyright = "2023, Francisco Bérchez, Víctor Vargas"
 author = "Francisco Bérchez, Víctor Vargas"
-release = "0.1.0"
+release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -19,6 +19,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.imgmath",
     "sphinxcontrib.bibtex",
+    "sphinx.ext.viewcode",
 ]
 
 templates_path = ["_templates"]
@@ -30,4 +31,4 @@ bibtex_bibfiles = ["references.bib"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ["_static"]
+# html_static_path = ["_static"]
