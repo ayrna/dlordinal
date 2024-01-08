@@ -8,7 +8,23 @@ from torch.utils.data import DataLoader
 
 class PytorchEstimator(BaseEstimator):
     """
-    PytorchEstimator is a class that implements a Pytorch estimator.
+    Wrapper around a Pytorch ``nn.Module`` implementing
+    the default estimator interface defined by ``scikit-learn``.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        A Pytorch model.
+    loss_fn : torch.nn.Module
+        A Pytorch loss function.
+    optimizer : torch.optim.Optimizer
+        A Pytorch optimizer.
+    device : torch.device
+        A Pytorch device.
+    max_iter : int
+        The maximum number of iterations.
+    \**kwargs : dict
+        Additional keyword arguments.
     """
 
     def __init__(
@@ -20,22 +36,6 @@ class PytorchEstimator(BaseEstimator):
         max_iter: int,
         **kwargs,
     ):
-        """
-        Parameters
-        ----------
-        model : torch.nn.Module
-            A Pytorch model.
-        loss_fn : torch.nn.Module
-            A Pytorch loss function.
-        optimizer : torch.optim.Optimizer
-            A Pytorch optimizer.
-        device : torch.device
-            A Pytorch device.
-        max_iter : int
-            The maximum number of iterations.
-        **kwargs : dict
-            Additional keyword arguments.
-        """
         self.kwargs = kwargs
         self.model = model
         self.loss_fn = loss_fn
@@ -55,8 +55,8 @@ class PytorchEstimator(BaseEstimator):
         ----------
         X : Union[DataLoader, torch.Tensor]
             The training data.
-        y : Optional[Union[torch.Tensor, None]], optional
-            The training labels, by default None
+        y : Optional[Union[torch.Tensor, None]], default=None
+            The training labels, only used if X is a ``torch.Tensor``.
         """
 
         # Check if X is a DataLoader
@@ -154,7 +154,7 @@ class PytorchEstimator(BaseEstimator):
             elif isinstance(X, torch.Tensor):
                 print("Predicting ...")
                 self.model.eval()
-                return self._predict(X)
+                return self._predict_proba(X)
 
             else:
                 raise ValueError("X must be a DataLoader or a torch Tensor")

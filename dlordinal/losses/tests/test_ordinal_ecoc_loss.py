@@ -1,21 +1,19 @@
 import torch
 from torch import cuda
 
-from ..losses import OrdinalEcocDistanceLoss
+from ..ordinal_ecoc_distance_loss import OrdinalECOCDistanceLoss
 
 
 def test_ordinal_ecoc_distance_loss_creation():
-    device = "cuda" if cuda.is_available() else "cpu"
-
-    loss = OrdinalEcocDistanceLoss(num_classes=6, device=device)
-    assert isinstance(loss, OrdinalEcocDistanceLoss)
+    loss = OrdinalECOCDistanceLoss(num_classes=6)
+    assert isinstance(loss, OrdinalECOCDistanceLoss)
 
 
 def test_ordinal_ecoc_distance_loss_output():
     device = "cuda" if cuda.is_available() else "cpu"
 
     num_classes = 6
-    loss = OrdinalEcocDistanceLoss(num_classes, device=device)
+    loss = OrdinalECOCDistanceLoss(num_classes).to(device)
 
     input_data = torch.tensor(
         [
@@ -37,8 +35,3 @@ def test_ordinal_ecoc_distance_loss_output():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
-
-
-if __name__ == "__main__":
-    test_ordinal_ecoc_distance_loss_creation()
-    test_ordinal_ecoc_distance_loss_output()

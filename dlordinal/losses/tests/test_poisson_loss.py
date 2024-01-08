@@ -1,6 +1,6 @@
 import torch
 
-from ..losses import PoissonCrossEntropyLoss
+from ..poisson_loss import PoissonCrossEntropyLoss
 
 
 def test_poisson_loss_creation():
@@ -28,8 +28,3 @@ def test_poisson_loss_output():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
-
-
-if __name__ == "__main__":
-    test_poisson_loss_creation()
-    test_poisson_loss_output()

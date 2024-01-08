@@ -6,36 +6,31 @@ import torch.nn as nn
 
 class WKLoss(nn.Module):
     """
-    Implements Weighted Kappa Loss. Weighted Kappa Loss was introduced in the
-    [Weighted kappa loss function for multi-class classification
-      of ordinal data in deep learning]
-      (https://www.sciencedirect.com/science/article/abs/pii/S0167865517301666).
-    Weighted Kappa is widely used in Ordinal Classification Problems. The loss
-    value lies in $[-\\infty, \\log 2]$, where $\\log 2$ means the random prediction
-    Usage: loss_fn = WKLoss(num_classes = NUM_CLASSES)
+    Implements Weighted Kappa Loss. Weighted Kappa Loss was introduced by :footcite:t:`deLaTorre2018kappa`.
+    Weighted Kappa is widely used in Ordinal Classification Problems. Its
+    value lies in :math:`[-\\infty, \\log 2]`, where :math:`\\log 2` means the random prediction
+
+    Parameters
+    ----------
+    num_classes : int
+        Number of unique classes in your dataset.
+    penalization_type : str, default='quadratic'
+        Weighting to be considered for calculating kappa
+        statistics. A valid value is one of ``['linear', 'quadratic']``.
+        Defaults to 'quadratic'.
+    epsilon : float, default=1e-10
+        Increment to avoid log zero,
+        so the loss will be :math:`\\log(1 - k + \\epsilon)`, where :math:`k` lies
+        in :math:`[-1, 1]`. Defaults to ``1e-10``.
     """
 
     def __init__(
         self,
         num_classes: int,
-        penalization_type: Optional[str] = "quadratic",
+        penalization_type: str = "quadratic",
         weight: Optional[torch.Tensor] = None,
         epsilon: Optional[float] = 1e-10,
     ):
-        """Creates a `WeightedKappaLoss` instance.
-        Args:
-          num_classes: Number of unique classes in your dataset.
-          penalization_type: (Optional) Weighting to be considered for calculating
-            kappa statistics. A valid value is one of
-            ['linear', 'quadratic']. Defaults to 'quadratic'.
-          epsilon: (Optional) increment to avoid log zero,
-            so the loss will be $ \\log(1 - k + \\epsilon) $, where $ k $ lies
-            in $ [-1, 1] $. Defaults to 1e-10.
-        Raises:
-          ValueError: If the value passed for `penalization_type` is invalid
-            i.e. not any one of ['linear', 'quadratic']
-        """
-
         super(WKLoss, self).__init__()
         self.num_classes = num_classes
         if penalization_type == "quadratic":
