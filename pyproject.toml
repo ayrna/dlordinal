@@ -6,8 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "dlordinal"
 version = "1.0.0"
 authors = [
-    {name = "Francisco Bérchez", email = "i72bemof@uco.es"},
-    {name = "Víctor Vargas", email = "vvargas@uco.es"},
+    {name = "Francisco Bérchez-Moreno", email = "i72bemof@uco.es"},
+    {name = "Víctor Manuel Vargas", email = "vvargas@uco.es"},
+    {name = "Javier Barbero-Gómez", email = "jbarbero@uco.es"},
 ]
 description = "Deep learning for ordinal classification"
 readme = "README.md"
