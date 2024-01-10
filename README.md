@@ -7,9 +7,8 @@ The library includes various modules such as loss functions, models, layers, met
 
 | Overview  |                                                                                                                                          |
 |-----------|------------------------------------------------------------------------------------------------------------------------------------------|
-| **CI/CD** | [![!codecov](https://img.shields.io/codecov/c/github/ayrna/dlordinal?label=codecov&logo=codecov)](https://codecov.io/gh/ayrna/dlordinal) [![!docs](https://readthedocs.org/projects/dlordinal/badge/?version=latest&style=flat)](https://dlordinal.readthedocs.io/en/latest/) |
+| **CI/CD** | [![!codecov](https://img.shields.io/codecov/c/github/ayrna/dlordinal?label=codecov&logo=codecov)](https://codecov.io/gh/ayrna/dlordinal) [![!docs](https://readthedocs.org/projects/dlordinal/badge/?version=latest&style=flat)](https://dlordinal.readthedocs.io/en/latest/)  [![!python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/) |
 | **Code**  | [![![binder]](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ayrna/dlordinal/main?filepath=tutorials) [![!black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Linter: Ruff](https://img.shields.io/badge/Linter-Ruff-brightgreen?style=flat-square)](https://github.com/charliermarsh/ruff)                     |
-
 
 ## ⚙️ Installation
 
@@ -19,11 +18,8 @@ You can install **dlordinal** directly from the GitHub repository using the foll
 
 Also, you can clone the repository and then install the library from the local repository folder:
 
-    cd ~
     git clone git@github.com:ayrna/dlordinal.git
-    pip install -e ~/dlordinal
-
-Using the -e argument with pip install, does an editable installation, allowing the changes obtained through the repository to be automatically applied to the installed version of the library.
+    pip install ./dlordinal
 
 ## Collaborating
 
