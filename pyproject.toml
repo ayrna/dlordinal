@@ -41,9 +41,6 @@ Documentation = "https://dlordinal.readthedocs.io/en/latest/"
 dev = ["pytest", "pre-commit"]
 docs = ["sphinx", "sphinxcontrib-bibtex", "sphinx-rtd-theme"]
 
-[tool.setuptools]
-package-dir = {"" = "src"}
-
 [tool.setuptools.packages.find]
 include = ["dlordinal.*"]
 exclude = ["*.tests"]
