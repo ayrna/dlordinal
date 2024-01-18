@@ -63,7 +63,7 @@ class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         label_smoothing: float = 0.0,
     ):
         # Precompute class probabilities for each label
-        r = get_general_triangular_probabilities(num_classes, alphas, verbose=3)
+        r = get_general_triangular_probabilities(num_classes, alphas, verbose=0)
         cls_probs = torch.tensor(r)
 
         super().__init__(
