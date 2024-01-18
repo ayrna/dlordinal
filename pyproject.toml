@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel", "toml", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -42,7 +42,7 @@ dev = ["pytest", "pre-commit"]
 docs = ["sphinx", "sphinxcontrib-bibtex", "sphinx-rtd-theme"]
 
 [tool.setuptools.packages.find]
-include = ["dlordinal.*"]
+include = ["dlordinal"]
 exclude = ["*.tests"]
 namespaces = false
 

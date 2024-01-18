@@ -12,10 +12,6 @@ on:
       - "dlordinal/**"
       - ".github/workflows/**"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   run-notebook-tutorials:
     runs-on: ubuntu-22.04
