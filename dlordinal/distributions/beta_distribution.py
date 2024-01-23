@@ -40,7 +40,7 @@ def beta_dist(x, p, q, a=1.0):
     q : float
             Second shape parameter (:math:`q > 0`).
     a : float, default=1.0
-            Scaling parameter.
+            Scaling parameter (:math: `a > 0`).
 
     Returns
     -------
@@ -59,22 +59,28 @@ def beta_dist(x, p, q, a=1.0):
 
 def get_beta_probabilities(n, p, q, a=1.0):
     """Get probabilities from a beta distribution :math:`B(p,q,a)` for ``n`` splits.
+    The :math:`[0,1]` interval is split into ``n`` intervals and the probability for
+    each interval is computed as the difference between the value of the distribution
+    function in the upper limit of the interval and the value of the distribution
+    function in the lower limit of the interval. Thus, the probability for class ``j``
+    is computed as :math:`B(p,q,a)(j/n) - B(p,q,a)((j-1)/n)`.
 
     Parameters
     ----------
     n : int
-            Number of classes.
+            Number of classes or splits.
     p : float
             First shape parameter (:math:`p > 0`).
     q : float
             Second shape parameter (:math:`q > 0`).
     a : float, default=1.0
-            Scaling parameter.
+            Scaling parameter (:math: `a > 0`).
 
     Returns
     -------
     probs: list
-            List of probabilities.
+            List of ``n`` elements that represent the probability associated with each
+            class or split.
     """
 
     intervals = get_intervals(n)
