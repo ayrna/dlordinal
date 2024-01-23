@@ -3,7 +3,8 @@ from scipy.stats import binom
 
 
 def get_binomial_probabilities(n):
-    """Get probabilities from binominal distribution for n classes.
+    """Get probabilities for the binomial distribution for ``n`` classes or splits.
+
 
     Parameters
     ----------

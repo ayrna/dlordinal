@@ -40,7 +40,7 @@ def beta_dist(x, p, q, a=1.0):
     q : float
             Second shape parameter (:math:`q > 0`).
     a : float, default=1.0
-            Scaling parameter (:math: `a > 0`).
+            Scaling parameter (:math:`a > 0`).
 
     Returns
     -------
@@ -74,14 +74,41 @@ def get_beta_probabilities(n, p, q, a=1.0):
     q : float
             Second shape parameter (:math:`q > 0`).
     a : float, default=1.0
-            Scaling parameter (:math: `a > 0`).
+            Scaling parameter (:math:`a > 0`).
+
+    Raises
+    ------
+    ValueError
+            If ``n`` is not a positive integer, if ``p`` is not positive, if ``q`` is
+            not positive or if ``a`` is not positive.
 
     Returns
     -------
     probs: list
             List of ``n`` elements that represent the probability associated with each
             class or split.
+
+    Example
+    -------
+    >>> from dlordinal.distributions import get_beta_probabilities
+    >>> get_beta_probabilities(3, 2, 3)
+    [0.4074074080000002, 0.48148148059259255, 0.11111111140740726]
+    >>> get_beta_probabilities(5, 5, 1, a=2)
+    [1.0240000307200007e-07, 0.00010475520052121611, 0.005941759979320316,
+      0.10132756401484902, 0.8926258084053067]
     """
+
+    if n <= 0 or not isinstance(n, int):
+        raise ValueError(f"{n=} must be a positive integer")
+
+    if p <= 0:
+        raise ValueError(f"{p=} must be positive")
+
+    if q <= 0:
+        raise ValueError(f"{q=} must be positive")
+
+    if a <= 0:
+        raise ValueError(f"{a=} must be positive")
 
     intervals = get_intervals(n)
     probs = []
