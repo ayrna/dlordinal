@@ -57,17 +57,17 @@ def beta_dist(x, p, q, a=1.0):
     return (x ** (a * p)) / (p * beta_func(p, q)) * hyp2f1(p, 1 - q, p + 1, x**a)
 
 
-def get_beta_probabilities(n, p, q, a=1.0):
-    """Get probabilities from a beta distribution :math:`B(p,q,a)` for ``n`` splits.
-    The :math:`[0,1]` interval is split into ``n`` intervals and the probability for
+def get_beta_probabilities(J, p, q, a=1.0):
+    """Get probabilities from a beta distribution :math:`B(p,q,a)` for ``J`` splits.
+    The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the distribution
     function in the upper limit of the interval and the value of the distribution
     function in the lower limit of the interval. Thus, the probability for class ``j``
-    is computed as :math:`B(p,q,a)(j/n) - B(p,q,a)((j-1)/n)`.
+    is computed as :math:`B(p,q,a)(j/J) - B(p,q,a)((j-1)/J)`.
 
     Parameters
     ----------
-    n : int
+    J : int
             Number of classes or splits.
     p : float
             First shape parameter (:math:`p > 0`).
@@ -79,13 +79,13 @@ def get_beta_probabilities(n, p, q, a=1.0):
     Raises
     ------
     ValueError
-            If ``n`` is not a positive integer, if ``p`` is not positive, if ``q`` is
+            If ``J`` is not a positive integer, if ``p`` is not positive, if ``q`` is
             not positive or if ``a`` is not positive.
 
     Returns
     -------
     probs: list
-            List of ``n`` elements that represent the probability associated with each
+            List of ``J`` elements that represent the probability associated with each
             class or split.
 
     Example
@@ -98,8 +98,8 @@ def get_beta_probabilities(n, p, q, a=1.0):
       0.10132756401484902, 0.8926258084053067]
     """
 
-    if n <= 0 or not isinstance(n, int):
-        raise ValueError(f"{n=} must be a positive integer")
+    if J < 2 or not isinstance(J, int):
+        raise ValueError(f"{J=} must be a positive integer greater than 1")
 
     if p <= 0:
         raise ValueError(f"{p=} must be positive")
@@ -110,7 +110,7 @@ def get_beta_probabilities(n, p, q, a=1.0):
     if a <= 0:
         raise ValueError(f"{a=} must be positive")
 
-    intervals = get_intervals(n)
+    intervals = get_intervals(J)
     probs = []
 
     # Compute probability for each interval (class) using the distribution function.

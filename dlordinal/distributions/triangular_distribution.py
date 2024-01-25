@@ -5,13 +5,13 @@ import numpy as np
 from .utils import get_intervals, triangular_cdf
 
 
-def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0):
+def get_triangular_probabilities(J: int, alpha2: float = 0.01, verbose: int = 0):
     """
     Get the probabilities for the triangular distribution.
 
     Parameters
     ----------
-    n : int
+    J : int
         Number of classes.
     alpha2 : float, optional
         Alpha2 value, by default 0.01.
@@ -20,7 +20,7 @@ def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0)
     """
 
     if verbose >= 1:
-        print(f"Computing triangular probabilities for {n=} and {alpha2=}...")
+        print(f"Computing triangular probabilities for {J=} and {alpha2=}...")
 
     def compute_alpha1(alpha2):
         c_minus = (1 - 2 * alpha2) * (2 * alpha2 - math.sqrt(2 * alpha2))
@@ -29,7 +29,7 @@ def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0)
 
     def compute_alpha3(alpha2):
         c1 = (
-            pow((n - 1) / n, 2)
+            pow((J - 1) / J, 2)
             * (1 - 2 * alpha2)
             * (math.sqrt(2 * alpha2) * (-1 + math.sqrt(2 * alpha2)))
         )
@@ -87,31 +87,31 @@ def get_triangular_probabilities(n: int, alpha2: float = 0.01, verbose: int = 0)
         return num / den
 
     if verbose >= 3:
-        print(f"{b1(n)=}, {m1(n)=}, {aJ(n)=}, {nJ(n)=}, {aj(n, 1)=}, {bj(n,1)=}")
-        for i in range(1, n + 1):
-            print(f"{i=}  {aj(n, i)=}, {bj(n,i)=}")
+        print(f"{b1(J)=}, {m1(J)=}, {aJ(J)=}, {nJ(J)=}, {aj(J, 1)=}, {bj(J,1)=}")
+        for i in range(1, J + 1):
+            print(f"{i=}  {aj(J, i)=}, {bj(J,i)=}")
 
-    intervals = get_intervals(n)
+    intervals = get_intervals(J)
     probs = []
 
     # Compute probability for each interval (class) using the distribution function.
-    for j in range(1, n + 1):
+    for j in range(1, J + 1):
         j_probs = []
         if j == 1:
             a = 0.0
-            b = b1(n)
+            b = b1(J)
             c = 0.0
-        elif j == n:
-            a = aJ(n)
+        elif j == J:
+            a = aJ(J)
             b = 1.0
             c = 1.0
         else:
-            a = aj(n, j)
-            b = bj(n, j)
+            a = aj(J, j)
+            b = bj(J, j)
             c = (a + b) / 2.0
 
         if verbose >= 1:
-            print(f"Class: {j}, {a=}, {b=}, {c=}, (j-1)/J={(j-1)/n}, (j/J)={j/n}")
+            print(f"Class: {j}, {a=}, {b=}, {c=}, (j-1)/J={(j-1)/J}, (j/J)={j/J}")
 
         for interval in intervals:
             j_probs.append(

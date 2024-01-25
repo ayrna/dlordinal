@@ -7,13 +7,13 @@ from sympy.core.add import Add
 from .utils import get_intervals, triangular_cdf
 
 
-def get_general_triangular_params(n: int, alphas: np.ndarray, verbose: int = 0):
+def get_general_triangular_params(J: int, alphas: np.ndarray, verbose: int = 0):
     """
     Get the parameters for the general triangular distribution.
 
     Parameters
     ----------
-    n : int
+    J : int
         Number of classes.
     alphas : np.ndarray
         Array of alphas.
@@ -21,7 +21,7 @@ def get_general_triangular_params(n: int, alphas: np.ndarray, verbose: int = 0):
         Verbosity level, by default 0.
     """
     alphas = np.array(alphas)
-    if not isinstance(alphas, np.ndarray) or alphas.shape != (2 * n,):
+    if not isinstance(alphas, np.ndarray) or alphas.shape != (2 * J,):
         raise ValueError(
             f"alphas must be a numpy array of shape (2 * n,), but got {alphas.shape}"
         )
@@ -92,25 +92,25 @@ def get_general_triangular_params(n: int, alphas: np.ndarray, verbose: int = 0):
         raise ValueError(f"Could not find solution for {j=}, {alpha2j_1=}, {alpha2j=}")
 
     if verbose >= 3:
-        print(f"{abc1(n,alphas[2])=}, {abcJ(n,alphas[2*n-1])=}")
-        for i in range(2, n):
-            print(f"{i=}  {abcj(n,i,alphas[2*i-1],alphas[2*i])}")
+        print(f"{abc1(J,alphas[2])=}, {abcJ(J,alphas[2*J-1])=}")
+        for i in range(2, J):
+            print(f"{i=}  {abcj(J,i,alphas[2*i-1],alphas[2*i])}")
 
     params = []
 
     # Compute params for each interval (class)
-    for j in range(1, n + 1):
+    for j in range(1, J + 1):
         j_params = {}
         if j == 1:
-            a, b, c = abc1(n, alphas[2])
+            a, b, c = abc1(J, alphas[2])
             j_params["alpha2j_1"] = 0
             j_params["alpha2j"] = alphas[2]
-        elif j == n:
-            a, b, c = abcJ(n, alphas[2 * n - 1])
-            j_params["alpha2j_1"] = alphas[2 * n - 1]
+        elif j == J:
+            a, b, c = abcJ(J, alphas[2 * J - 1])
+            j_params["alpha2j_1"] = alphas[2 * J - 1]
             j_params["alpha2j"] = 0
         else:
-            a, b, c = abcj(n, j, alphas[2 * j - 1], alphas[2 * j])
+            a, b, c = abcj(J, j, alphas[2 * j - 1], alphas[2 * j])
             j_params["alpha2j_1"] = alphas[2 * j - 1]
             j_params["alpha2j"] = alphas[2 * j]
 
