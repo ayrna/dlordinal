@@ -3,7 +3,8 @@ from scipy.stats import binom
 
 
 def get_binomial_probabilities(J):
-    """Get probabilities for the binomial distribution for ``J`` classes or splits.
+    """Get probabilities for the binomial distribution for ``J`` classes or splits
+    using the approach described in :footcite:t:`liu2020unimodal`.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the binomial
     probability function for the interval boundaries. The probability for the first
