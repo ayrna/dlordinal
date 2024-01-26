@@ -23,7 +23,7 @@ class PytorchEstimator(BaseEstimator):
         A Pytorch device.
     max_iter : int
         The maximum number of iterations.
-    \**kwargs : dict
+    **kwargs : dict
         Additional keyword arguments.
     """
 
