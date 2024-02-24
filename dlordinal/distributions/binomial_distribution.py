@@ -2,22 +2,39 @@ import numpy as np
 from scipy.stats import binom
 
 
-def get_binomial_probabilities(n):
-    """Get probabilities from binominal distribution for n classes.
+def get_binomial_probabilities(J):
+    """Get probabilities for the binomial distribution for ``J`` classes or splits
+    using the approach described in :footcite:t:`liu2020unimodal`.
+    The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
+    each interval is computed as the difference between the value of the binomial
+    probability function for the interval boundaries. The probability for the first
+    interval is computed as the value of the binomial probability function for the first
+    interval boundary.
+
+    The binomial distributions employed are denoted as :math:`\\text{b}(k, n-1, p)` where
+    :math:`k` is given by the order of the class for which the probability is computed,
+    and :math:`p` is given by :math:`0.1 + (0.9-0.1) / (n-1) * j` where :math:`j` is
+    is the order of the target class.
 
     Parameters
     ----------
-    n : int
-            Number of classes.
+    J : int
+            Number of classes or splits.
+
+    Raises
+    ------
+    ValueError
+            If ``J`` is not a positive integer greater than 1.
 
     Returns
     -------
-    probs : 2d array-like
+    probs : 2d array-like of shape (J, J)
             Matrix of probabilities where each row represents the true class
-            and each column the probability for class n.
+            and each column the probability for class ``j``.
 
     Example
     -------
+    >>> from dlordinal.distributions import get_binominal_probabilities
     >>> get_binominal_probabilities(5)
     array([[6.561e-01, 2.916e-01, 4.860e-02, 3.600e-03, 1.000e-04],
             [2.401e-01, 4.116e-01, 2.646e-01, 7.560e-02, 8.100e-03],
@@ -25,6 +42,9 @@ def get_binomial_probabilities(n):
             [8.100e-03, 7.560e-02, 2.646e-01, 4.116e-01, 2.401e-01],
             [1.000e-04, 3.600e-03, 4.860e-02, 2.916e-01, 6.561e-01]])
     """
+
+    if J < 2 or not isinstance(J, int):
+        raise ValueError(f"{J=} must be a positive integer greater than 1")
 
     params = {}
 
@@ -39,7 +59,7 @@ def get_binomial_probabilities(n):
 
     probs = []
 
-    for true_class in range(0, n):
-        probs.append(binom.pmf(np.arange(0, n), n - 1, params[str(n)][true_class]))
+    for true_class in range(0, J):
+        probs.append(binom.pmf(np.arange(0, J), J - 1, params[str(J)][true_class]))
 
     return np.array(probs)
