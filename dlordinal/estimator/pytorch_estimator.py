@@ -134,30 +134,29 @@ class PytorchEstimator(BaseEstimator):
         if X is None:
             raise ValueError("X must be a DataLoader or a torch Tensor")
 
+        # check if X is a DataLoader
+        if isinstance(X, DataLoader):
+            print("Predicting ...")
+            self.model.eval()
+            predictions = []
+
+            # Iterate over batches
+            for _, (X_batch, _) in enumerate(X):
+                predictions_batch = self._predict_proba(X_batch)
+                predictions.append(predictions_batch)
+
+            # Concatenate predictions
+            predictions = torch.cat(predictions)
+            return predictions
+
+        # check if X is a torch Tensor
+        elif isinstance(X, torch.Tensor):
+            print("Predicting ...")
+            self.model.eval()
+            return self._predict_proba(X)
+
         else:
-            # check if X is a DataLoader
-            if isinstance(X, DataLoader):
-                print("Predicting ...")
-                self.model.eval()
-                predictions = []
-
-                # Iterate over batches
-                for _, (X_batch, _) in enumerate(X):
-                    predictions_batch = self._predict_proba(X_batch)
-                    predictions.append(predictions_batch)
-
-                # Concatenate predictions
-                predictions = torch.cat(predictions)
-                return predictions
-
-            # check if X is a torch Tensor
-            elif isinstance(X, torch.Tensor):
-                print("Predicting ...")
-                self.model.eval()
-                return self._predict_proba(X)
-
-            else:
-                raise ValueError("X must be a DataLoader or a torch Tensor")
+            raise ValueError("X must be a DataLoader or a torch Tensor")
 
     def _predict_proba(self, X):
         """
@@ -169,10 +168,11 @@ class PytorchEstimator(BaseEstimator):
         X : torch.Tensor
             The data to predict.
         """
-        X = X.to(self.device)
-        pred = self.model(X)
-        probabilities = F.softmax(pred, dim=1)
-        return probabilities
+        with torch.no_grad():
+            X = X.to(self.device)
+            pred = self.model(X)
+            probabilities = F.softmax(pred, dim=1)
+            return probabilities
 
     def predict(self, X: Union[DataLoader, torch.Tensor]):
         """
