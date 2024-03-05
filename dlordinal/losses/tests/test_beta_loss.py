@@ -5,7 +5,7 @@ from ..beta_loss import BetaCrossEntropyLoss
 
 
 def test_beta_loss_creation():
-    loss = BetaCrossEntropyLoss()
+    loss = BetaCrossEntropyLoss(num_classes=5)
     assert isinstance(loss, BetaCrossEntropyLoss)
 
 

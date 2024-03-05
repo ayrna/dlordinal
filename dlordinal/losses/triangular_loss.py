@@ -12,7 +12,7 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
     Parameters
     ----------
-    num_classes : int, default=5
+    num_classes : int
         Number of classes.
     alpha2 : float, default=0.05
         Parameter that controls the influence of the regularisation.
@@ -51,7 +51,7 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
     def __init__(
         self,
-        num_classes: int = 5,
+        num_classes: int,
         alpha2: float = 0.05,
         eta: float = 1.0,
         weight: Optional[Tensor] = None,

@@ -5,7 +5,7 @@ from ..poisson_loss import PoissonCrossEntropyLoss
 
 
 def test_poisson_loss_creation():
-    loss = PoissonCrossEntropyLoss()
+    loss = PoissonCrossEntropyLoss(num_classes=5)
     assert isinstance(loss, PoissonCrossEntropyLoss)
 
 

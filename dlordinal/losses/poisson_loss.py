@@ -12,7 +12,7 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
     Parameters
     ----------
-    num_classes : int, default=5
+    num_classes : int
         Number of classes.
     eta : float, default=1.0
         Parameter that controls the influence of the regularisation.
@@ -49,7 +49,7 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
     def __init__(
         self,
-        num_classes: int = 5,
+        num_classes: int,
         eta: float = 1.0,
         weight: Optional[Tensor] = None,
         size_average=None,
