@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-from ..distributions import get_binomial_probabilities
+from ..distributions import get_binomial_softlabels
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 
@@ -59,7 +59,7 @@ class BinomialCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         label_smoothing: float = 0.0,
     ):
         # Precompute class probabilities for each label
-        cls_probs = torch.tensor(get_binomial_probabilities(num_classes)).float()
+        cls_probs = torch.tensor(get_binomial_softlabels(num_classes)).float()
 
         super().__init__(
             cls_probs=cls_probs,

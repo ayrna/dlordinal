@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from ..binomial_distribution import get_binomial_probabilities
+from ..binomial_distribution import get_binomial_softlabels
 
 
 def test_get_binomial_probabilities():
     # Case 1: n = 5
     n = 5
-    result = get_binomial_probabilities(n)
+    result = get_binomial_softlabels(n)
     expected_result = np.array(
         [
             [6.561e-01, 2.916e-01, 4.860e-02, 3.600e-03, 1.000e-04],
