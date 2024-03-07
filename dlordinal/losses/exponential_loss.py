@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-from ..distributions import get_exponential_probabilities
+from ..distributions import get_exponential_softlabels
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 
@@ -63,7 +63,7 @@ class ExponentialRegularisedCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         label_smoothing: float = 0.0,
     ):
         # Precompute class probabilities for each label
-        cls_probs = torch.tensor(get_exponential_probabilities(num_classes, p)).float()
+        cls_probs = torch.tensor(get_exponential_softlabels(num_classes, p)).float()
 
         super().__init__(
             cls_probs=cls_probs,

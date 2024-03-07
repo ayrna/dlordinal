@@ -158,7 +158,7 @@ def get_general_triangular_params(J: int, alphas: np.ndarray, verbose: int = 0):
     return params
 
 
-def get_general_triangular_probabilities(J: int, alphas: np.ndarray, verbose: int = 0):
+def get_general_triangular_softlabels(J: int, alphas: np.ndarray, verbose: int = 0):
     """Get probabilities from triangular distributions for ``J`` classes or splits.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the triangular
@@ -213,8 +213,8 @@ def get_general_triangular_probabilities(J: int, alphas: np.ndarray, verbose: in
 
     if not isinstance(alphas, np.ndarray) or alphas.shape != (2 * J,):
         raise ValueError(
-            f"alphas must be a numpy array or list of shape (2 * n,),"
-            f" but got {{alphas.shape}}"
+            "alphas must be a numpy array or list of shape (2 * n,),"
+            " but got {alphas.shape}"
         )
 
     intervals = get_intervals(J)

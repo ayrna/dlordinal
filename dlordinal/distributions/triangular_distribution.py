@@ -5,7 +5,7 @@ import numpy as np
 from .utils import get_intervals, triangular_cdf
 
 
-def get_triangular_probabilities(J: int, alpha2: float = 0.01, verbose: int = 0):
+def get_triangular_softlabels(J: int, alpha2: float = 0.01, verbose: int = 0):
     """
     Get probabilities from triangular distributions for ``J`` classes or splits using
     the approach described in :footcite:t:`vargas2023softlabelling`.
@@ -46,7 +46,7 @@ def get_triangular_probabilities(J: int, alpha2: float = 0.01, verbose: int = 0)
             1 & \\text{if } j = J
         \\end{cases}
 
-    The value of :math:`\\alpha_1`, that represents the error for the first class, 
+    The value of :math:`\\alpha_1`, that represents the error for the first class,
     is computed as follows:
 
     .. math::
@@ -57,7 +57,7 @@ def get_triangular_probabilities(J: int, alpha2: float = 0.01, verbose: int = 0)
     is computed as follows:
 
     .. math::
-        \\alpha_3 = \\left(\\frac{1 - 
+        \\alpha_3 = \\left(\\frac{1 -
         \\sqrt{1 - 4\\left(\\frac{J - 1}{J}\\right)^2(1 - 2\\alpha_2)(\\sqrt{2\\alpha_2}
           (-1 + \\sqrt{2\\alpha_2}))}}{2}\\right)^2
 

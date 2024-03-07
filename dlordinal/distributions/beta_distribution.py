@@ -57,7 +57,7 @@ def beta_dist(x, p, q, a=1.0):
     return (x ** (a * p)) / (p * beta_func(p, q)) * hyp2f1(p, 1 - q, p + 1, x**a)
 
 
-def get_beta_probabilities(J, p, q, a=1.0):
+def get_beta_softlabels(J, p, q, a=1.0):
     """Get probabilities from a beta distribution :math:`B(p,q,a)` for ``J`` splits.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the distribution

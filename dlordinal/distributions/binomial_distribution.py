@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import binom
 
 
-def get_binomial_probabilities(J):
+def get_binomial_softlabels(J):
     """Get probabilities for the binomial distribution for ``J`` classes or splits
     using the approach described in :footcite:t:`liu2020unimodal`.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for

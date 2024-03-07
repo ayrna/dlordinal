@@ -2,7 +2,7 @@ import numpy as np
 from scipy.special import softmax
 
 
-def get_exponential_probabilities(J, p=1.0, tau=1.0):
+def get_exponential_softlabels(J, p=1.0, tau=1.0):
     """Get probabilities from exponential distribution for ``J`` classes or splits as
     described in :footcite:t:`liu2020unimodal` and :footcite:t:`vargas2023exponential`.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
