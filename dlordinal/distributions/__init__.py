@@ -6,14 +6,14 @@ from .general_triangular_distribution import (
     get_general_triangular_probabilities,
 )
 from .poisson_distribution import get_poisson_probabilities
-from .triangular_distribution import get_triangular_probabilities
+from .triangular_distribution import get_triangular_softlabels
 
 __all__ = [
     "get_beta_softlabels",
     "get_exponential_softlabels",
     "get_binomial_softlabels",
     "get_poisson_probabilities",
-    "get_triangular_probabilities",
+    "get_triangular_softlabels",
     "get_general_triangular_params",
     "get_general_triangular_probabilities",
 ]
