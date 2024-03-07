@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
-from ..exponential_distribution import get_exponential_probabilities
+from ..exponential_distribution import get_exponential_softlabels
 
 
 def test_get_exponential_probabilities():
     n = 5
     p = 1.0
     tau = 1.0
-    result = get_exponential_probabilities(n, p, tau)
+    result = get_exponential_softlabels(n, p, tau)
     expected_result = np.array(
         [
             [0.63640865, 0.23412166, 0.08612854, 0.03168492, 0.01165623],
@@ -35,7 +35,7 @@ def test_exponential_probabilities():
     n = 4
     p = 2.0
     tau = 1.0
-    result = get_exponential_probabilities(n, p, tau)
+    result = get_exponential_softlabels(n, p, tau)
     expected_result = np.array(
         [
             [7.21334965e-01, 2.65364304e-01, 1.32117107e-02, 8.90198068e-05],
