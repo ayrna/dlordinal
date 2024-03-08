@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from ..fgnet import FGNet
+from dlordinal.datasets import FGNet
 
 TMP_DIR = "./tmp_test_dir_fgnet"
 
