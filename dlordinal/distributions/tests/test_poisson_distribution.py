@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ..poisson_distribution import get_poisson_probabilities
+from dlordinal.distributions import get_poisson_probabilities
 
 
 def test_get_poisson_probabilities():

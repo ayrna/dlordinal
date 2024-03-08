@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ..binomial_distribution import get_binomial_softlabels
+from dlordinal.distributions import get_binomial_softlabels
 
 
 def test_get_binomial_probabilities():
