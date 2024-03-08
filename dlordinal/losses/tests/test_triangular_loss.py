@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from ..triangular_loss import TriangularCrossEntropyLoss
+from dlordinal.losses import TriangularCrossEntropyLoss
 
 
 def test_triangular_loss_creation():
