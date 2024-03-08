@@ -1,6 +1,6 @@
 import torch
 
-from ..clm import CLM
+from dlordinal.layers import CLM
 
 
 def test_clm_creation():
