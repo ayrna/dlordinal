@@ -4,7 +4,7 @@ from torch import cuda
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision import models
 
-from ..pytorch_estimator import PytorchEstimator
+from dlordinal.estimator import PytorchEstimator
 
 
 def test_pytorch_estimator_creation():
