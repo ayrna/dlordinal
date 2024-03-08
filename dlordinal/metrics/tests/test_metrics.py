@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from sklearn.metrics import recall_score
 
-from ..metrics import (
+from dlordinal.metrics import (
     accuracy_off1,
     gmsec,
     minimum_sensitivity,
