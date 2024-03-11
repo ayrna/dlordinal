@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ..exponential_distribution import get_exponential_softlabels
+from dlordinal.distributions import get_exponential_softlabels
 
 
 def test_get_exponential_probabilities():

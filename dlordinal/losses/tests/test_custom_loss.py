@@ -1,6 +1,6 @@
 import torch
 
-from ..custom_targets_loss import CustomTargetsCrossEntropyLoss
+from dlordinal.losses import CustomTargetsCrossEntropyLoss
 
 
 # Auxiliar function to get a test class

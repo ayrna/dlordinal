@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from ..binomial_loss import BinomialCrossEntropyLoss
+from dlordinal.losses import BinomialCrossEntropyLoss
 
 
 def test_binomial_loss_creation():

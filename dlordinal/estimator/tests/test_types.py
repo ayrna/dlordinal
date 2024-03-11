@@ -2,7 +2,7 @@ import pytest
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from ..pytorch_estimator import PytorchEstimator
+from dlordinal.estimator import PytorchEstimator
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import torch
 
-from ..stick_breaking_layer import StickBreakingLayer
+from dlordinal.layers import StickBreakingLayer
 
 
 def test_stick_breaking_layer_creation():

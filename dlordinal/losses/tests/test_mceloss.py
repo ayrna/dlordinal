@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from ..mceloss import MCELoss
+from dlordinal.losses import MCELoss
 
 
 def test_mceloss_creation():

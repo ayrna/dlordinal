@@ -3,7 +3,7 @@ import re
 import numpy as np
 import pytest
 
-from ..general_triangular_distribution import get_general_triangular_params
+from dlordinal.distributions import get_general_triangular_params
 
 
 def test_get_general_triangular_params():

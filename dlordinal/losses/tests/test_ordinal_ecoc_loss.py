@@ -1,7 +1,7 @@
 import torch
 from torch import cuda
 
-from ..ordinal_ecoc_distance_loss import OrdinalECOCDistanceLoss
+from dlordinal.losses import OrdinalECOCDistanceLoss
 
 
 def test_ordinal_ecoc_distance_loss_creation():
