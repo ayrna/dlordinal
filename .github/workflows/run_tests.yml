@@ -60,6 +60,7 @@ jobs:
     - name: Run tests for codecov
       run: |
         pytest --cov=dlordinal --cov-report=xml
+      timeout-minutes: 20
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
