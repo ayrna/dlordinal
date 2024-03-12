@@ -1,5 +1,6 @@
 from typing import Optional, Union
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from sklearn.base import BaseEstimator
@@ -146,7 +147,7 @@ class PytorchEstimator(BaseEstimator):
                 predictions.append(predictions_batch)
 
             # Concatenate predictions
-            predictions = torch.cat(predictions)
+            predictions = np.concatenate(predictions)
             return predictions
 
         # check if X is a torch Tensor
@@ -172,7 +173,7 @@ class PytorchEstimator(BaseEstimator):
             X = X.to(self.device)
             pred = self.model(X)
             probabilities = F.softmax(pred, dim=1)
-            return probabilities
+            return probabilities.cpu().numpy()
 
     def predict(self, X: Union[DataLoader, torch.Tensor]):
         """
@@ -184,4 +185,4 @@ class PytorchEstimator(BaseEstimator):
             The data to predict.
         """
         pred = self.predict_proba(X)
-        return torch.argmax(pred, dim=1)
+        return np.argmax(pred, axis=1)
