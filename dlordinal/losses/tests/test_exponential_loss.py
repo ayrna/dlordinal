@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from ..exponential_loss import ExponentialRegularisedCrossEntropyLoss
+from dlordinal.losses import ExponentialRegularisedCrossEntropyLoss
 
 
 def test_exponential_loss_creation():

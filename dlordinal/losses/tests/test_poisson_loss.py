@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from ..poisson_loss import PoissonCrossEntropyLoss
+from dlordinal.losses import PoissonCrossEntropyLoss
 
 
 def test_poisson_loss_creation():

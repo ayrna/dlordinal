@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 import torch
 
-from ..featuredataset import FeatureDataset
+from dlordinal.datasets import FeatureDataset
 
 
 @pytest.fixture
