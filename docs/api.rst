@@ -14,6 +14,7 @@ This is the API for the **dlordinal** package.
    datasets
    distributions
    layers
+   dropout
    models
    metrics
    sklearn_integration
