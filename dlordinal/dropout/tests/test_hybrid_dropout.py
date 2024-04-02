@@ -1,38 +1,58 @@
 import pytest
 import torch
+from torch import nn
 
-from dlordinal.dropout import HybridDropout
+from dlordinal.dropout import HybridDropout, HybridDropoutContainer
+
+
+class ModelWithHybridDropout(nn.Module):
+    def __init__(self):
+        super(ModelWithHybridDropout, self).__init__()
+        self.fc1 = nn.Linear(10, 256)
+        self.hybrid_dropout = HybridDropout()
+        self.fc2 = nn.Linear(256, 5)  # Cambiar de 5 a la dimensión correcta
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = self.hybrid_dropout(x)
+        x = self.fc2(x)
+        return x
 
 
 @pytest.fixture
-def batch_targets():
-    return torch.randn(10)  # Assuming batch size is 10
+def model():
+    return ModelWithHybridDropout()
 
 
-def test_constructor_valid_arguments(batch_targets):
-    dropout = HybridDropout(batch_targets=batch_targets, p=0.5, beta=0.1)
-    assert dropout.p == 0.5
-    assert dropout.beta == 0.1
-    assert torch.all(torch.eq(dropout.batch_targets, batch_targets))
+@pytest.fixture
+def hybrid_dropout_container(model):
+    return HybridDropoutContainer(model)
 
 
-def test_constructor_invalid_p_value(batch_targets):
+def test_set_targets(hybrid_dropout_container):
+    targets = torch.tensor([1, 2, 3, 4, 5])
+    hybrid_dropout_container.set_targets(targets)
+    hybrid_dropout = None
+    for module in hybrid_dropout_container.model.modules():
+        if isinstance(module, HybridDropout):
+            hybrid_dropout = module
+            break
+    assert hybrid_dropout is not None
+    assert torch.all(torch.eq(hybrid_dropout.batch_targets, targets))
+
+
+def test_forward_with_targets():
+    model = ModelWithHybridDropout()
+    inputs = torch.randn(32, 10)
+    targets = torch.randn(32)
+    model.hybrid_dropout.batch_targets = targets
+    outputs = model(inputs)
+
+    # The number of classes is 5
+    assert outputs.shape == (32, 5)
+
+
+def test_forward_without_targets(hybrid_dropout_container):
+    inputs = torch.randn(32, 10)
     with pytest.raises(ValueError):
-        HybridDropout(batch_targets=batch_targets, p=1.5)
-
-
-def test_forward_shape(batch_targets):
-    dropout = HybridDropout(batch_targets=batch_targets)
-    input_tensor = torch.randn(5, 10)  # Assuming input tensor shape is (5, 10)
-    output = dropout(input_tensor)
-    assert output.shape == input_tensor.shape
-
-
-# def test_forward_non_training(batch_targets):
-#     dropout = HybridDropout(batch_targets=batch_targets)
-#     input_tensor = torch.randn(5, 10)  # Assuming input tensor shape is (5, 10)
-#     output = dropout(input_tensor)
-#     assert torch.all(torch.eq(output, input_tensor))
-
-
-# You can add more tests as needed
+        hybrid_dropout_container(inputs)
