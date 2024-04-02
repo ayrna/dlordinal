@@ -17,6 +17,19 @@ class HybridDropoutContainer(nn.Module):
         self.model = model
 
     def forward(self, x):
+        """Forward pass of the HybridDropoutContainer module.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor
+        """
+
         return self.model(x)
 
     def set_targets(self, targets):
@@ -26,13 +39,13 @@ class HybridDropoutContainer(nn.Module):
         Parameters
         ----------
         targets : torch.Tensor
-            Targets of the batch.
+            Targets of the batch
 
         Example
         -------
         >>> from dlordinal.dropout import HybridDropoutContainer
         >>> from torchvision.models import resnet18
-        >>> model = models.resnet18(weights='IMAGENET1K_V1')
+        >>> model = resnet18(weights='IMAGENET1K_V1')
         >>> model.fc = nn.Sequential(
                 nn.Linear(model.fc.in_features, 256),
                 HybridDropout(),
@@ -42,6 +55,7 @@ class HybridDropoutContainer(nn.Module):
         >>> model = HybridDropoutContainer(model)
         >>> model.set_targets(targets)
         """
+
         for module in self.model.modules():
             if isinstance(module, HybridDropout):
                 module.batch_targets = targets
@@ -51,7 +65,7 @@ class HybridDropout(nn.Module):
     """Implements a Hybrid dropout methodology by :footcite:t:`berchez2024fusion` which
     mix a standard dropout with an ordinal dropout. The ordinal dropout is based on the
     correlation between the activation values of the of the neuron and the target labels
-    of the dataset
+    of the dataset.
 
     To use this module, you must wrap your model with the ``HybridDropoutContainer``
     module
@@ -79,13 +93,32 @@ class HybridDropout(nn.Module):
             raise ValueError("p must be a probability")
 
     def forward(self, x):
+        """Forward pass of the HybridDropout module just during training. The module
+        calculates the correlation between the activation values of the neuron and the
+        target labels of the dataset. Then, it calculates the ordinal probabilities
+        and the mask for the dropout.
+
+        Parameters
+        ----------
+            x : torch.Tensor
+                Input tensor
+
+        Raises
+        ------
+        ValueError
+            If there are NaN values in the tensor.
+        ValueError
+            If the batch targets have not been set.
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor
+        """
         if self.training:
             if torch.isnan(x).any():
                 raise ValueError("Nan values in the tensor")
 
-            # targets = torch.reshape(
-            #     self.batch_targets, (1, self.batch_targets.shape[0])
-            # )
             if hasattr(self, "batch_targets"):
                 targets = self.batch_targets
             else:
@@ -93,7 +126,6 @@ class HybridDropout(nn.Module):
                     "Batch targets have not been set. Use"
                     " HybridDropoutContainer.set_targets() to set the targets."
                 )
-            print(targets)
 
             targets = torch.reshape(targets, (1, targets.shape[0]))
 
