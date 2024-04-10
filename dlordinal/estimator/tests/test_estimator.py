@@ -4,7 +4,7 @@ from torch import cuda
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision import models
 
-from ..pytorch_estimator import PytorchEstimator
+from dlordinal.estimator import PytorchEstimator
 
 
 def test_pytorch_estimator_creation():
@@ -49,7 +49,7 @@ def calculate_loss(model, loss_fn, dataloader):
     return total_loss / len(dataloader.dataset)
 
 
-def test_pytorch_estimator_fit():
+def test_pytorch_estimator_fit_Dataloader():
     input_size = 10
     num_classes = 3
     batch_size = 16
@@ -79,6 +79,30 @@ def test_pytorch_estimator_fit():
 
     assert not np.isnan(final_loss)
     assert not np.isinf(final_loss)
+
+
+def test_pytorch_estimator_fit_Tensor():
+    input_size = 10
+    num_classes = 3
+
+    # Create an example of training data
+    X = torch.randn(100, input_size)
+
+    # Create an example of training labels
+    y = torch.randint(0, num_classes, (100,))
+    print("shape of y")
+    print(y.shape)
+
+    model = torch.nn.Linear(input_size, num_classes)
+    loss_fn = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    device = torch.device("cpu")
+    max_iter = 5
+
+    estimator = PytorchEstimator(model, loss_fn, optimizer, device, max_iter)
+
+    # Verifies the training flow
+    estimator.fit(X=X, y=y)
 
 
 def test_pytorch_estimator_predict():
@@ -115,10 +139,10 @@ def test_pytorch_estimator_predict():
     assert len(predictions) == 50
 
     # Check that the predictions are values in the range [0, num_classes)
-    assert torch.all(predictions >= 0) and torch.all(predictions < num_classes)
+    assert np.all(predictions >= 0) and np.all(predictions < num_classes)
 
 
-def test_pytorch_estimator_predict_proba():
+def test_pytorch_estimator_predict_proba_dataloader():
     input_size = 10
     num_classes = 5
     batch_size = 16
@@ -151,14 +175,46 @@ def test_pytorch_estimator_predict_proba():
     assert probabilities.shape == (50, 5)
 
     # Verify that the sum of the probabilities for each example is close to 1.
-    assert torch.allclose(probabilities.sum(dim=1), torch.ones(50), atol=1e-5)
+    assert np.allclose(np.sum(probabilities, axis=1), np.ones(50), atol=1e-5)
 
     # Verify that the probabilities are in the range [0, 1]
-    assert torch.all(probabilities >= 0) and torch.all(probabilities <= 1)
+    assert np.all(probabilities >= 0) and np.all(probabilities <= 1)
 
 
-if __name__ == "__main__":
-    test_pytorch_estimator_creation()
-    test_pytorch_estimator_fit()
-    test_pytorch_estimator_predict()
-    test_pytorch_estimator_predict_proba()
+def test_pytorch_estimator_predict_proba_tensor():
+    input_size = 10
+    num_classes = 3
+
+    # Create an example of training data
+    X = torch.randn(100, input_size)
+
+    # Create an example of training labels
+    y = torch.randint(0, num_classes, (100,))
+    print("shape of y")
+    print(y.shape)
+
+    model = torch.nn.Linear(input_size, num_classes)
+    loss_fn = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    device = torch.device("cpu")
+    max_iter = 5
+
+    estimator = PytorchEstimator(model, loss_fn, optimizer, device, max_iter)
+
+    # Verifies the training flow
+    estimator.fit(X=X, y=y)
+
+    # minimum, maximum, (number of samples, number of features)
+    y_test = torch.randint(0, num_classes, (50, 10))
+    y_test = y_test.float()
+
+    probabilities = estimator.predict_proba(y_test)
+
+    # Check that the probabilities have the correct shape
+    assert probabilities.shape == (50, 3)
+
+    # Check that the sum of the probabilities for each example is close to 1.
+    assert np.allclose(np.sum(probabilities, axis=1), np.ones(50), atol=1e-5)
+
+    # Check that the probabilities are in the range [0, 1]
+    assert np.all(probabilities >= 0) and np.all(probabilities <= 1)

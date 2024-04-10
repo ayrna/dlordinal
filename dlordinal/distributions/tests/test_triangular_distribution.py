@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ..triangular_distribution import get_triangular_probabilities
+from dlordinal.distributions import get_triangular_softlabels
 
 
 def test_get_triangular_probabilities():
@@ -10,7 +10,7 @@ def test_get_triangular_probabilities():
     alpha2 = 0.01
     verbose = 0
 
-    result = get_triangular_probabilities(n, alpha2, verbose)
+    result = get_triangular_softlabels(n, alpha2, verbose)
 
     expected_result = [
         [0.98845494, 0.01154505, 0.0, 0.0, 0.0],
@@ -39,7 +39,7 @@ def test_get_triangular_probabilities():
     alpha2 = 0.01
     verbose = 0
 
-    result = get_triangular_probabilities(n, alpha2, verbose)
+    result = get_triangular_softlabels(n, alpha2, verbose)
 
     expected_result = [
         [0.98845494, 0.01154505, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -66,5 +66,34 @@ def test_get_triangular_probabilities():
     np.testing.assert_allclose(result, expected_result, rtol=1e-6)
 
 
-if __name__ == "__main__":
-    test_get_triangular_probabilities()
+def test_get_triangular_probabilities_verbose():
+    # Case 1
+    n = 4
+    alpha2 = 0.01
+    verbose = 4
+
+    result = get_triangular_softlabels(n, alpha2, verbose)
+
+    expected_result = [
+        [
+            0.98845495,
+            0.01154505,
+            0.0,
+            0.0,
+        ],
+        [
+            0.01,
+            0.98,
+            0.01,
+            0.0,
+        ],
+        [
+            0.0,
+            0.01,
+            0.98,
+            0.01,
+        ],
+        [0.0, 0.0, 0.00396503, 0.99603496],
+    ]
+
+    np.testing.assert_allclose(result, expected_result, rtol=1e-6)

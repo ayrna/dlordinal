@@ -1,5 +1,6 @@
 from typing import Optional, Union
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from sklearn.base import BaseEstimator
@@ -23,7 +24,7 @@ class PytorchEstimator(BaseEstimator):
         A Pytorch device.
     max_iter : int
         The maximum number of iterations.
-    \**kwargs : dict
+    **kwargs : dict
         Additional keyword arguments.
     """
 
@@ -134,30 +135,29 @@ class PytorchEstimator(BaseEstimator):
         if X is None:
             raise ValueError("X must be a DataLoader or a torch Tensor")
 
+        # check if X is a DataLoader
+        if isinstance(X, DataLoader):
+            print("Predicting ...")
+            self.model.eval()
+            predictions = []
+
+            # Iterate over batches
+            for _, (X_batch, _) in enumerate(X):
+                predictions_batch = self._predict_proba(X_batch)
+                predictions.append(predictions_batch)
+
+            # Concatenate predictions
+            predictions = np.concatenate(predictions)
+            return predictions
+
+        # check if X is a torch Tensor
+        elif isinstance(X, torch.Tensor):
+            print("Predicting ...")
+            self.model.eval()
+            return self._predict_proba(X)
+
         else:
-            # check if X is a DataLoader
-            if isinstance(X, DataLoader):
-                print("Predicting ...")
-                self.model.eval()
-                predictions = []
-
-                # Iterate over batches
-                for _, (X_batch, _) in enumerate(X):
-                    predictions_batch = self._predict_proba(X_batch)
-                    predictions.append(predictions_batch)
-
-                # Concatenate predictions
-                predictions = torch.cat(predictions)
-                return predictions
-
-            # check if X is a torch Tensor
-            elif isinstance(X, torch.Tensor):
-                print("Predicting ...")
-                self.model.eval()
-                return self._predict(X)
-
-            else:
-                raise ValueError("X must be a DataLoader or a torch Tensor")
+            raise ValueError("X must be a DataLoader or a torch Tensor")
 
     def _predict_proba(self, X):
         """
@@ -169,10 +169,11 @@ class PytorchEstimator(BaseEstimator):
         X : torch.Tensor
             The data to predict.
         """
-        X = X.to(self.device)
-        pred = self.model(X)
-        probabilities = F.softmax(pred, dim=1)
-        return probabilities
+        with torch.no_grad():
+            X = X.to(self.device)
+            pred = self.model(X)
+            probabilities = F.softmax(pred, dim=1)
+            return probabilities.cpu().numpy()
 
     def predict(self, X: Union[DataLoader, torch.Tensor]):
         """
@@ -184,4 +185,4 @@ class PytorchEstimator(BaseEstimator):
             The data to predict.
         """
         pred = self.predict_proba(X)
-        return torch.argmax(pred, dim=1)
+        return np.argmax(pred, axis=1)

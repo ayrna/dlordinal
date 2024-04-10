@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
-from ..exponential_distribution import get_exponential_probabilities
+from dlordinal.distributions import get_exponential_softlabels
 
 
 def test_get_exponential_probabilities():
     n = 5
     p = 1.0
     tau = 1.0
-    result = get_exponential_probabilities(n, p, tau)
+    result = get_exponential_softlabels(n, p, tau)
     expected_result = np.array(
         [
             [0.63640865, 0.23412166, 0.08612854, 0.03168492, 0.01165623],
@@ -31,5 +31,19 @@ def test_get_exponential_probabilities():
     assert np.all(result >= 0) and np.all(result <= 1)
 
 
-if __name__ == "__main__":
-    test_get_exponential_probabilities()
+def test_exponential_probabilities():
+    n = 4
+    p = 2.0
+    tau = 1.0
+    result = get_exponential_softlabels(n, p, tau)
+    expected_result = np.array(
+        [
+            [7.21334965e-01, 2.65364304e-01, 1.32117107e-02, 8.90198068e-05],
+            [2.09728513e-01, 5.70101206e-01, 2.09728513e-01, 1.04417678e-02],
+            [1.04417678e-02, 2.09728513e-01, 5.70101206e-01, 2.09728513e-01],
+            [8.90198068e-05, 1.32117107e-02, 2.65364304e-01, 7.21334965e-01],
+        ]
+    )
+
+    # compare result with expected_result
+    np.testing.assert_allclose(result, expected_result, rtol=1e-6)

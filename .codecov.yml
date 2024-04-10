@@ -27,3 +27,4 @@ ignore:
   - ".binder/"
   - "build_tools/"
   - "tutorials/"
+  - "docs/"

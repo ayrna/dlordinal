@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from ..wkloss import WKLoss
+from dlordinal.losses import WKLoss
 
 
 def test_wkloss_creation():

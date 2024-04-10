@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from ..beta_distribution import beta_dist, beta_func, get_beta_probabilities
+from dlordinal.distributions import get_beta_softlabels
+from dlordinal.distributions.beta_distribution import beta_dist, beta_func
 
 
 def test_beta_inc():
@@ -57,7 +58,7 @@ def test_beta_probabilities():
     p = 2.0
     q = 3.0
     a = 1.0
-    result = get_beta_probabilities(n, p, q, a)
+    result = get_beta_softlabels(n, p, q, a)
     expected_result = [
         0.1808000009216,
         0.34399999942400017,
@@ -74,7 +75,7 @@ def test_beta_probabilities():
     p = 1.5
     q = 2.5
     a = 2.0
-    result = get_beta_probabilities(n, p, q, a)
+    result = get_beta_softlabels(n, p, q, a)
     expected_result = [
         0.05010107325697135,
         0.283232260076362,
@@ -84,11 +85,3 @@ def test_beta_probabilities():
 
     for r, e in zip(result, expected_result):
         assert r == pytest.approx(e, rel=1e-6)
-
-
-if __name__ == "__main__":
-    test_beta_inc()
-    test_beta_inc_negative_values()
-    test_beta_distribution()
-    test_beta_distribution_negative_x()
-    test_beta_probabilities()

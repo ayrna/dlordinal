@@ -1,8 +1,7 @@
 import pytest
 import torch
 
-from ..losses import MCEAndWKLoss, MCELoss
-from ..wkloss import WKLoss
+from dlordinal.losses import MCEAndWKLoss, MCELoss, WKLoss
 
 
 def test_mcewkloss_creation():

@@ -1,7 +1,9 @@
+import re
+
 import numpy as np
 import pytest
 
-from ..general_triangular_distribution import get_general_triangular_params
+from dlordinal.distributions import get_general_triangular_params
 
 
 def test_get_general_triangular_params():
@@ -94,5 +96,22 @@ def test_get_general_triangular_params():
         assert params[i] == pytest.approx(expected_params[i], rel=1e-6)
 
 
-if __name__ == "__main__":
-    test_get_general_triangular_params()
+def test_wrong_alpha_shape():
+    n = 3
+    alphas = np.array(
+        [
+            0.05518804,
+            0.14000449,
+            0.0586412,
+            0.03018706,
+            0.15230179,
+            0.03493327,
+            0.19175102,
+        ]
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape("alphas must be a numpy array of shape (2 * n,), but got (7,)"),
+    ):
+        get_general_triangular_params(n, alphas)
