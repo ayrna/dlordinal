@@ -13,6 +13,7 @@ The library includes various modules such as loss functions, models, layers, met
 
 ## Table of Contents
 - [⚙️ Installation](#%EF%B8%8F-installation)
+- [📖 Documentation](#-documentation)
 - [Collaborating](#collaborating)
     - [Guidelines for code contributions](#guidelines-for-code-contributions)
 
@@ -22,20 +23,28 @@ The library includes various modules such as loss functions, models, layers, met
 
 The easiest way to install `dlordinal` is via `pip`:
 
-    pip install dlordinal
-
+```bash
+pip install dlordinal
+```
 
 ## 📖 Documentation
 
 `Sphinx` is a documentation generator tool that is commonly used in the Python ecosystem. It allows developers to write documentation in a markup language called reStructuredText (reST) and generates HTML, PDF, and other formats from it. Sphinx provides a powerful and flexible way to document code, making it easier for developers to create comprehensive and user-friendly documentation for their projects.
 
-To document `dlordinal`, it is necessary to clone the repository and access the `docs/` directory:
+To document `dlordinal`, it is necessary to install all documentation dependencies:
+
+```bash
+pip install -e '.[docs]'
+```
+
+Then access the `docs/` directory:
 
 ```bash
 docs/
 ↳ api.rst
 ↳ conf.py
 ↳ distributions.rst
+↳ references.bib
 ↳ ...
 ```
 
@@ -62,6 +71,33 @@ This is the API for the **dlordinal** package.
    sklearn_integration
    ***NEW_MODULE***
 ```
+
+Afterwards, a new file in `.rst` format associated to the new module must be created, specifying the automatic inclusion of documentation from the module files containing a docstring, and the inclusion of the bibliography if it exists within any of them.
+
+```bash
+docs/
+↳ api.rst
+↳ conf.py
+↳ distributions.rst
+↳ new_module.rst
+↳ references.bib
+↳ ...
+```
+
+```plaintext
+.. _new_module:
+
+New Module
+==========
+
+.. automodule:: dlordinal.new_module
+    :members:
+
+.. footbibliography::
+
+```
+
+Finally, if any new bibliographic citations have been added, they should be included in the `references.bib` file.
 
 ## Collaborating
 
