@@ -10,6 +10,12 @@ The library includes various modules such as loss functions, models, layers, met
 | **CI/CD** | [![!codecov](https://img.shields.io/codecov/c/github/ayrna/dlordinal?label=codecov&logo=codecov)](https://codecov.io/gh/ayrna/dlordinal) |
 | **Code**  | [![![binder]](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ayrna/dlordinal/main?filepath=tutorials) [![!black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Linter: Ruff](https://img.shields.io/badge/Linter-Ruff-brightgreen?style=flat-square)](https://github.com/charliermarsh/ruff)                     |
 
+
+## Table of Contents
+- [⚙️ Installation](#%EF%B8%8F-installation)
+- [Collaborating](#collaborating)
+    - [Guidelines for code contributions](#guidelines-for-code-contributions)
+
 ## ⚙️ Installation
 
 You can install **dlordinal** directly from the GitHub repository using the following command in your terminal:
@@ -23,6 +29,44 @@ Also, you can clone the repository and then install the library from the local r
     pip install -e ~/dlordinal
 
 Using the -e argument with pip install, does an editable installation, allowing the changes obtained through the repository to be automatically applied to the installed version of the library.
+
+## 📖 Documentation
+
+`Sphinx` is a documentation generator tool that is commonly used in the Python ecosystem. It allows developers to write documentation in a markup language called reStructuredText (reST) and generates HTML, PDF, and other formats from it. Sphinx provides a powerful and flexible way to document code, making it easier for developers to create comprehensive and user-friendly documentation for their projects.
+
+To document `dlordinal`, it is necessary to clone the repository and access the `docs/` directory:
+
+```bash
+docs/
+↳ api.rst
+↳ conf.py
+↳ distributions.rst
+↳ ...
+```
+
+If a new module is created in the software project, the `api.rst` file must be modified to include the name of the new module:
+
+```plaintext
+.. _api:
+
+=============
+API Reference
+=============
+
+This is the API for the **dlordinal** package.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   losses
+   datasets
+   distributions
+   layers
+   metrics
+   sklearn_integration
+   ***NEW_MODULE***
+```
 
 ## Collaborating
 
