@@ -1,0 +1,30 @@
+name: 🚀 Feature request
+description: Suggest a new feature or idea for dlordinal.
+title: "[ENH] "
+labels: ["enhancement"]
+
+body:
+- type: textarea
+  attributes:
+    label: Describe the feature or idea you want to propose
+    description: >
+      Please provide a clear and concise description of the feature or idea you are proposing.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Describe your proposed solution
+    description: >
+      Please provide a description of your desired outcome, ideally aligning with the existing toolbox design, classes, and methods.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Describe alternatives you have considered, if relevant
+    description: >
+      Please provide any alternative solutions or features you have considered.
+- type: textarea
+  attributes:
+    label: Additional context
+    description: >
+      Add any other context about the problem here.

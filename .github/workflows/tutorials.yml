@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "tutorials/**"
+      - "dlordinal/**"
+      - ".github/workflows/**"
   pull_request:
     branches:
       - main

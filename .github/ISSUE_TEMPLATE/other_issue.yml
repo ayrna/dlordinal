@@ -1,0 +1,20 @@
+name: ❗ Other issue
+description: Other issue not covered by the other templates.
+title: "[MNT] "
+
+body:
+- type: markdown
+  attributes:
+    value: >
+      If the issue is maintenance related, please start the title with [MNT] and add the maintenance tag, or use any other tag available in the repository.
+- type: textarea
+  attributes:
+    label: Describe the issue
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Suggest a potential alternative/fix
+- type: textarea
+  attributes:
+    label: Additional context
