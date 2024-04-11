@@ -1,0 +1,72 @@
+name: 🐛 Bug report
+description: Report a bug currently impacting dlordinal.
+title: "[BUG] "
+labels: ["bug"]
+
+body:
+- type: markdown
+  attributes:
+    value: >
+      #### Please make sure the bug hasn't already been addressed by searching
+      through the open and closed [issues](https://github.com/ayrna/dlordinal/issues).
+- type: textarea
+  attributes:
+    label: Describe the bug
+    description: >
+      A clear and concise description of what the bug is.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Steps/Code to reproduce the bug
+    description: |
+      Please include a [minimal reproducible example](https://stackoverflow.com/help/mcve) so users can reproduce the error when running it. Be as succinct as possible, and do not depend on external data files.
+
+      i.e. If you were reporting a bug dowloanding, extracting and using FGNet dataset, you could provide the following code snippet:
+
+      ```python
+      from dlordinal.datasets import FGNet
+
+      fgnet = FGNet(root='./datasets/fgnet', download=True, process_data=True)
+
+      train_data = ImageFolder(
+          root="./datasets/fgnet/FGNET/train", transform=Compose([ToTensor()])
+      )
+      test_data = ImageFolder(
+          root="./datasets/fgnet/FGNET/test", transform=Compose([ToTensor()])
+      )
+      ```
+
+
+    placeholder: |
+      ```python
+      Your code here. Placing the code snippet here will help us reproduce the bug and identify the issue.
+      ```
+- type: textarea
+  attributes:
+    label: Expected results
+    description: >
+      Please provide a clear and concise description of the expected results or paste the correct output if available.
+    placeholder: >
+      For example: train_data and test_data should be loaded without any errors.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Actual results
+    description: |
+      Please provide a clear and concise description of the actual seen results or paste the incorrect output if available.
+
+      If you observe an error, please paste the error message including the full traceback of the exception.
+
+      ```python-traceback
+      Traceback (most recent call last):
+        File "example.py", line 1, in <module>
+          raise ValueError("This is an example error.")
+      ```
+    placeholder: |
+      ```python-traceback
+      Place traceback error here if applicable. If your issue has no traceback, please describe the observed output without formatting.
+      ```
+  validations:
+    required: true
