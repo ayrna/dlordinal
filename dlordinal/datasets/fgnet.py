@@ -17,6 +17,25 @@ from tqdm import tqdm
 class FGNet(VisionDataset):
     """
     Base class for FGNet dataset.
+
+    Parameters
+    ----------
+    root : str or Path
+        Root directory of dataset
+    download : bool, optional
+        If True, downloads the dataset from the internet and puts it in root directory.
+        If dataset is already downloaded, it is not downloaded again.
+    process_data : bool, optional
+        If True, processes the dataset and puts it in root directory.
+        If dataset is already processed, it is not processed again.
+    target_size : tuple, optional
+        Size of the images after resizing.
+    categories : list, optional
+        List of categories to be used.
+    test_size : float, optional
+        Size of the test set.
+    validation_size : float, optional
+        Size of the validation set.
     """
 
     def __init__(
@@ -29,29 +48,6 @@ class FGNet(VisionDataset):
         test_size: float = 0.2,
         validation_size: float = 0.15,
     ) -> None:
-        """
-        FGNet dataset.
-
-        Parameters
-        ----------
-        root : str or Path
-            Root directory of dataset
-        download : bool, optional
-            If True, downloads the dataset from the internet and puts it in root directory.
-            If dataset is already downloaded, it is not downloaded again.
-        process_data : bool, optional
-            If True, processes the dataset and puts it in root directory.
-            If dataset is already processed, it is not processed again.
-        target_size : tuple, optional
-            Size of the images after resizing.
-        categories : list, optional
-            List of categories to be used.
-        test_size : float, optional
-            Size of the test set.
-        validation_size : float, optional
-            Size of the validation set.
-        """
-
         super(FGNet, self).__init__(root)
 
         self.root = Path(self.root)

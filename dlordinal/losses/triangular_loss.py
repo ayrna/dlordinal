@@ -15,7 +15,7 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
     num_classes : int
         Number of classes.
     alpha2 : float, default=0.05
-        Parameter that controls the influence of the regularisation.
+        Parameter that controls the probability deposited in adjacent classes.
     eta : float, default=1.0
         Parameter that controls the influence of the regularisation.
     weight : Optional[Tensor], default=None
