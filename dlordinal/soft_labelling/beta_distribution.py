@@ -58,7 +58,7 @@ def beta_dist(x, p, q, a=1.0):
 
 
 def get_beta_softlabels(J, p, q, a=1.0):
-    """Get probabilities from a beta distribution :math:`B(p,q,a)` for ``J`` splits.
+    """Get soft labels from a beta distribution :math:`B(p,q,a)` for ``J`` splits.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the distribution
     function in the upper limit of the interval and the value of the distribution
@@ -90,7 +90,7 @@ def get_beta_softlabels(J, p, q, a=1.0):
 
     Example
     -------
-    >>> from dlordinal.distributions import get_beta_probabilities
+    >>> from dlordinal.soft_labelling import get_beta_probabilities
     >>> get_beta_probabilities(3, 2, 3)
     [0.4074074080000002, 0.48148148059259255, 0.11111111140740726]
     >>> get_beta_probabilities(5, 5, 1, a=2)
