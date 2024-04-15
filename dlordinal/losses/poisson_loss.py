@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-from ..distributions import get_poisson_probabilities
+from ..soft_labelling import get_poisson_probabilities
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 

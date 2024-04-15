@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from ..distributions import get_general_triangular_softlabels
+from ..soft_labelling import get_general_triangular_softlabels
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 

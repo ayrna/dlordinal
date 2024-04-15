@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-from ..distributions import get_exponential_softlabels
+from ..soft_labelling import get_exponential_softlabels
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 
