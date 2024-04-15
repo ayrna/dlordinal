@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from dlordinal.distributions import get_triangular_softlabels
+from dlordinal.soft_labelling import get_triangular_softlabels
 
 
 def test_get_triangular_probabilities():
