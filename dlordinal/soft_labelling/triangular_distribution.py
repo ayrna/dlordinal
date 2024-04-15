@@ -7,7 +7,7 @@ from .utils import get_intervals, triangular_cdf
 
 def get_triangular_softlabels(J: int, alpha2: float = 0.01, verbose: int = 0):
     """
-    Get probabilities from triangular distributions for ``J`` classes or splits using
+    Get soft labels using triangular distributions for ``J`` classes or splits using
     the approach described in :footcite:t:`vargas2023softlabelling`.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the triangular
@@ -87,8 +87,8 @@ def get_triangular_softlabels(J: int, alpha2: float = 0.01, verbose: int = 0):
 
     Example
     -------
-    >>> from dlordinal.distributions import get_triangular_probabilities
-    >>> get_triangular_probabilities(5)
+    >>> from dlordinal.soft_labelling import get_triangular_softlabels
+    >>> get_triangular_softlabels(5)
     array([[0.98845494, 0.01154505, 0.        , 0.        , 0.        ],
            [0.01      , 0.98      , 0.01      , 0.        , 0.        ],
            [0.        , 0.01      , 0.98      , 0.01      , 0.        ],
