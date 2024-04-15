@@ -1,11 +1,11 @@
 import pytest
 import torch
 
-from ..triangular_loss import TriangularCrossEntropyLoss
+from dlordinal.losses import TriangularCrossEntropyLoss
 
 
 def test_triangular_loss_creation():
-    loss = TriangularCrossEntropyLoss()
+    loss = TriangularCrossEntropyLoss(num_classes=5)
     assert isinstance(loss, TriangularCrossEntropyLoss)
 
 

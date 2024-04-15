@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from PIL import Image
 
-from ..adience import Adience
+from dlordinal.datasets import Adience
 
 temp_dir = None
 

@@ -13,6 +13,31 @@ from tqdm import tqdm
 class Adience:
     """
     Base class for the Adience dataset.
+
+    Parameters
+    ----------
+    extract_file_path : Union[str, Path]
+        Path to the tar.gz file containing the dataset.
+    folds_path : Union[str, Path]
+        Path to the folder containing the folds.
+    images_path : Union[str, Path]
+        Path to the folder containing the images.
+    transformed_images_path : Union[str, Path]
+        Path to the folder containing the transformed images.
+    partition_path : Union[str, Path]
+        Path to the folder containing the partitions.
+    number_partitions : int, optional
+        Number of partitions to create, by default 20.
+    ranges : list, optional
+        List of age ranges to use, by default [(0, 2), (4, 6), (8, 13),
+        (15, 20), (25, 32), (38, 43), (48, 53), (60, 100)].
+    test_size : float, optional
+        Test size, by default 0.2.
+    extract : bool, optional
+        Boolean indicating if the tar.gz file should be extracted, by default True.
+    transfrom : bool, optional
+        Boolean indicating if the images should be transformed and the partitions
+        created, by default True.
     """
 
     def __init__(
@@ -37,33 +62,6 @@ class Adience:
         extract: bool = True,
         transfrom: bool = True,
     ) -> None:
-        """
-        Parameters
-        ----------
-        extract_file_path : Union[str, Path]
-            Path to the tar.gz file containing the dataset.
-        folds_path : Union[str, Path]
-            Path to the folder containing the folds.
-        images_path : Union[str, Path]
-            Path to the folder containing the images.
-        transformed_images_path : Union[str, Path]
-            Path to the folder containing the transformed images.
-        partition_path : Union[str, Path]
-            Path to the folder containing the partitions.
-        number_partitions : int, optional
-            Number of partitions to create, by default 20.
-        ranges : list, optional
-            List of age ranges to use, by default [(0, 2), (4, 6), (8, 13),
-            (15, 20), (25, 32), (38, 43), (48, 53), (60, 100)].
-        test_size : float, optional
-            Test size, by default 0.2.
-        extract : bool, optional
-            Boolean indicating if the tar.gz file should be extracted, by default True.
-        transfrom : bool, optional
-            Boolean indicating if the images should be transformed and the partitions
-            created, by default True.
-        """
-
         super().__init__()
 
         self.extract_file_path = Path(extract_file_path)

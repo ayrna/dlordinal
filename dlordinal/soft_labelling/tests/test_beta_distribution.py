@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from ..beta_distribution import beta_dist, beta_func, get_beta_softlabels
+from dlordinal.distributions import get_beta_softlabels
+from dlordinal.distributions.beta_distribution import beta_dist, beta_func
 
 
 def test_beta_inc():

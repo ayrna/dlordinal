@@ -4,7 +4,7 @@ from torch import cuda
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision import models
 
-from ..pytorch_estimator import PytorchEstimator
+from dlordinal.estimator import PytorchEstimator
 
 
 def test_pytorch_estimator_creation():
@@ -139,7 +139,7 @@ def test_pytorch_estimator_predict():
     assert len(predictions) == 50
 
     # Check that the predictions are values in the range [0, num_classes)
-    assert torch.all(predictions >= 0) and torch.all(predictions < num_classes)
+    assert np.all(predictions >= 0) and np.all(predictions < num_classes)
 
 
 def test_pytorch_estimator_predict_proba_dataloader():
@@ -175,10 +175,10 @@ def test_pytorch_estimator_predict_proba_dataloader():
     assert probabilities.shape == (50, 5)
 
     # Verify that the sum of the probabilities for each example is close to 1.
-    assert torch.allclose(probabilities.sum(dim=1), torch.ones(50), atol=1e-5)
+    assert np.allclose(np.sum(probabilities, axis=1), np.ones(50), atol=1e-5)
 
     # Verify that the probabilities are in the range [0, 1]
-    assert torch.all(probabilities >= 0) and torch.all(probabilities <= 1)
+    assert np.all(probabilities >= 0) and np.all(probabilities <= 1)
 
 
 def test_pytorch_estimator_predict_proba_tensor():
@@ -214,7 +214,7 @@ def test_pytorch_estimator_predict_proba_tensor():
     assert probabilities.shape == (50, 3)
 
     # Check that the sum of the probabilities for each example is close to 1.
-    assert torch.allclose(probabilities.sum(dim=1), torch.ones(50), atol=1e-5)
+    assert np.allclose(np.sum(probabilities, axis=1), np.ones(50), atol=1e-5)
 
     # Check that the probabilities are in the range [0, 1]
-    assert torch.all(probabilities >= 0) and torch.all(probabilities <= 1)
+    assert np.all(probabilities >= 0) and np.all(probabilities <= 1)

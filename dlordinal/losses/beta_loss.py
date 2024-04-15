@@ -122,7 +122,7 @@ class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
     Parameters
     ----------
-    num_classes : int, default=5
+    num_classes : int
         Number of classes.
     params_set : str, default='standard'
         The set of parameters to use for the beta distribution (chosen from the
@@ -162,7 +162,7 @@ class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
     def __init__(
         self,
-        num_classes: int = 5,
+        num_classes: int,
         params_set: str = "standard",
         eta: float = 1.0,
         weight: Optional[Tensor] = None,
