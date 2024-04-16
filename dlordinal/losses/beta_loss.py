@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-from ..distributions import get_beta_softlabels
+from ..soft_labelling import get_beta_soft_labels
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 # Params [a,b] for beta distribution
@@ -177,7 +177,7 @@ class BetaCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         # Precompute class probabilities for each label
         cls_probs = torch.tensor(
             [
-                get_beta_softlabels(
+                get_beta_soft_labels(
                     num_classes,
                     self.params[num_classes][i][0],
                     self.params[num_classes][i][1],

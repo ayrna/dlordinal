@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from dlordinal.distributions import get_binomial_softlabels
+from dlordinal.soft_labelling import get_binomial_soft_labels
 
 
-def test_get_binomial_probabilities():
+def test_get_binomial_soft_labels():
     # Case 1: n = 5
     n = 5
-    result = get_binomial_softlabels(n)
+    result = get_binomial_soft_labels(n)
     expected_result = np.array(
         [
             [6.561e-01, 2.916e-01, 4.860e-02, 3.600e-03, 1.000e-04],

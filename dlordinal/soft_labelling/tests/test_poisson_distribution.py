@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from dlordinal.distributions import get_poisson_probabilities
+from dlordinal.soft_labelling import get_poisson_soft_labels
 
 
-def test_get_poisson_probabilities():
+def test_get_poisson_soft_labels():
     # Case 1: n = 3
     n = 3
-    result = get_poisson_probabilities(n)
+    result = get_poisson_soft_labels(n)
 
     # Verifies that the result is a matrix with n rows and n columns
     assert result.shape == (n, n)
@@ -32,7 +32,7 @@ def test_get_poisson_probabilities():
 
     # Case 2: n = 5
     n = 5
-    result = get_poisson_probabilities(n)
+    result = get_poisson_soft_labels(n)
 
     print(result)
     # Verifies that the result is a matrix with n rows and n columns

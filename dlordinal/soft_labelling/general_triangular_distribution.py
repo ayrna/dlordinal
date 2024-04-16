@@ -47,7 +47,7 @@ def get_general_triangular_params(J: int, alphas: np.ndarray, verbose: int = 0):
 
     Example
     -------
-    >>> from dlordinal.distributions import get_general_triangular_params
+    >>> from dlordinal.soft_labelling import get_general_triangular_params
     >>> get_general_triangular_params(5, [0, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0])
     [{'alpha2j_1': 0, 'alpha2j': 0.05, 'a': 0, 'b': 0.25760143110525874, 'c': 0}, {'alpha2j_1': 0.05, 'alpha2j': 0.05, 'a': 0.153752470442574, 'b': 0.446247529557426, 'c': 0.3}, {'alpha2j_1': 0.05, 'alpha2j': 0.05, 'a': 0.353752470442574, 'b': 0.646247529557426, 'c': 0.5}, {'alpha2j_1': 0.05, 'alpha2j': 0.1, 'a': 0.550779686438060, 'b': 0.875486049708105, 'c': 0.7}, {'alpha2j_1': 0.0, 'alpha2j': 0, 'a': 0.8, 'b': 1, 'c': 1}]
 
@@ -158,8 +158,8 @@ def get_general_triangular_params(J: int, alphas: np.ndarray, verbose: int = 0):
     return params
 
 
-def get_general_triangular_softlabels(J: int, alphas: np.ndarray, verbose: int = 0):
-    """Get probabilities from triangular distributions for ``J`` classes or splits.
+def get_general_triangular_soft_labels(J: int, alphas: np.ndarray, verbose: int = 0):
+    """Get soft labels using triangular distributions for ``J`` classes or splits.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the triangular
     distribution function for the interval boundaries. The probability for the first
@@ -193,8 +193,8 @@ def get_general_triangular_softlabels(J: int, alphas: np.ndarray, verbose: int =
 
     Example
     -------
-    >>> from dlordinal.distributions import get_general_triangular_probabilities
-    >>> get_general_triangular_probabilities(
+    >>> from dlordinal.soft_labelling import get_general_triangular_soft_labels
+    >>> get_general_triangular_soft_labels(
     ...     5,
     ...     [0, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0]
     ... )
