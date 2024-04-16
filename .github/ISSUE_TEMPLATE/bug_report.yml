@@ -39,8 +39,8 @@ body:
 
 
     placeholder: |
-      ```python
-      Your code here. Placing the code snippet here will help us reproduce the bug and identify the issue.
+      ```
+      Place your code here. Placing the code snippet here will help us reproduce the bug and identify the issue.
       ```
 - type: textarea
   attributes:
