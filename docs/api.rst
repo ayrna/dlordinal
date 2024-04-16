@@ -10,11 +10,11 @@ This is the API for the **dlordinal** package.
    :maxdepth: 2
    :caption: Contents:
 
-   losses
    datasets
-   layers
    dropout
-   models
+   layers
+   losses
    metrics
+   models
    sklearn_integration
    soft_labelling
