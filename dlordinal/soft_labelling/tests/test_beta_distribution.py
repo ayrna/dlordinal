@@ -1,8 +1,12 @@
 import numpy as np
 import pytest
 
-from dlordinal.distributions import get_beta_softlabels
-from dlordinal.distributions.beta_distribution import beta_dist, beta_func
+from dlordinal.soft_labelling import get_beta_soft_labels
+from dlordinal.soft_labelling.beta_distribution import (
+    _get_beta_soft_label,
+    beta_dist,
+    beta_func,
+)
 
 
 def test_beta_inc():
@@ -23,7 +27,7 @@ def test_beta_inc_negative_values(a, b):
         beta_func(a, b)
 
 
-def test_beta_distribution():
+def test_beta_dist():
     # Case 1: Valid input
     x = 0.5
     p = 2.0
@@ -52,13 +56,13 @@ def test_beta_distribution_negative_x(x):
         beta_dist(x, 2.0, 3.0, 1.0)
 
 
-def test_beta_probabilities():
+def test_beta_soft_label():
     # Case 1: Valid input
     n = 5
     p = 2.0
     q = 3.0
     a = 1.0
-    result = get_beta_softlabels(n, p, q, a)
+    result = _get_beta_soft_label(n, p, q, a)
     expected_result = [
         0.1808000009216,
         0.34399999942400017,
@@ -75,7 +79,7 @@ def test_beta_probabilities():
     p = 1.5
     q = 2.5
     a = 2.0
-    result = get_beta_softlabels(n, p, q, a)
+    result = _get_beta_soft_label(n, p, q, a)
     expected_result = [
         0.05010107325697135,
         0.283232260076362,
@@ -85,3 +89,54 @@ def test_beta_probabilities():
 
     for r, e in zip(result, expected_result):
         assert r == pytest.approx(e, rel=1e-6)
+
+
+def test_beta_softlabels():
+    n = 5
+    result = get_beta_soft_labels(n)
+
+    assert len(result.shape) == 2
+    assert result.shape[0] == n
+    assert result.shape[1] == n
+
+    expected_result = [
+        [
+            0.8322278330066323,
+            0.15097599903815717,
+            0.01614079995258888,
+            0.0006528000025611824,
+            2.5600000609360407e-06,
+        ],
+        [
+            0.16306230596685573,
+            0.6740152119811103,
+            0.15985465217901373,
+            0.003067150177798128,
+            6.796952229937148e-07,
+        ],
+        [
+            0.0005973937258183486,
+            0.16304604740785777,
+            0.6727131177326486,
+            0.16304604740785367,
+            0.000597393725820794,
+        ],
+        [
+            6.796952207410873e-07,
+            0.0030671501777993896,
+            0.15985465217901168,
+            0.6740152119811109,
+            0.16306230596685678,
+        ],
+        [
+            2.560000061440001e-06,
+            0.0006528000025600005,
+            0.01614079995258879,
+            0.1509759990381568,
+            0.8322278330066332,
+        ],
+    ]
+
+    for r, e in zip(result, expected_result):
+        for r_, e_ in zip(r, e):
+            assert r_ == pytest.approx(e_, rel=1e-6)

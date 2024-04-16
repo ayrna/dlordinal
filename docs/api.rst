@@ -12,9 +12,9 @@ This is the API for the **dlordinal** package.
 
    losses
    datasets
-   distributions
    layers
    dropout
    models
    metrics
    sklearn_integration
+   soft_labelling

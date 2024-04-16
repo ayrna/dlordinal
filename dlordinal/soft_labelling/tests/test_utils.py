@@ -1,4 +1,4 @@
-from dlordinal.distributions.utils import get_intervals, triangular_cdf
+from dlordinal.soft_labelling.utils import get_intervals, triangular_cdf
 
 
 def test_get_intervals():
