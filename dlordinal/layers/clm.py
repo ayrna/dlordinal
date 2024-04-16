@@ -16,7 +16,7 @@ class CLM(Module):
     link_function : str
         The link function to use. Can be ``'logit'``, ``'probit'`` or ``'cloglog'``.
     min_distance : float, default=0.0
-       The minimum distance between thresholds
+        The minimum distance between thresholds
     """
 
     def __init__(self, num_classes, link_function, min_distance=0.0, **kwargs):
