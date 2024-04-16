@@ -3,7 +3,7 @@ from scipy.special import softmax
 from scipy.stats import poisson
 
 
-def get_poisson_softlabels(J):
+def get_poisson_soft_labels(J):
     """Get soft labels using poisson distributions for ``J`` classes or splits using the
     methodology described in :footcite:t:`liu2020unimodal`.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
@@ -36,8 +36,8 @@ def get_poisson_softlabels(J):
 
     Example
     -------
-    >>> from dlordinal.soft_labelling import get_poisson_softlabels
-    >>> get_poisson_softlabels(5)
+    >>> from dlordinal.soft_labelling import get_poisson_soft_labels
+    >>> get_poisson_soft_labels(5)
     array([[0.23414552, 0.23414552, 0.19480578, 0.17232403, 0.16457916],
         [0.18896888, 0.21635436, 0.21635436, 0.19768881, 0.18063359],
         [0.17822335, 0.19688341, 0.21214973, 0.21214973, 0.20059378],

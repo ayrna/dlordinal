@@ -58,7 +58,7 @@ def beta_dist(x, p, q, a=1.0):
     return (x ** (a * p)) / (p * beta_func(p, q)) * hyp2f1(p, 1 - q, p + 1, x**a)
 
 
-def _get_beta_softlabel(J, p, q, a=1.0):
+def _get_beta_soft_label(J, p, q, a=1.0):
     """Get soft labels from a beta distribution :math:`B(p,q,a)` for ``J`` splits.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the distribution
@@ -91,10 +91,10 @@ def _get_beta_softlabel(J, p, q, a=1.0):
 
     Example
     -------
-    >>> from dlordinal.soft_labelling import get_beta_probabilities
-    >>> get_beta_probabilities(3, 2, 3)
+    >>> from dlordinal.soft_labelling import get_beta_soft_labels
+    >>> get_beta_soft_labels(3, 2, 3)
     [0.4074074080000002, 0.48148148059259255, 0.11111111140740726]
-    >>> get_beta_probabilities(5, 5, 1, a=2)
+    >>> get_beta_soft_labels(5, 5, 1, a=2)
     [1.0240000307200007e-07, 0.00010475520052121611, 0.005941759979320316,
       0.10132756401484902, 0.8926258084053067]
     """
@@ -232,7 +232,7 @@ _beta_params_sets = {
 }
 
 
-def get_beta_softlabels(J, params_set="standard"):
+def get_beta_soft_labels(J, params_set="standard"):
     """Get soft labels for each of the ``J`` classes using a beta distributions and
     the parameter defined in the ``params_set`` as described in :footcite:t:`vargas2022unimodal`.
 
@@ -286,4 +286,4 @@ def get_beta_softlabels(J, params_set="standard"):
         raise ValueError(f"Invalid params_set: {params_set}")
 
     params = _beta_params_sets[params_set]
-    return np.array([_get_beta_softlabel(J, p, q, a) for (p, q, a) in params[J]])
+    return np.array([_get_beta_soft_label(J, p, q, a) for (p, q, a) in params[J]])
