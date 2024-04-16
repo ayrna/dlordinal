@@ -1,3 +1,4 @@
+import numpy as np
 from scipy.special import gamma, hyp2f1
 
 from .utils import get_intervals
@@ -285,4 +286,4 @@ def get_beta_softlabels(J, params_set="standard"):
         raise ValueError(f"Invalid params_set: {params_set}")
 
     params = _beta_params_sets[params_set]
-    return [_get_beta_softlabel(J, p, q, a) for (p, q, a) in params[J]]
+    return np.array([_get_beta_softlabel(J, p, q, a) for (p, q, a) in params[J]])

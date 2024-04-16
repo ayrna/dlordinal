@@ -95,8 +95,9 @@ def test_beta_softlabels():
     n = 5
     result = get_beta_softlabels(n)
 
-    assert len(result) == n
-    assert len(result[0]) == n
+    assert len(result.shape) == 2
+    assert result.shape[0] == n
+    assert result.shape[1] == n
 
     expected_result = [
         [
