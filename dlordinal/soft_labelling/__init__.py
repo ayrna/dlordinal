@@ -1,19 +1,19 @@
-from .beta_distribution import get_beta_softlabels
-from .binomial_distribution import get_binomial_softlabels
-from .exponential_distribution import get_exponential_softlabels
+from .beta_distribution import get_beta_soft_labels
+from .binomial_distribution import get_binomial_soft_labels
+from .exponential_distribution import get_exponential_soft_labels
 from .general_triangular_distribution import (
     get_general_triangular_params,
-    get_general_triangular_softlabels,
+    get_general_triangular_soft_labels,
 )
-from .poisson_distribution import get_poisson_softlabels
-from .triangular_distribution import get_triangular_softlabels
+from .poisson_distribution import get_poisson_soft_labels
+from .triangular_distribution import get_triangular_soft_labels
 
 __all__ = [
-    "get_beta_softlabels",
-    "get_exponential_softlabels",
-    "get_binomial_softlabels",
-    "get_poisson_softlabels",
-    "get_triangular_softlabels",
+    "get_beta_soft_labels",
+    "get_exponential_soft_labels",
+    "get_binomial_soft_labels",
+    "get_poisson_soft_labels",
+    "get_triangular_soft_labels",
     "get_general_triangular_params",
-    "get_general_triangular_softlabels",
+    "get_general_triangular_soft_labels",
 ]

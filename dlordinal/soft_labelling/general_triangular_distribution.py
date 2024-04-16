@@ -158,7 +158,7 @@ def get_general_triangular_params(J: int, alphas: np.ndarray, verbose: int = 0):
     return params
 
 
-def get_general_triangular_softlabels(J: int, alphas: np.ndarray, verbose: int = 0):
+def get_general_triangular_soft_labels(J: int, alphas: np.ndarray, verbose: int = 0):
     """Get soft labels using triangular distributions for ``J`` classes or splits.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the triangular
@@ -193,8 +193,8 @@ def get_general_triangular_softlabels(J: int, alphas: np.ndarray, verbose: int =
 
     Example
     -------
-    >>> from dlordinal.soft_labelling import get_general_triangular_softlabels
-    >>> get_general_triangular_softlabels(
+    >>> from dlordinal.soft_labelling import get_general_triangular_soft_labels
+    >>> get_general_triangular_soft_labels(
     ...     5,
     ...     [0, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0]
     ... )

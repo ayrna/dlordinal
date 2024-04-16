@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from dlordinal.soft_labelling import get_beta_softlabels
+from dlordinal.soft_labelling import get_beta_soft_labels
 from dlordinal.soft_labelling.beta_distribution import beta_dist, beta_func
 
 
@@ -23,7 +23,7 @@ def test_beta_inc_negative_values(a, b):
         beta_func(a, b)
 
 
-def test_beta_distribution():
+def test_beta_soft_label():
     # Case 1: Valid input
     x = 0.5
     p = 2.0
@@ -52,13 +52,13 @@ def test_beta_distribution_negative_x(x):
         beta_dist(x, 2.0, 3.0, 1.0)
 
 
-def test_beta_probabilities():
+def test_beta_soft_labels():
     # Case 1: Valid input
     n = 5
     p = 2.0
     q = 3.0
     a = 1.0
-    result = get_beta_softlabels(n, p, q, a)
+    result = get_beta_soft_labels(n, p, q, a)
     expected_result = [
         0.1808000009216,
         0.34399999942400017,
@@ -75,7 +75,7 @@ def test_beta_probabilities():
     p = 1.5
     q = 2.5
     a = 2.0
-    result = get_beta_softlabels(n, p, q, a)
+    result = get_beta_soft_labels(n, p, q, a)
     expected_result = [
         0.05010107325697135,
         0.283232260076362,
