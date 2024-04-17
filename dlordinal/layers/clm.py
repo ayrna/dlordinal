@@ -25,7 +25,6 @@ class CLM(Module):
         self.link_function = link_function
         self.min_distance = min_distance
         self.dist = torch.distributions.Normal(0, 1)
-        self.device = "cpu"
 
         self.thresholds_b = torch.nn.Parameter(data=torch.Tensor(1), requires_grad=True)
         torch.nn.init.uniform_(self.thresholds_b, 0.0, 0.1)
@@ -45,13 +44,11 @@ class CLM(Module):
         thresholds_param = torch.cat((b, a), dim=0)
         th = torch.sum(
             torch.tril(
-                torch.ones((self.num_classes - 1, self.num_classes - 1)).to(
-                    self.device
-                ),
+                torch.ones((self.num_classes - 1, self.num_classes - 1)),
                 diagonal=-1,
             )
             * torch.reshape(
-                torch.tile(thresholds_param, (self.num_classes - 1,)).to(self.device),
+                torch.tile(thresholds_param, (self.num_classes - 1,)),
                 shape=(self.num_classes - 1, self.num_classes - 1),
             ),
             dim=(1,),
@@ -79,7 +76,7 @@ class CLM(Module):
         else:
             a3T = 1.0 / (1.0 + torch.exp(-z3))
 
-        ones = torch.ones((m, 1)).to(self.device)
+        ones = torch.ones((m, 1))
         a3 = torch.cat((a3T, ones), dim=1)
         a3[:, 1:] = a3[:, 1:] - a3[:, 0:-1]
 
@@ -103,8 +100,3 @@ class CLM(Module):
         )
 
         return self._clm(x, thresholds)
-
-    def to(self, device):
-        self.device = device
-
-        return self
