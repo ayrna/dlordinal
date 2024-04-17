@@ -3,8 +3,8 @@ import torch.nn as nn
 
 
 class HybridDropoutContainer(nn.Module):
-    """Container for the HybridDropout module. This container is used to set the targets
-    of the batch in the HybridDropout module.
+    """Container for the ``HybridDropout`` module. This container is used to set the
+    targets of the batch in the HybridDropout module.
 
     Parameters
     ----------
@@ -17,7 +17,7 @@ class HybridDropoutContainer(nn.Module):
         self.model = model
 
     def forward(self, x):
-        """Forward pass of the HybridDropoutContainer module.
+        """Forward pass of the ``HybridDropoutContainer`` module.
 
         Parameters
         ----------
@@ -34,7 +34,7 @@ class HybridDropoutContainer(nn.Module):
 
     def set_targets(self, targets):
         """
-        Set the targets of the batch in the HybridDropout module.
+        Set the targets of the batch in the ``HybridDropout`` module.
 
         Parameters
         ----------
@@ -62,9 +62,9 @@ class HybridDropoutContainer(nn.Module):
 
 
 class HybridDropout(nn.Module):
-    """Implements a Hybrid dropout methodology by :footcite:t:`berchez2024fusion` which
+    """Implements a hybrid dropout methodology by :footcite:t:`berchez2024fusion` which
     mix a standard dropout with an ordinal dropout. The ordinal dropout is based on the
-    correlation between the activation values of the of the neuron and the target labels
+    correlation between the activation values of the neuron and the target labels
     of the dataset.
 
     To use this module, you must wrap your model with the ``HybridDropoutContainer``
