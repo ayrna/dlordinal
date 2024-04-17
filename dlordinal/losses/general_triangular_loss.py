@@ -45,9 +45,6 @@ class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         :attr:`reduce` are in the process of being deprecated, and in the meantime,
         specifying either of those two args will override :attr:`reduction`.
         Default: ``'mean'``
-    label_smoothing : float, default=0.0
-        Controls the amount of label smoothing for the loss. Zero means no smoothing.
-        Default: ``0.0``
     """
 
     def __init__(
@@ -60,7 +57,6 @@ class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         ignore_index: int = -100,
         reduce=None,
         reduction: str = "mean",
-        label_smoothing: float = 0.0,
     ):
         # Precompute class probabilities for each label
         r = get_general_triangular_soft_labels(num_classes, alphas, verbose=0)
@@ -74,5 +70,5 @@ class GeneralTriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
             ignore_index=ignore_index,
             reduce=reduce,
             reduction=reduction,
-            label_smoothing=label_smoothing,
+            label_smoothing=0.0,
         )
