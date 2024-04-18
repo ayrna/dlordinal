@@ -17,6 +17,28 @@ class CLM(Module):
         The link function to use. Can be ``'logit'``, ``'probit'`` or ``'cloglog'``.
     min_distance : float, default=0.0
         The minimum distance between thresholds
+
+    Example
+    ---------
+    >>> import torch
+    >>> from dlordinal.layers import CLM
+
+    >>> inp = torch.randn(10, 5)
+    >>> fc = torch.nn.Linear(5, 1)
+    >>> clm = CLM(5, "logit")
+
+    >>> output = clm(fc(inp))
+    >>> print(output)
+    tensor([[0.4704, 0.0063, 0.0441, 0.0423, 0.4369],
+        [0.2496, 0.0048, 0.0349, 0.0363, 0.6745],
+        [0.6384, 0.0058, 0.0393, 0.0357, 0.2808],
+        [0.4862, 0.0063, 0.0441, 0.0420, 0.4214],
+        [0.3768, 0.0060, 0.0425, 0.0421, 0.5327],
+        [0.4740, 0.0063, 0.0441, 0.0422, 0.4334],
+        [0.2868, 0.0052, 0.0378, 0.0387, 0.6315],
+        [0.2583, 0.0049, 0.0356, 0.0369, 0.6643],
+        [0.1811, 0.0038, 0.0281, 0.0300, 0.7570],
+        [0.5734, 0.0062, 0.0423, 0.0392, 0.3389]], grad_fn=<CopySlices>)
     """
 
     def __init__(self, num_classes, link_function, min_distance=0.0, **kwargs):
@@ -25,7 +47,6 @@ class CLM(Module):
         self.link_function = link_function
         self.min_distance = min_distance
         self.dist = torch.distributions.Normal(0, 1)
-        self.device = "cpu"
 
         self.thresholds_b = torch.nn.Parameter(data=torch.Tensor(1), requires_grad=True)
         torch.nn.init.uniform_(self.thresholds_b, 0.0, 0.1)
@@ -45,13 +66,13 @@ class CLM(Module):
         thresholds_param = torch.cat((b, a), dim=0)
         th = torch.sum(
             torch.tril(
-                torch.ones((self.num_classes - 1, self.num_classes - 1)).to(
-                    self.device
+                torch.ones(
+                    (self.num_classes - 1, self.num_classes - 1), device=a.device
                 ),
                 diagonal=-1,
             )
             * torch.reshape(
-                torch.tile(thresholds_param, (self.num_classes - 1,)).to(self.device),
+                torch.tile(thresholds_param, (self.num_classes - 1,)).to(a.device),
                 shape=(self.num_classes - 1, self.num_classes - 1),
             ),
             dim=(1,),
@@ -79,7 +100,7 @@ class CLM(Module):
         else:
             a3T = 1.0 / (1.0 + torch.exp(-z3))
 
-        ones = torch.ones((m, 1)).to(self.device)
+        ones = torch.ones((m, 1), device=projected.device)
         a3 = torch.cat((a3T, ones), dim=1)
         a3[:, 1:] = a3[:, 1:] - a3[:, 0:-1]
 
@@ -103,8 +124,3 @@ class CLM(Module):
         )
 
         return self._clm(x, thresholds)
-
-    def to(self, device):
-        self.device = device
-
-        return self
