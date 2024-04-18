@@ -44,11 +44,13 @@ class CLM(Module):
         thresholds_param = torch.cat((b, a), dim=0)
         th = torch.sum(
             torch.tril(
-                torch.ones((self.num_classes - 1, self.num_classes - 1)),
+                torch.ones(
+                    (self.num_classes - 1, self.num_classes - 1), device=a.device
+                ),
                 diagonal=-1,
             )
             * torch.reshape(
-                torch.tile(thresholds_param, (self.num_classes - 1,)),
+                torch.tile(thresholds_param, (self.num_classes - 1,)).to(a.device),
                 shape=(self.num_classes - 1, self.num_classes - 1),
             ),
             dim=(1,),
@@ -76,7 +78,7 @@ class CLM(Module):
         else:
             a3T = 1.0 / (1.0 + torch.exp(-z3))
 
-        ones = torch.ones((m, 1))
+        ones = torch.ones((m, 1), device=projected.device)
         a3 = torch.cat((a3T, ones), dim=1)
         a3[:, 1:] = a3[:, 1:] - a3[:, 0:-1]
 
