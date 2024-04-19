@@ -3,8 +3,6 @@
 `dlordinal` is an open-source Python toolkit focused on deep learning with ordinal methodologies. It is compatible with
 [scikit-learn](https://scikit-learn.org).
 
-The library includes various modules such as loss functions, models, layers, metrics, and an estimator.
-
 | Overview  |                                                                                                                                          |
 |-----------|------------------------------------------------------------------------------------------------------------------------------------------|
 | **CI/CD** | [![!codecov](https://img.shields.io/codecov/c/github/ayrna/dlordinal?label=codecov&logo=codecov)](https://codecov.io/gh/ayrna/dlordinal) [![!docs](https://readthedocs.org/projects/dlordinal/badge/?version=latest&style=flat)](https://dlordinal.readthedocs.io/en/latest/)  [![!python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue)](https://www.python.org/) |
