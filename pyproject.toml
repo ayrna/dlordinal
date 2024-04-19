@@ -31,6 +31,7 @@ dependencies = [
     "scikit-image>=0.18",
     "tqdm>=4",
     "Pillow>=8",
+    "skorch>=0.15.0"
 ]
 
 [project.urls]
