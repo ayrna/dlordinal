@@ -1,7 +1,6 @@
 # Deep learning utilities library
 
-`dlordinal` is an open-source Python toolkit focused on deep learning with ordinal methodologies. It is compatible with
-[scikit-learn](https://scikit-learn.org).
+`dlordinal` is an open-source Python toolkit focused on deep learning with ordinal methodologies.
 
 | Overview  |                                                                                                                                          |
 |-----------|------------------------------------------------------------------------------------------------------------------------------------------|
