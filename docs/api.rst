@@ -16,5 +16,4 @@ This is the API for the **dlordinal** package.
    losses
    metrics
    models
-   sklearn_integration
    soft_labelling
