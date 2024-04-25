@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dlordinal"
-version = "1.0.1"
+version = "2.0.0"
 authors = [
     {name = "Francisco Bérchez-Moreno", email = "i72bemof@uco.es"},
     {name = "Víctor Manuel Vargas", email = "vvargas@uco.es"},
