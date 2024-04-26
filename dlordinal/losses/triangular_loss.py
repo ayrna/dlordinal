@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-from ..distributions import get_triangular_probabilities
+from ..soft_labelling import get_triangular_soft_labels
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 
@@ -12,10 +12,10 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
     Parameters
     ----------
-    num_classes : int, default=5
+    num_classes : int
         Number of classes.
     alpha2 : float, default=0.05
-        Parameter that controls the influence of the regularisation.
+        Parameter that controls the probability deposited in adjacent classes.
     eta : float, default=1.0
         Parameter that controls the influence of the regularisation.
     weight : Optional[Tensor], default=None
@@ -44,14 +44,11 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         :attr:`reduce` are in the process of being deprecated, and in the meantime,
         specifying either of those two args will override :attr:`reduction`.
         Default: ``'mean'``
-    label_smoothing : float, default=0.0
-        Controls the amount of label smoothing for the loss. Zero means no smoothing.
-        Default: ``0.0``
     """
 
     def __init__(
         self,
-        num_classes: int = 5,
+        num_classes: int,
         alpha2: float = 0.05,
         eta: float = 1.0,
         weight: Optional[Tensor] = None,
@@ -59,10 +56,9 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         ignore_index: int = -100,
         reduce=None,
         reduction: str = "mean",
-        label_smoothing: float = 0.0,
     ):
         # Precompute class probabilities for each label
-        cls_probs = torch.tensor(get_triangular_probabilities(num_classes, alpha2))
+        cls_probs = torch.tensor(get_triangular_soft_labels(num_classes, alpha2))
         super().__init__(
             cls_probs=cls_probs,
             eta=eta,
@@ -71,5 +67,5 @@ class TriangularCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
             ignore_index=ignore_index,
             reduce=reduce,
             reduction=reduction,
-            label_smoothing=label_smoothing,
+            label_smoothing=0.0,
         )

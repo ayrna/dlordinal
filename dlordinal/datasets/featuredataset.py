@@ -57,7 +57,12 @@ class FeatureDataset(Dataset):
         Parameters
         ----------
         v : ArrayLike
+            Input array.
 
+        Returns
+        -------
+        v : np.ndarray
+            2D numpy array with shape (n, 1).
         """
 
         if isinstance(v, pd.Series):

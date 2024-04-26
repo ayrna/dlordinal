@@ -1,6 +1,7 @@
 name: ❗ Other issue
 description: Other issue not covered by the other templates.
 title: "[MNT] "
+labels: ["maintenance"]
 
 body:
 - type: markdown

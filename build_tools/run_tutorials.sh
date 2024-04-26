@@ -7,6 +7,7 @@ CMD="jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.t
 
 excluded=(
     "tutorials/datasets_tutorial.ipynb"
+    "tutorials/dlordinal_with_skorch_tutorial.ipynb"
 )
 
 shopt -s lastpipe

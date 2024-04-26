@@ -1,11 +1,11 @@
 import pytest
 import torch
 
-from ..binomial_loss import BinomialCrossEntropyLoss
+from dlordinal.losses import BinomialCrossEntropyLoss
 
 
 def test_binomial_loss_creation():
-    loss = BinomialCrossEntropyLoss()
+    loss = BinomialCrossEntropyLoss(num_classes=5)
     assert isinstance(loss, BinomialCrossEntropyLoss)
 
 

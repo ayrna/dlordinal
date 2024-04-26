@@ -11,6 +11,7 @@ on:
   pull_request:
     branches:
       - main
+      - development
     paths:
       - "tutorials/**"
       - "dlordinal/**"
@@ -22,10 +23,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: 3.8
 
@@ -46,10 +47,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: 3.8
 
@@ -63,6 +64,7 @@ jobs:
     - name: Run tests for codecov
       run: |
         pytest --cov=dlordinal --cov-report=xml
+      timeout-minutes: 20
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3

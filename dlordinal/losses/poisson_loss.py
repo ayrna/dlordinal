@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-from ..distributions import get_poisson_probabilities
+from ..soft_labelling import get_poisson_soft_labels
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 
@@ -12,7 +12,7 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
 
     Parameters
     ----------
-    num_classes : int, default=5
+    num_classes : int
         Number of classes.
     eta : float, default=1.0
         Parameter that controls the influence of the regularisation.
@@ -42,24 +42,20 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
         :attr:`reduce` are in the process of being deprecated, and in the meantime,
         specifying either of those two args will override :attr:`reduction`.
         Default: ``'mean'``
-    label_smoothing : float, default=0.0
-        Controls the amount of label smoothing for the loss. Zero means no smoothing.
-        Default: ``0.0``
     """
 
     def __init__(
         self,
-        num_classes: int = 5,
+        num_classes: int,
         eta: float = 1.0,
         weight: Optional[Tensor] = None,
         size_average=None,
         ignore_index: int = -100,
         reduce=None,
         reduction: str = "mean",
-        label_smoothing: float = 0.0,
     ):
         # Precompute class probabilities for each label
-        cls_probs = torch.tensor(get_poisson_probabilities(num_classes)).float()
+        cls_probs = torch.tensor(get_poisson_soft_labels(num_classes)).float()
 
         super().__init__(
             cls_probs=cls_probs,
@@ -69,5 +65,5 @@ class PoissonCrossEntropyLoss(CustomTargetsCrossEntropyLoss):
             ignore_index=ignore_index,
             reduce=reduce,
             reduction=reduction,
-            label_smoothing=label_smoothing,
+            label_smoothing=0.0,
         )

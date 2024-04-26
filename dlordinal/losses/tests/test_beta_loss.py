@@ -1,11 +1,11 @@
 import pytest
 import torch
 
-from ..beta_loss import BetaCrossEntropyLoss
+from dlordinal.losses import BetaCrossEntropyLoss
 
 
 def test_beta_loss_creation():
-    loss = BetaCrossEntropyLoss()
+    loss = BetaCrossEntropyLoss(num_classes=5)
     assert isinstance(loss, BetaCrossEntropyLoss)
 
 

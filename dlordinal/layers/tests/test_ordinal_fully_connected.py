@@ -1,10 +1,10 @@
 import pytest
 import torch
 
-from ..activation_function import activation_function_by_name
-from ..ordinal_fully_connected import (
+from dlordinal.layers import (
     ResNetOrdinalFullyConnected,
     VGGOrdinalFullyConnected,
+    activation_function_by_name,
 )
 
 
