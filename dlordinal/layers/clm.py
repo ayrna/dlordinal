@@ -91,7 +91,7 @@ class CLM(Module):
             0,
             1,
         )
-        z3 = a - b
+        z3 = torch.clip(a - b, -10, 10)
 
         if self.link_function == "probit":
             a3T = self.dist.cdf(z3)
