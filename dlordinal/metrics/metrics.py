@@ -1,10 +1,10 @@
-import numpy as np
-from sklearn.metrics import confusion_matrix
-from pathlib import Path
-from typing import Callable, Dict, Optional
 import json
 import os
-from sklearn.metrics import recall_score
+from pathlib import Path
+from typing import Callable, Dict, Optional
+
+import numpy as np
+from sklearn.metrics import confusion_matrix, recall_score
 
 
 def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -103,10 +103,62 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return np.sqrt(sensitivities[0] * sensitivities[-1])
 
 
+def amae(y_true: np.ndarray, ypred: np.ndarray):
+    """Computes the average mean absolute error computed independently for each class.
+
+    Parameters
+    ----------
+    y_true : array-like
+            Target labels.
+    ypred : array-like
+            Predicted probabilities or labels.
+
+    Returns
+    -------
+    amae : float
+            Average mean absolute error.
+    """
+
+    cm = confusion_matrix(y_true, ypred)
+    n_class = cm.shape[0]
+    costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
+    costs = np.abs(costs - np.transpose(costs))
+    errors = costs * cm
+    per_class_maes = np.sum(errors, axis=1) / np.sum(cm, axis=1).astype("double")
+    per_class_maes = per_class_maes[~np.isnan(per_class_maes)]
+    return np.mean(per_class_maes)
+
+
+def mmae(y_true: np.ndarray, ypred: np.ndarray):
+    """Computes the maximum mean absolute error computed independently for each class.
+
+    Parameters
+    ----------
+    y_true : array-like
+            Target labels.
+    ypred : array-like
+            Predicted probabilities or labels.
+
+    Returns
+    -------
+    mmae : float
+            Maximum mean absolute error.
+    """
+
+    cm = confusion_matrix(y_true, ypred)
+    n_class = cm.shape[0]
+    costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
+    costs = np.abs(costs - np.transpose(costs))
+    errors = costs * cm
+    per_class_maes = np.sum(errors, axis=1) / np.sum(cm, axis=1).astype("double")
+    per_class_maes = per_class_maes[~np.isnan(per_class_maes)]
+    return per_class_maes.max()
+
+
 def write_metrics_dict_to_file(
     metrics: Dict[str, float],
     path_str: str,
-    filter_fn: Optional[Callable[[str, float], bool]] = None,
+    filter_fn: Optional[Callable[[str, float], bool]] = lambda n, v: True,
 ) -> None:
     """Writes a dictionary of metrics to a tabular file.
     The dictionary is filtered by the filter function.
@@ -121,7 +173,7 @@ def write_metrics_dict_to_file(
             Path to the file that will be saved.
             The directory of the file will be created if it does not exist.
             If the file exists, the metrics will be appended to the file in a new row.
-    filter_fn : Optional[Callable[[str, bool], bool]]
+    filter_fn : Optional[Callable[[str, bool], bool]], default=lambda n, v: True
             Function that filters the metrics.
             The function takes the name and the value of the metric and returns ``True`` if the metric should be saved.
 
@@ -144,9 +196,6 @@ def write_metrics_dict_to_file(
     0.5
     """
 
-    filter_fn: Callable[[str, bool], bool] = (
-        filter_fn if filter_fn is not None else lambda n, v: True
-    )
     path = Path(path_str)
     directory = path.parents[0]
     os.makedirs(directory, exist_ok=True)
