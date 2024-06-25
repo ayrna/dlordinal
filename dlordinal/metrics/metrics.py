@@ -103,14 +103,14 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return np.sqrt(sensitivities[0] * sensitivities[-1])
 
 
-def amae(y_true: np.ndarray, ypred: np.ndarray):
+def amae(y_true: np.ndarray, y_pred: np.ndarray):
     """Computes the average mean absolute error computed independently for each class.
 
     Parameters
     ----------
     y_true : array-like
-            Target labels.
-    ypred : array-like
+            Targets labels with one-hot or integer encoding.
+    y_pred : array-like
             Predicted probabilities or labels.
 
     Returns
@@ -119,7 +119,12 @@ def amae(y_true: np.ndarray, ypred: np.ndarray):
             Average mean absolute error.
     """
 
-    cm = confusion_matrix(y_true, ypred)
+    if len(y_true.shape) > 1:
+        y_true = np.argmax(y_true, axis=1)
+    if len(y_pred.shape) > 1:
+        y_pred = np.argmax(y_pred, axis=1)
+
+    cm = confusion_matrix(y_true, y_pred)
     n_class = cm.shape[0]
     costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
     costs = np.abs(costs - np.transpose(costs))
@@ -129,14 +134,14 @@ def amae(y_true: np.ndarray, ypred: np.ndarray):
     return np.mean(per_class_maes)
 
 
-def mmae(y_true: np.ndarray, ypred: np.ndarray):
+def mmae(y_true: np.ndarray, y_pred: np.ndarray):
     """Computes the maximum mean absolute error computed independently for each class.
 
     Parameters
     ----------
     y_true : array-like
-            Target labels.
-    ypred : array-like
+            Target labels with one-hot or integer encoding.
+    y_pred : array-like
             Predicted probabilities or labels.
 
     Returns
@@ -145,7 +150,12 @@ def mmae(y_true: np.ndarray, ypred: np.ndarray):
             Maximum mean absolute error.
     """
 
-    cm = confusion_matrix(y_true, ypred)
+    if len(y_true.shape) > 1:
+        y_true = np.argmax(y_true, axis=1)
+    if len(y_pred.shape) > 1:
+        y_pred = np.argmax(y_pred, axis=1)
+
+    cm = confusion_matrix(y_true, y_pred)
     n_class = cm.shape[0]
     costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
     costs = np.abs(costs - np.transpose(costs))
