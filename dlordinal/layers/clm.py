@@ -1,3 +1,4 @@
+import warnings
 from math import sqrt
 
 import torch
@@ -17,6 +18,8 @@ class CLM(Module):
         The link function to use. Can be ``'logit'``, ``'probit'`` or ``'cloglog'``.
     min_distance : float, default=0.0
         The minimum distance between thresholds
+    clip_warning : bool, default=True
+        Whether to print the clipping value warning or not.
 
     Example
     ---------
@@ -41,11 +44,14 @@ class CLM(Module):
         [0.5734, 0.0062, 0.0423, 0.0392, 0.3389]], grad_fn=<CopySlices>)
     """
 
-    def __init__(self, num_classes, link_function, min_distance=0.0, **kwargs):
+    def __init__(
+        self, num_classes, link_function, min_distance=0.0, clip_warning=True, **kwargs
+    ):
         super().__init__()
         self.num_classes = num_classes
         self.link_function = link_function
         self.min_distance = min_distance
+        self.clip_warning = clip_warning
         self.dist = torch.distributions.Normal(0, 1)
 
         self.thresholds_b = torch.nn.Parameter(data=torch.Tensor(1), requires_grad=True)
@@ -59,6 +65,8 @@ class CLM(Module):
             sqrt((1.0 / (self.num_classes - 2)) / 2),
             sqrt(1.0 / (self.num_classes - 2)),
         )
+
+        self.clip_warning_shown = False
 
     def _convert_thresholds(self, b, a, min_distance):
         a = a**2
@@ -91,7 +99,17 @@ class CLM(Module):
             0,
             1,
         )
+
         z3 = a - b
+        if torch.any(z3 > 10) or torch.any(z3 < -10):
+            if self.clip_warning and not self.clip_warning_shown:
+                warnings.warn(
+                    "The output value of the CLM layer is out of the range [-10, 10]."
+                    " Clipping value prior to applying the link function for numerical"
+                    " stability."
+                )
+            z3 = torch.clip(a - b, -10, 10)
+            self.clip_warning_shown = True
 
         if self.link_function == "probit":
             a3T = self.dist.cdf(z3)

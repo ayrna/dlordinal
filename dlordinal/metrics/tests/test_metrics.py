@@ -7,8 +7,10 @@ from sklearn.metrics import recall_score
 
 from dlordinal.metrics import (
     accuracy_off1,
+    amae,
     gmsec,
     minimum_sensitivity,
+    mmae,
     write_array_to_file,
     write_metrics_dict_to_file,
 )
@@ -47,6 +49,72 @@ def test_gmsec():
     result = gmsec(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = np.sqrt(sensitivities[0] * sensitivities[-1])
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+
+def test_amae():
+    y_true = np.array([0, 0, 1, 1])
+    y_pred = np.array([0, 1, 0, 1])
+    result = amae(y_true, y_pred)
+    expected_result = 0.5
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 0, 1, 1, 2, 2])
+    y_pred = np.array([0, 0, 1, 1, 2, 2])
+    result = amae(y_true, y_pred)
+    expected_result = 0.0
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 0, 2, 1])
+    y_pred = np.array([0, 2, 0, 1])
+    result = amae(y_true, y_pred)
+    expected_result = 1.0
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 0, 2, 1, 3])
+    y_pred = np.array([2, 2, 0, 3, 1])
+    result = amae(y_true, y_pred)
+    expected_result = 2.0
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    # Test using one-hot and probabilities
+    y_true = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
+    y_pred = np.array([[1, 0], [0, 1], [1, 0], [0, 1]])
+    result = amae(y_true, y_pred)
+    expected_result = 0.5
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+
+def test_mmae():
+    y_true = np.array([0, 0, 1, 1])
+    y_pred = np.array([0, 1, 0, 1])
+    result = mmae(y_true, y_pred)
+    expected_result = 0.5
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 0, 1, 1, 2, 2])
+    y_pred = np.array([0, 0, 1, 1, 2, 2])
+    result = mmae(y_true, y_pred)
+    expected_result = 0.0
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 0, 2, 1])
+    y_pred = np.array([0, 2, 0, 1])
+    result = mmae(y_true, y_pred)
+    expected_result = 2.0
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 0, 2, 1, 3])
+    y_pred = np.array([2, 2, 0, 3, 1])
+    result = mmae(y_true, y_pred)
+    expected_result = 2.0
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    # Test using one-hot and probabilities
+    y_true = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
+    y_pred = np.array([[1, 0], [0, 1], [1, 0], [0, 1]])
+    result = mmae(y_true, y_pred)
+    expected_result = 0.5
     assert result == pytest.approx(expected_result, rel=1e-6)
 
 
