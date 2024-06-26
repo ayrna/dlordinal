@@ -128,9 +128,10 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
     n_class = cm.shape[0]
     costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
     costs = np.abs(costs - np.transpose(costs))
-    errors = costs * cm
-    per_class_maes = np.sum(errors, axis=1) / np.sum(cm, axis=1).astype("double")
-    per_class_maes = per_class_maes[~np.isnan(per_class_maes)]
+    non_zero_cm_rows = ~np.all(cm == 0, axis=1)
+    cm_ = cm[non_zero_cm_rows]
+    errors = costs * cm_
+    per_class_maes = np.sum(errors, axis=1) / np.sum(cm_, axis=1).astype("double")
     return np.mean(per_class_maes)
 
 
@@ -159,9 +160,10 @@ def mmae(y_true: np.ndarray, y_pred: np.ndarray):
     n_class = cm.shape[0]
     costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
     costs = np.abs(costs - np.transpose(costs))
-    errors = costs * cm
-    per_class_maes = np.sum(errors, axis=1) / np.sum(cm, axis=1).astype("double")
-    per_class_maes = per_class_maes[~np.isnan(per_class_maes)]
+    non_zero_cm_rows = ~np.all(cm == 0, axis=1)
+    cm_ = cm[non_zero_cm_rows]
+    errors = costs * cm_
+    per_class_maes = np.sum(errors, axis=1) / np.sum(cm_, axis=1).astype("double")
     return per_class_maes.max()
 
 
