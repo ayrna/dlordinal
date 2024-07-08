@@ -12,7 +12,7 @@ This is the API for the **dlordinal** package.
 
    datasets
    dropout
-   output_layerslayers
+   output_layers
    losses
    metrics
    models
