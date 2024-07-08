@@ -1,4 +1,4 @@
-.. _layers:
+.. _output_layers:
 
 Output Layers
 =============
