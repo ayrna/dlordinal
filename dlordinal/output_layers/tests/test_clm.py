@@ -2,7 +2,8 @@ import warnings
 
 import pytest
 import torch
-from dlordinal.layers import CLM
+
+from dlordinal.output_layers import CLM
 
 
 def test_clm_creation():
