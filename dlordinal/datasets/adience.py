@@ -3,14 +3,13 @@ from pathlib import Path
 from typing import Union
 
 import pandas as pd
-
-# import subprocess
 from PIL import Image
 from sklearn.model_selection import StratifiedShuffleSplit
+from torchvision.datasets.vision import VisionDataset
 from tqdm import tqdm
 
 
-class Adience:
+class Adience(VisionDataset):
     """
     Base class for the Adience dataset.
 
