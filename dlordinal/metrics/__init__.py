@@ -6,6 +6,7 @@ from .metrics import (
     mmae,
     write_array_to_file,
     write_metrics_dict_to_file,
+    ranked_probability_score,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "mmae",
     "write_array_to_file",
     "write_metrics_dict_to_file",
+    "ranked_probability_score",
 ]

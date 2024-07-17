@@ -7,6 +7,49 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, recall_score
 
 
+def ranked_probability_score(y_true, y_proba):
+    """Computes the ranked probability score as presented in [1].
+
+    Parameters
+    ----------
+    y_true : array-like
+            Target labels.
+    y_proba : array-like
+            Predicted probabilities.
+
+    Returns
+    -------
+    rps : float
+            The ranked probability score.
+
+    References
+    ----------
+    .. [1] Janitza, S., Tutz, G., & Boulesteix, A. L. (2016).
+    Random forest for ordinal responses: prediction and variable selection.
+    Computational Statistics & Data Analysis, 96, 57-73.
+
+    Examples
+    --------
+    >>> y_true = np.array([0, 0, 3, 2])
+    >>> y_pred = np.array([[0.2, 0.4, 0.2, 0.2], [0.7, 0.1, 0.1, 0.1], [0.5, 0.05, 0.1, 0.35], [0.1, 0.05, 0.65, 0.2]])
+    >>> ranked_probability_score(y_true, y_pred)
+    0.506875
+    """
+    y_oh = np.zeros(y_proba.shape)
+    y_oh[np.arange(len(y_true)), y_true] = 1
+
+    y_oh = y_oh.cumsum(axis=1)
+    y_proba = y_proba.cumsum(axis=1)
+
+    rps = 0
+    for i in range(len(y_true)):
+        if y_true[i] in np.arange(y_proba.shape[1]):
+            rps += np.power(y_proba[i] - y_oh[i], 2).sum()
+        else:
+            rps += 1
+    return rps / len(y_true)
+
+
 def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Computes the sensitivity by class and returns the lowest value.
 
