@@ -30,10 +30,12 @@ def ranked_probability_score(y_true, y_proba):
 
     Examples
     --------
+    >>> import numpy as np
+    >>> from dlordinal.metrics import ranked_probability_score
     >>> y_true = np.array([0, 0, 3, 2])
     >>> y_pred = np.array([[0.2, 0.4, 0.2, 0.2], [0.7, 0.1, 0.1, 0.1], [0.5, 0.05, 0.1, 0.35], [0.1, 0.05, 0.65, 0.2]])
     >>> ranked_probability_score(y_true, y_pred)
-    0.506875
+    0.5068750000000001
     """
     y_true = np.array(y_true)
     y_proba = np.array(y_proba)
@@ -70,8 +72,10 @@ def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
     Examples
     --------
-    >>> y_true = np.array([0, 0, 1, 1])
-    >>> y_pred = np.array([0, 1, 0, 1])
+    >>> import numpy as np
+    >>> from dlordinal.metrics import minimum_sensitivity
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 3, 0, 1])
     >>> minimum_sensitivity(y_true, y_pred)
     0.5
     """
@@ -106,10 +110,12 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
 
     Examples
     --------
-    >>> y_true = np.array([0, 0, 1, 1])
-    >>> y_pred = np.array([0, 1, 0, 1])
+    >>> import numpy as np
+    >>> from dlordinal.metrics import accuracy_off1
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 0, 0, 1])
     >>> accuracy_off1(y_true, y_pred)
-    1.0
+    0.8571428571428571
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
@@ -148,10 +154,12 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
     Examples
     --------
-    >>> y_true = np.array([0, 0, 1, 1])
-    >>> y_pred = np.array([0, 1, 0, 1])
-    >>> gmec(y_true, y_pred)
-    0.5
+    >>> import numpy as np
+    >>> from dlordinal.metrics import gmsec
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 3, 0, 1])
+    >>> gmsec(y_true, y_pred)
+    0.7071067811865476
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
@@ -179,6 +187,15 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
     -------
     amae : float
             Average mean absolute error.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from dlordinal.metrics import amae
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 3, 0, 1])
+    >>> amae(y_true, y_pred)
+    0.125
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
@@ -213,6 +230,15 @@ def mmae(y_true: np.ndarray, y_pred: np.ndarray):
     -------
     mmae : float
             Maximum mean absolute error.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from dlordinal.metrics import mmae
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 3, 0, 1])
+    >>> mmae(y_true, y_pred)
+    0.5
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
