@@ -1,7 +1,9 @@
 import shutil
 from pathlib import Path
 
+import numpy as np
 import pytest
+from PIL import Image
 
 from dlordinal.datasets import FGNet
 
@@ -11,7 +13,14 @@ TMP_DIR = "./tmp_test_dir_fgnet"
 @pytest.fixture
 def fgnet_instance():
     root = TMP_DIR
-    fgnet = FGNet(root, download=True, process_data=True)
+    fgnet = FGNet(
+        root,
+        download=True,
+        process_data=True,
+        # transform=Compose([ToTensor()]),
+        target_transform=np.array,
+        train=True,
+    )
     return fgnet
 
 
@@ -76,6 +85,26 @@ def test_split_dataframe(fgnet_instance):
     )
     assert len(train_df) > 0
     assert len(test_df) > 0
+
+
+def test_getitem(fgnet_instance):
+    img, label = fgnet_instance[0]
+    assert isinstance(img, Image.Image)
+    assert img.mode == "RGB"
+    assert img.size == (128, 128)
+    assert label in range(6)
+
+
+def test_len(fgnet_instance):
+    assert len(fgnet_instance) > 0
+
+
+def test_targets(fgnet_instance):
+    assert len(fgnet_instance.targets) > 0
+
+
+def test_classes(fgnet_instance):
+    assert len(fgnet_instance.classes) == 6
 
 
 def test_clean_up():

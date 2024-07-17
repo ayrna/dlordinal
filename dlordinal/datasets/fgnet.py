@@ -1,10 +1,11 @@
 import re
 import shutil
 from pathlib import Path
-from typing import Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 from skimage.io import imread, imsave
 from skimage.transform import resize
 from skimage.util import img_as_ubyte
@@ -47,8 +48,13 @@ class FGNet(VisionDataset):
         categories: list = [3, 11, 16, 24, 40],
         test_size: float = 0.2,
         validation_size: float = 0.15,
+        train: bool = True,
+        transform: Optional[Callable] = None,
+        target_transform: Optional[Callable] = None,
     ) -> None:
-        super(FGNet, self).__init__(root)
+        super(FGNet, self).__init__(
+            root, transform=transform, target_transform=target_transform
+        )
 
         self.root = Path(self.root)
         self.root.parent.mkdir(parents=True, exist_ok=True)
@@ -87,8 +93,79 @@ class FGNet(VisionDataset):
                 test_images_path,
             )
 
+        # Load train and test dataframes
+        if train:
+            self.data = pd.read_csv(train_csv_path)
+        else:
+            self.data = pd.read_csv(test_csv_path)
+
     def __str__(self) -> str:
         return "FGNet"
+
+    def __len__(self) -> int:
+        """
+        Return the number of samples in the dataset.
+        """
+        return len(self.data)
+
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        """
+        Get a sample from the dataset.
+
+        Parameters
+        ----------
+        index : int
+            Index of the sample to get.
+
+        Returns
+        -------
+        tuple
+            (image, target) where target is the class index of the target class.
+        """
+        img_path = (
+            self.root / "FGNET" / "data_processed" / self.data.iloc[index]["path"]
+        )
+
+        # Cargar la imagen como PIL.Image.Image
+        with open(img_path, "rb") as f:
+            image = Image.open(f)
+            image = image.convert("RGB")
+
+        # Aplicar transformación si está definida
+        if self.transform:
+            image = self.transform(image)
+
+        target = int(self.data.iloc[index]["category"])
+
+        return image, target
+
+    @property
+    def targets(self):
+        """
+        Return the targets of the dataset.
+
+        Returns
+        -------
+        list
+            List of targets.
+        """
+
+        if self.target_transform:
+            return self.target_transform(self.data["category"])
+        else:
+            return self.data["category"].tolist()
+
+    @property
+    def classes(self) -> int:
+        """
+        Return the number of unique classes in the dataset.
+
+        Returns
+        -------
+        int
+            Number of unique classes.
+        """
+        return self.data["category"].unique()
 
     def download(self) -> None:
         """
@@ -289,7 +366,11 @@ class FGNet(VisionDataset):
         x = np.array(df["path"])
         y = np.array(df["category"])
         x_train, x_test, y_train, y_test = train_test_split(
-            x, y, test_size=self.test_size, random_state=1
+            x,
+            y,
+            test_size=self.test_size,
+            random_state=1,
+            stratify=y,
         )
 
         for path, label in zip(x_train, y_train):
@@ -303,7 +384,11 @@ class FGNet(VisionDataset):
             shutil.copy(original_images_path / path, test_path / path)
 
         x_train, x_val, y_train, y_val = train_test_split(
-            x_train, y_train, test_size=self.validation_size, random_state=1
+            x_train,
+            y_train,
+            test_size=self.validation_size,
+            random_state=1,
+            stratify=y_train,
         )
 
         train = np.hstack((x_train[:, np.newaxis], y_train[:, np.newaxis]))
