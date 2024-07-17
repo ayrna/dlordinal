@@ -8,7 +8,7 @@ from sklearn.metrics import confusion_matrix, recall_score
 
 
 def ranked_probability_score(y_true, y_proba):
-    """Computes the ranked probability score as presented in [1].
+    """Computes the ranked probability score as presented in :footcite:t:`janitza2016random`.
 
     Parameters
     ----------
@@ -21,12 +21,6 @@ def ranked_probability_score(y_true, y_proba):
     -------
     rps : float
             The ranked probability score.
-
-    References
-    ----------
-    .. [1] Janitza, S., Tutz, G., & Boulesteix, A. L. (2016).
-    Random forest for ordinal responses: prediction and variable selection.
-    Computational Statistics & Data Analysis, 96, 57-73.
 
     Examples
     --------
@@ -155,7 +149,7 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def amae(y_true: np.ndarray, y_pred: np.ndarray):
-    """Computes the average mean absolute error computed independently for each class.
+    """Computes the average mean absolute error computed independently for each class as presented in :footcite:t:`baccianella2009evaluation`.
 
     Parameters
     ----------
@@ -196,7 +190,7 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
 
 
 def mmae(y_true: np.ndarray, y_pred: np.ndarray):
-    """Computes the maximum mean absolute error computed independently for each class.
+    """Computes the maximum mean absolute error computed independently for each class as presented in :footcite:t:`cruz2014metrics`.
 
     Parameters
     ----------
