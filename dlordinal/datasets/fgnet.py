@@ -43,7 +43,6 @@ class FGNet(VisionDataset):
         self,
         root: Union[str, Path],
         download: bool = False,
-        process_data: bool = True,
         target_size: tuple = (128, 128),
         categories: list = [3, 11, 16, 24, 40],
         test_size: float = 0.2,
@@ -82,16 +81,15 @@ class FGNet(VisionDataset):
                 " download it"
             )
 
-        if process_data:
-            self.process(original_path, processed_path)
-            self.split(
-                original_csv_path,
-                train_csv_path,
-                test_csv_path,
-                original_images_path,
-                train_images_path,
-                test_images_path,
-            )
+        self.process(original_path, processed_path)
+        self.split(
+            original_csv_path,
+            train_csv_path,
+            test_csv_path,
+            original_images_path,
+            train_images_path,
+            test_images_path,
+        )
 
         # Load train and test dataframes
         if train:

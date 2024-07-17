@@ -16,7 +16,6 @@ def fgnet_instance():
     fgnet = FGNet(
         root,
         download=True,
-        process_data=True,
         # transform=Compose([ToTensor()]),
         target_transform=np.array,
         train=True,
