@@ -120,7 +120,7 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
 def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Geometric mean of the sensitivity of the extreme classes.
     Determines how good the classification performance for the first and the last
-    classes is.
+    classes is. Proposed in :footcite:t:`vargas2024improving`.
 
     Parameters
     ----------
