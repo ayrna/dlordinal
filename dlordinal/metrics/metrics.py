@@ -76,7 +76,8 @@ def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
-    """Computes the accuracy of the predictions, allowing errors if they occur in an adjacent class.
+    """Computes the accuracy of the predictions, allowing errors if they occur in an
+    adjacent class.
 
     Parameters
     ----------
@@ -118,9 +119,9 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
 
 
 def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Geometric mean of the sensitivity of the extreme classes.
-    Determines how good the classification performance for the first and the last
-    classes is. Proposed in :footcite:t:`vargas2024improving`.
+    """Geometric Mean of the Sensitivity of the Extreme Classes (GMSEC). It was proposed
+    in (:footcite:t:`vargas2024improving`) with the aim of assessing the performance of
+    the classification performance for the first and the last classes.
 
     Parameters
     ----------
@@ -149,7 +150,8 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def amae(y_true: np.ndarray, y_pred: np.ndarray):
-    """Computes the average mean absolute error computed independently for each class as presented in :footcite:t:`baccianella2009evaluation`.
+    """Computes the average mean absolute error computed independently for each class
+    as presented in :footcite:t:`baccianella2009evaluation`.
 
     Parameters
     ----------
@@ -190,7 +192,8 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
 
 
 def mmae(y_true: np.ndarray, y_pred: np.ndarray):
-    """Computes the maximum mean absolute error computed independently for each class as presented in :footcite:t:`cruz2014metrics`.
+    """Computes the maximum mean absolute error computed independently for each class
+    as presented in :footcite:t:`cruz2014metrics`.
 
     Parameters
     ----------
@@ -237,8 +240,8 @@ def write_metrics_dict_to_file(
 ) -> None:
     """Writes a dictionary of metrics to a tabular file.
     The dictionary is filtered by the filter function.
-    The first time that the metrics are saved to the file, the keys are written as the header.
-    Subsequent calls append the values to the file.
+    The first time that the metrics are saved to the file, the keys are written as
+    the header. Subsequent calls append the values to the file.
 
     Parameters
     ----------
@@ -250,7 +253,8 @@ def write_metrics_dict_to_file(
             If the file exists, the metrics will be appended to the file in a new row.
     filter_fn : Optional[Callable[[str, bool], bool]], default=lambda n, v: True
             Function that filters the metrics.
-            The function takes the name and the value of the metric and returns ``True`` if the metric should be saved.
+            The function takes the name and the value of the metric and returns ``True``
+            if the metric should be saved.
 
     Examples
     --------
