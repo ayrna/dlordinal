@@ -22,12 +22,6 @@ def ranked_probability_score(y_true, y_proba):
     rps : float
             The ranked probability score.
 
-    References
-    ----------
-    .. [1] Janitza, S., Tutz, G., & Boulesteix, A. L. (2016).
-    Random forest for ordinal responses: prediction and variable selection.
-    Computational Statistics & Data Analysis, 96, 57-73.
-
     Examples
     --------
     >>> y_true = np.array([0, 0, 3, 2])

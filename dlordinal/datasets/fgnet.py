@@ -19,25 +19,57 @@ class FGNet(VisionDataset):
     """
     Base class for FGNet dataset.
 
+    Attributes
+    ----------
+    root : Path
+        Root directory of the dataset.
+    target_size : tuple
+        Size of the images after resizing.
+    categories : list
+        List of categories to be used.
+    test_size : float
+        Size of the test set.
+    validation_size : float
+        Size of the validation set.
+    transform : callable, optional
+        A function/transform that takes in a PIL image and returns a transformed version.
+    target_transform : callable, optional
+        A function/transform that takes in the target and transforms it.
+    data : pd.DataFrame
+        Dataframe containing the dataset.
+
     Parameters
     ----------
     root : str or Path
-        Root directory of dataset
+        Root directory of the dataset.
     download : bool, optional
-        If True, downloads the dataset from the internet and puts it in root directory.
-        If dataset is already downloaded, it is not downloaded again.
-    process_data : bool, optional
-        If True, processes the dataset and puts it in root directory.
-        If dataset is already processed, it is not processed again.
+        If True, downloads the dataset from the internet and puts it in the root directory.
+        If the dataset is already downloaded, it is not downloaded again.
     target_size : tuple, optional
-        Size of the images after resizing.
+        Size of the images after resizing. Default is (128, 128).
     categories : list, optional
-        List of categories to be used.
+        List of categories to be used. Default is [3, 11, 16, 24, 40].
     test_size : float, optional
-        Size of the test set.
+        Size of the test set. Default is 0.2.
     validation_size : float, optional
-        Size of the validation set.
+        Size of the validation set. Default is 0.15.
+    train : bool, optional
+        If True, returns the training dataset, otherwise returns the test dataset. Default is True.
+    transform : callable, optional
+        A function/transform that takes in a PIL image and returns a transformed version.
+    target_transform : callable, optional
+        A function/transform that takes in the target and transforms it.
     """
+
+    # Attributes
+    root: Path
+    target_size: tuple
+    categories: list
+    test_size: float
+    validation_size: float
+    transform: Optional[Callable]
+    target_transform: Optional[Callable]
+    data: pd.DataFrame
 
     def __init__(
         self,
@@ -55,12 +87,14 @@ class FGNet(VisionDataset):
             root, transform=transform, target_transform=target_transform
         )
 
-        self.root = Path(self.root)
+        self.root = Path(root)
         self.root.parent.mkdir(parents=True, exist_ok=True)
         self.target_size = target_size
         self.categories = categories
         self.test_size = test_size
         self.validation_size = validation_size
+        self.transform = transform
+        self.target_transform = target_transform
 
         original_path = self.root / "FGNET/images"
         processed_path = self.root / "FGNET/data_processed"
