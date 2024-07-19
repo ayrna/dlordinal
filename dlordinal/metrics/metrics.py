@@ -8,7 +8,7 @@ from sklearn.metrics import confusion_matrix, recall_score
 
 
 def ranked_probability_score(y_true, y_proba):
-    """Computes the ranked probability score as presented in [1].
+    """Computes the ranked probability score as presented in :footcite:t:`janitza2016random`.
 
     Parameters
     ----------
@@ -21,12 +21,6 @@ def ranked_probability_score(y_true, y_proba):
     -------
     rps : float
             The ranked probability score.
-
-    References
-    ----------
-    .. [1] Janitza, S., Tutz, G., & Boulesteix, A. L. (2016).
-    Random forest for ordinal responses: prediction and variable selection.
-    Computational Statistics & Data Analysis, 96, 57-73.
 
     Examples
     --------
@@ -92,7 +86,8 @@ def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
-    """Computes the accuracy of the predictions, allowing errors if they occur in an adjacent class.
+    """Computes the accuracy of the predictions, allowing errors if they occur in an
+    adjacent class.
 
     Parameters
     ----------
@@ -136,9 +131,9 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
 
 
 def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Geometric mean of the sensitivity of the extreme classes.
-    Determines how good the classification performance for the first and the last
-    classes is.
+    """Geometric Mean of the Sensitivity of the Extreme Classes (GMSEC). It was proposed
+    in (:footcite:t:`vargas2024improving`) with the aim of assessing the performance of
+    the classification performance for the first and the last classes.
 
     Parameters
     ----------
@@ -174,7 +169,8 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def amae(y_true: np.ndarray, y_pred: np.ndarray):
-    """Computes the average mean absolute error computed independently for each class.
+    """Computes the average mean absolute error computed independently for each class
+    as presented in :footcite:t:`baccianella2009evaluation`.
 
     Parameters
     ----------
@@ -217,7 +213,8 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
 
 
 def mmae(y_true: np.ndarray, y_pred: np.ndarray):
-    """Computes the maximum mean absolute error computed independently for each class.
+    """Computes the maximum mean absolute error computed independently for each class
+    as presented in :footcite:t:`cruz2014metrics`.
 
     Parameters
     ----------
@@ -266,8 +263,8 @@ def write_metrics_dict_to_file(
 ) -> None:
     """Writes a dictionary of metrics to a tabular file.
     The dictionary is filtered by the filter function.
-    The first time that the metrics are saved to the file, the keys are written as the header.
-    Subsequent calls append the values to the file.
+    The first time that the metrics are saved to the file, the keys are written as
+    the header. Subsequent calls append the values to the file.
 
     Parameters
     ----------
@@ -279,7 +276,8 @@ def write_metrics_dict_to_file(
             If the file exists, the metrics will be appended to the file in a new row.
     filter_fn : Optional[Callable[[str, bool], bool]], default=lambda n, v: True
             Function that filters the metrics.
-            The function takes the name and the value of the metric and returns ``True`` if the metric should be saved.
+            The function takes the name and the value of the metric and returns ``True``
+            if the metric should be saved.
 
     Examples
     --------
