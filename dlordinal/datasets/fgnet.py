@@ -1,7 +1,7 @@
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -179,7 +179,7 @@ class FGNet(VisionDataset):
         return image, target
 
     @property
-    def targets(self) -> list[int]:
+    def targets(self) -> List[int]:
         """
         Return the targets of the dataset.
 
@@ -195,7 +195,7 @@ class FGNet(VisionDataset):
             return self.data["category"].tolist()
 
     @property
-    def classes(self) -> list:
+    def classes(self) -> List[int]:
         """
         Return the unique classes in the dataset.
 
