@@ -7,6 +7,8 @@ from unittest.mock import Mock
 import numpy as np
 import PIL.Image as Image
 import pytest
+import torch
+from torchvision.transforms import ToTensor
 
 from dlordinal.datasets import Adience
 from dlordinal.datasets.adience import _image_path_from_row, _track_progress
@@ -196,7 +198,7 @@ def _create_adience_data(tmp_path):
     return images_path, folds_path
 
 
-def get_adience_instance(tmp_path, train):
+def get_adience_instance(tmp_path, train, verbose=False):
     images_path, folds_path = _create_adience_data(tmp_path)
 
     adience_instance = Adience(
@@ -213,6 +215,7 @@ def get_adience_instance(tmp_path, train):
             (60, 100),
         ],
         test_size=0.2,
+        verbose=verbose,
     )
 
     return adience_instance
@@ -220,12 +223,12 @@ def get_adience_instance(tmp_path, train):
 
 @pytest.fixture
 def adience_train(tmp_path):
-    return get_adience_instance(tmp_path, train=True)
+    return get_adience_instance(tmp_path, train=True, verbose=True)
 
 
 @pytest.fixture
 def adience_test(tmp_path):
-    return get_adience_instance(tmp_path, train=False)
+    return get_adience_instance(tmp_path, train=False, verbose=False)
 
 
 def test_adience_init(adience_train, adience_test):
@@ -241,12 +244,33 @@ def test_adience_len(adience_train, adience_test):
         assert len(adience) == len(adience.targets)
         assert len(adience) == len(adience.data)
 
+        adience.targets.append(0)
+
+        with pytest.raises(ValueError):
+            len(adience)
+
 
 def test_adience_getitem(adience_train, adience_test):
     for adience in [adience_train, adience_test]:
         for i in range(len(adience)):
             assert isinstance(adience[i][0], Image.Image)
+            assert isinstance(adience[i][1], int)
             assert adience[i][1] == adience.targets[i]
+            assert np.array(adience[i][0]).ndim == 3
+
+        adience.transform = ToTensor()
+
+        for i in range(len(adience)):
+            assert isinstance(adience[i][0], torch.Tensor)
+            assert isinstance(adience[i][1], int)
+            assert adience[i][1] == adience.targets[i]
+            assert len(adience[i][0].shape) == 3
+
+        adience.target_transform = lambda target: np.array(target)
+        for i in range(len(adience)):
+            assert isinstance(adience[i][0], torch.Tensor)
+            assert isinstance(adience[i][1], np.ndarray)
+            assert np.array_equal(adience[i][1], adience.targets[i])
 
 
 def test_assign_range_integers(adience_train, adience_test):
@@ -348,8 +372,81 @@ def test_process_and_split(monkeypatch, tmp_path):
                 initial_symlink_count + len(adience.df_) * adience.test_size, abs=1
             )
 
+        shutil.rmtree(adience.transformed_images_path_)
+
+        initial_open_count = mock_image_open.call_count
+        initial_symlink_count = mock_symlink_to.call_count
+
+        adience._process_and_split(adience.folds_)
+
+        assert mock_image_open.call_count == initial_open_count + len(adience.df_)
+
+        assert mock_symlink_to.call_count == initial_symlink_count
+
 
 def test_adience_classes(adience_train, adience_test):
     assert adience_train.classes == adience_test.classes
     assert adience_train.classes == np.unique(adience_train.targets).tolist()
     assert adience_test.classes == np.unique(adience_test.targets).tolist()
+
+
+def test_check_input_files(adience_train, adience_test, tmp_path):
+    assert adience_train._check_input_files()
+    assert adience_test._check_input_files()
+
+    adience_train.data_file_path_.unlink()
+    assert not adience_train._check_input_files()
+
+    (adience_test.folds_path_ / "fold_0_data.txt").unlink()
+    assert not adience_test._check_input_files()
+
+    with pytest.raises(FileNotFoundError):
+        Adience(root=Path(tmp_path) / "test", train=True)
+
+
+def test_check_if_extracted(adience_train, adience_test):
+    assert adience_train._check_if_extracted()
+    assert adience_test._check_if_extracted()
+
+    shutil.rmtree(adience_train.images_path_)
+    assert not adience_train._check_if_extracted()
+    assert not adience_test._check_if_extracted()
+
+
+def test_check_if_transformed(adience_train, adience_test):
+    assert adience_train._check_if_transformed()
+    assert adience_test._check_if_transformed()
+
+    shutil.rmtree(adience_train.transformed_images_path_)
+    assert not adience_train._check_if_transformed()
+    assert not adience_test._check_if_transformed()
+
+
+def test_check_if_partitioned(adience_train, adience_test):
+    assert adience_train._check_if_partitioned()
+    assert adience_test._check_if_partitioned()
+
+    shutil.rmtree(adience_train.partition_path_)
+    assert not adience_train._check_if_partitioned()
+    assert not adience_test._check_if_partitioned()
+
+
+def test_extract_data(adience_train, adience_test):
+    assert adience_train._check_if_extracted()
+    assert adience_test._check_if_extracted()
+
+    adience_train._extract_data()
+    adience_test._extract_data()
+
+    assert adience_train._check_if_extracted()
+    assert adience_test._check_if_extracted()
+
+    shutil.rmtree(adience_train.images_path_)
+
+    assert not adience_train._check_if_extracted()
+    assert not adience_test._check_if_extracted()
+
+    adience_train._extract_data()
+
+    assert adience_train._check_if_extracted()
+    assert adience_test._check_if_extracted()

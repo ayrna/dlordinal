@@ -117,7 +117,7 @@ class Adience(VisionDataset):
             self.partition_path_ = self.root_adience_ / "test"
 
         if not self._check_input_files():
-            raise ValueError(
+            raise FileNotFoundError(
                 "Some input files are missing. Please, check the documentation of the"
                 " root parameter to see the expected directory structure."
             )
@@ -174,7 +174,7 @@ class Adience(VisionDataset):
         with tarfile.open(self.data_file_path_, "r:gz") as file:
             path = self.data_file_path_.parent
             path.mkdir(exist_ok=True, parents=True)
-            file.extractall(path, members=_track_progress(file))
+            file.extractall(path, members=_track_progress(file), filter="data")
 
     def _process_and_split(self, folds: list) -> None:
         """
@@ -359,8 +359,7 @@ class Adience(VisionDataset):
         image_path = self.data[index]
         target = self.targets[index]
 
-        with open(image_path, "rb") as f:
-            image = Image.open(f)
+        image = Image.open(image_path)
 
         if self.transform is not None:
             image = self.transform(image)
