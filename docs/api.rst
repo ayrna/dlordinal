@@ -15,5 +15,5 @@ This is the API for the **dlordinal** package.
    output_layers
    losses
    metrics
-   models
+   wrappers
    soft_labelling

@@ -2,9 +2,7 @@ import pytest
 import torch
 import torchvision.models as models
 
-from ..obd_ecoc import (
-    OBDECOCModel,
-)
+from dlordinal.wrappers import OBDECOCModel
 
 
 @pytest.fixture
