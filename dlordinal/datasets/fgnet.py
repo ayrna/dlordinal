@@ -165,9 +165,8 @@ class FGNet(VisionDataset):
         )
 
         # Cargar la imagen como PIL.Image.Image
-        with open(img_path, "rb") as f:
-            image = Image.open(f)
-            image = image.convert("RGB")
+        image = Image.open(img_path)
+        image = image.convert("RGB")
 
         # Aplicar transformación si está definida
         if self.transform:
