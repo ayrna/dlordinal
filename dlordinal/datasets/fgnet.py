@@ -168,6 +168,8 @@ class FGNet(VisionDataset):
             image = self.transform(image)
 
         target = int(self.data.iloc[index]["category"])
+        if self.target_transform:
+            target = self.target_transform(target)
 
         return image, target
 
