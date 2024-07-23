@@ -42,7 +42,7 @@ class FGNet(VisionDataset):
     ----------
     root : str or Path
         Root directory of the dataset.
-    download : bool, optional
+    download : bool, optional, default = True
         If True, downloads the dataset from the internet and puts it in the root directory.
         If the dataset is already downloaded, it is not downloaded again.
     target_size : tuple, optional
@@ -74,7 +74,7 @@ class FGNet(VisionDataset):
     def __init__(
         self,
         root: Union[str, Path],
-        download: bool = False,
+        download: bool = True,
         target_size: tuple = (128, 128),
         categories: list = [3, 11, 16, 24, 40],
         test_size: float = 0.2,
@@ -180,7 +180,7 @@ class FGNet(VisionDataset):
         return image, target
 
     @property
-    def targets(self):
+    def targets(self) -> list[int]:
         """
         Return the targets of the dataset.
 
