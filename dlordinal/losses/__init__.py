@@ -8,6 +8,7 @@ from .mcewkloss import MCEAndWKLoss
 from .ordinal_ecoc_distance_loss import OrdinalECOCDistanceLoss
 from .poisson_loss import PoissonCrossEntropyLoss
 from .triangular_loss import TriangularCrossEntropyLoss
+from .logistic_at_loss import LogisticATLoss
 from .wkloss import WKLoss
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "OrdinalECOCDistanceLoss",
     "TriangularCrossEntropyLoss",
     "GeneralTriangularCrossEntropyLoss",
+    "LogisticATLoss",
 ]

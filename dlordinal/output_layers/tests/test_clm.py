@@ -64,6 +64,72 @@ def test_clm_thresholds():
     _test_probas(clm)
 
 
+def test_clm_thresholds_exhaustive():
+    num_classes = 5
+    link_function = "logit"
+    min_distance = 0.0
+
+    clm = CLM(
+        num_classes=num_classes, link_function=link_function, min_distance=min_distance
+    )
+
+    lambdas_1 = torch.Tensor([0.2, 0.05, 0.7])
+    th_base_1 = torch.Tensor([0.5])
+    th_1 = clm._convert_thresholds(th_base_1, lambdas_1, min_distance)
+    expected_th_1 = torch.Tensor([0.5, 0.54, 0.5425, 1.0325])
+    assert torch.allclose(th_1, expected_th_1)
+
+    lambdas_2 = torch.Tensor([7.2, 0.4, 4.3])
+    th_base_2 = torch.Tensor([1.2])
+    th_2 = clm._convert_thresholds(th_base_2, lambdas_2, min_distance)
+    expected_th_2 = torch.Tensor([1.2, 53.04, 53.2, 71.69])
+    assert torch.allclose(th_2, expected_th_2)
+
+    lambdas_3 = torch.Tensor([-5.6, 6.1, -8.9])
+    th_base_3 = torch.Tensor([-0.7])
+    th_3 = clm._convert_thresholds(th_base_3, lambdas_3, min_distance)
+    expected_th_3 = torch.Tensor([-0.7, 30.66, 67.87, 147.08])
+    assert torch.allclose(th_3, expected_th_3)
+
+
+def test_clm_probas_from_projection_and_thresholds():
+    num_classes = 5
+    link_function = "logit"
+    min_distance = 0.0
+
+    clm = CLM(
+        num_classes=num_classes, link_function=link_function, min_distance=min_distance
+    )
+
+    th = torch.Tensor([0, 1, 2, 3])
+    wx = torch.Tensor([2.2])
+    probas = clm._clm(wx, th)
+    expected_probas = torch.Tensor(
+        [
+            0.0997504891196851,
+            0.131724727381297,
+            0.21869078618654,
+            0.23980847844009,
+            0.310025518872387,
+        ]
+    )
+    assert torch.allclose(probas, expected_probas, atol=1e-06)
+
+    th = torch.Tensor([0.5, 0.54, 0.5425, 1.0325])
+    wx = torch.Tensor([0.25])
+    probas = clm._clm(wx, th)
+    expected_probas = torch.Tensor(
+        [
+            0.562176500885798,
+            0.00981963204572056,
+            0.0006119309317415,
+            0.113610607034421,
+            0.313781329102319,
+        ]
+    )
+    assert torch.allclose(probas, expected_probas, atol=1e-06)
+
+
 def test_clm_link_functions():
     for link in ["logit", "probit", "cloglog"]:
         for num_classes in range(3, 12):
