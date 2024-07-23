@@ -428,6 +428,7 @@ def test_check_if_partitioned(adience_train, adience_test):
 
     shutil.rmtree(adience_train.partition_path_)
     assert not adience_train._check_if_partitioned()
+    shutil.rmtree(adience_test.partition_path_)
     assert not adience_test._check_if_partitioned()
 
 
