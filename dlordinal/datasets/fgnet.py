@@ -84,7 +84,7 @@ class FGNet(VisionDataset):
         target_transform: Optional[Callable] = None,
     ) -> None:
         super(FGNet, self).__init__(
-            root, transform=transform, target_transform=target_transform
+            str(root), transform=transform, target_transform=target_transform
         )
 
         self.root = Path(root)
@@ -136,8 +136,14 @@ class FGNet(VisionDataset):
 
     def __len__(self) -> int:
         """
-        Return the number of samples in the dataset.
+        Obtain the number of samples in the dataset.
+
+        Returns
+        -------
+        int
+            Number of samples in the dataset.
         """
+
         return len(self.data)
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
@@ -190,16 +196,16 @@ class FGNet(VisionDataset):
             return self.data["category"].tolist()
 
     @property
-    def classes(self) -> int:
+    def classes(self) -> list:
         """
-        Return the number of unique classes in the dataset.
+        Return the unique classes in the dataset.
 
         Returns
         -------
-        int
-            Number of unique classes.
+        list
+            List of unique classes.
         """
-        return self.data["category"].unique()
+        return np.unique(self.data["category"]).tolist()
 
     def download(self) -> None:
         """
@@ -211,7 +217,7 @@ class FGNet(VisionDataset):
 
         download_and_extract_archive(
             "http://yanweifu.github.io/FG_NET_data/FGNET.zip",
-            self.root,
+            str(self.root),
             filename="fgnet.zip",
             md5="1206978cac3626321b84c22b24cc8d19",
         )
@@ -316,7 +322,9 @@ class FGNet(VisionDataset):
             Filename of the image.
         """
         m = re.match("[0-9]+A([0-9]+).*", filename)
-        return int(m.groups()[0])
+        if m:
+            return int(m.groups()[0])
+        return None
 
     def find_category(self, real_age):
         """

@@ -1,6 +1,3 @@
-import shutil
-from pathlib import Path
-
 import numpy as np
 import pytest
 import torch
@@ -9,14 +6,11 @@ from torchvision.transforms import ToTensor
 
 from dlordinal.datasets import FGNet
 
-TMP_DIR = "./tmp_test_dir_fgnet"
-
 
 @pytest.fixture
-def fgnet_train():
-    root = TMP_DIR
+def fgnet_train(tmp_path):
     fgnet = FGNet(
-        root,
+        root=tmp_path,
         download=True,
         train=True,
     )
@@ -24,10 +18,9 @@ def fgnet_train():
 
 
 @pytest.fixture
-def fgnet_test():
-    root = TMP_DIR
+def fgnet_test(tmp_path):
     fgnet = FGNet(
-        root,
+        root=tmp_path,
         download=True,
         train=False,
     )
@@ -118,19 +111,23 @@ def test_getitem(fgnet_train, fgnet_test):
             assert np.array_equal(fgnet[i][1], fgnet.targets[i])
 
 
-def test_len(fgnet_train):
-    assert len(fgnet_train) > 0
+def test_len(fgnet_train, fgnet_test):
+    for fgnet in [fgnet_train, fgnet_test]:
+        assert len(fgnet) == len(fgnet.targets)
+        assert len(fgnet) == len(fgnet.data)
 
 
 def test_targets(fgnet_train):
     assert len(fgnet_train.targets) > 0
+    assert isinstance(fgnet_train.targets, list)
+    assert isinstance(fgnet_train.targets[0], int)
+    assert np.all(np.array(fgnet_train.targets) >= 0)
 
 
-def test_classes(fgnet_train):
+def test_classes(fgnet_train, fgnet_test):
     assert len(fgnet_train.classes) == 6
-
-
-def test_clean_up():
-    path = Path(TMP_DIR)
-    if path.exists():
-        shutil.rmtree(path)
+    assert isinstance(fgnet_train.classes, list)
+    assert fgnet_train.classes == fgnet_test.classes
+    assert fgnet_train.classes == np.unique(fgnet_train.targets).tolist()
+    assert fgnet_test.classes == np.unique(fgnet_test.targets).tolist()
+    assert fgnet_train.classes == [0, 1, 2, 3, 4, 5]
