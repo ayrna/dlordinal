@@ -13,7 +13,21 @@ from dlordinal.metrics import (
     mmae,
     write_array_to_file,
     write_metrics_dict_to_file,
+    ranked_probability_score,
 )
+
+
+def test_ranked_probability_score():
+    y_true = np.array([0, 0, 3, 2])
+    y_pred = np.array(
+        [
+            [0.2, 0.4, 0.2, 0.2],
+            [0.7, 0.1, 0.1, 0.1],
+            [0.5, 0.05, 0.1, 0.35],
+            [0.1, 0.05, 0.65, 0.2],
+        ]
+    )
+    assert ranked_probability_score(y_true, y_pred) == pytest.approx(0.506875, rel=1e-6)
 
 
 def test_minimum_sensitivity():
