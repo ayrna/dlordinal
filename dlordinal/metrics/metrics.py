@@ -1,13 +1,15 @@
 import json
 import os
 from pathlib import Path
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Union
 
 import numpy as np
 from sklearn.metrics import confusion_matrix, recall_score
 
 
-def ranked_probability_score(y_true, y_proba):
+def ranked_probability_score(
+    y_true: Union[np.array, list], y_proba: Union[np.array, list]
+):
     """Computes the ranked probability score as presented in :footcite:t:`janitza2016random`.
 
     Parameters
@@ -31,8 +33,12 @@ def ranked_probability_score(y_true, y_proba):
     >>> ranked_probability_score(y_true, y_pred)
     0.5068750000000001
     """
+
     y_true = np.array(y_true)
     y_proba = np.array(y_proba)
+
+    if len(y_true.shape) > 1:
+        y_true = np.argmax(y_true, axis=1)
 
     y_oh = np.zeros(y_proba.shape)
     y_oh[np.arange(len(y_true)), y_true] = 1
@@ -49,7 +55,9 @@ def ranked_probability_score(y_true, y_proba):
     return rps / len(y_true)
 
 
-def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+def minimum_sensitivity(
+    y_true: Union[np.array, list], y_pred: Union[np.array, list]
+) -> float:
     """Computes the sensitivity by class and returns the lowest value.
 
     Parameters
@@ -73,6 +81,7 @@ def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> minimum_sensitivity(y_true, y_pred)
     0.5
     """
+
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
 
@@ -85,7 +94,9 @@ def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return np.min(sensitivities)
 
 
-def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
+def accuracy_off1(
+    y_true: Union[np.array, list], y_pred: Union[np.array, list], labels=None
+) -> float:
     """Computes the accuracy of the predictions, allowing errors if they occur in an
     adjacent class.
 
@@ -112,6 +123,7 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
     >>> accuracy_off1(y_true, y_pred)
     0.8571428571428571
     """
+
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
 
@@ -130,7 +142,7 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
     return 1.0 * np.sum(correct) / np.sum(conf_mat)
 
 
-def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+def gmsec(y_true: Union[np.array, list], y_pred: Union[np.array, list]) -> float:
     """Geometric Mean of the Sensitivity of the Extreme Classes (GMSEC). It was proposed
     in (:footcite:t:`vargas2024improving`) with the aim of assessing the performance of
     the classification performance for the first and the last classes.
@@ -156,6 +168,7 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> gmsec(y_true, y_pred)
     0.7071067811865476
     """
+
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
 
@@ -168,7 +181,7 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return np.sqrt(sensitivities[0] * sensitivities[-1])
 
 
-def amae(y_true: np.ndarray, y_pred: np.ndarray):
+def amae(y_true: Union[np.array, list], y_pred: Union[np.array, list]):
     """Computes the average mean absolute error computed independently for each class
     as presented in :footcite:t:`baccianella2009evaluation`.
 
@@ -193,6 +206,7 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
     >>> amae(y_true, y_pred)
     0.125
     """
+
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
 
@@ -212,7 +226,7 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
     return np.mean(per_class_maes)
 
 
-def mmae(y_true: np.ndarray, y_pred: np.ndarray):
+def mmae(y_true: Union[np.array, list], y_pred: Union[np.array, list]):
     """Computes the maximum mean absolute error computed independently for each class
     as presented in :footcite:t:`cruz2014metrics`.
 
@@ -237,6 +251,7 @@ def mmae(y_true: np.ndarray, y_pred: np.ndarray):
     >>> mmae(y_true, y_pred)
     0.5
     """
+
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
 
