@@ -23,7 +23,7 @@ The latest `dlordinal` release is `v2.2.0`.
 
 ## ⚙️ Installation
 
-`dlordinal v2.1.1` is the last version supported by Python 3.8, Python 3.9 and Python 3.10.
+`dlordinal v2.2.0` is the last version, supported by Python 3.8, Python 3.9 and Python 3.10.
 
 The easiest way to install `dlordinal` is via `pip`:
 
