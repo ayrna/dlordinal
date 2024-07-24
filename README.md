@@ -1,6 +1,8 @@
-# Deep learning utilities library
+# Welcome to dlordinal
 
-`dlordinal` is an open-source Python toolkit focused on deep learning with ordinal methodologies.
+`dlordinal` is a Python library that unifies many recent deep ordinal classification methodologies available in the literature. Developed using PyTorch as underlying framework, it implements the top performing state-of-the-art deep learning techniques for ordinal classification problems. Ordinal approaches are designed to leverage the ordering information present in the target variable. Specifically, it includes loss functions, various output layers, dropout techniques, soft labelling methodologies, and other classification strategies, all of which are appropriately designed to incorporate the ordinal information. Furthermore, as the performance metrics to assess novel proposals in ordinal classification depend on the distance between target and predicted classes in the ordinal scale, suitable ordinal evaluation metrics are also included.
+
+The latest `dlordinal` release is `v2.2.0`.
 
 | Overview  |                                                                                                                                          |
 |-----------|------------------------------------------------------------------------------------------------------------------------------------------|
@@ -9,19 +11,111 @@
 
 
 ## Table of Contents
-- [⚙️ Installation](#%EF%B8%8F-installation)
-- [📖 Documentation](#-documentation)
-- [Collaborating](#collaborating)
+- [Welcome to dlordinal](#welcome-to-dlordinal)
+  - [Table of Contents](#table-of-contents)
+  - [⚙️ Installation](#️-installation)
+  - [🚀 Getting started](#-getting-started)
+    - [Loading an ordinal benchmark dataset](#loading-an-ordinal-benchmark-dataset)
+    - [Training a CNN model using the `skorch` library](#training-a-cnn-model-using-the-skorch-library)
+  - [📖 Documentation](#-documentation)
+  - [Collaborating](#collaborating)
     - [Guidelines for code contributions](#guidelines-for-code-contributions)
 
 ## ⚙️ Installation
 
-`dlordinal v2.2.0` is the last version supported by Python 3.8, Python 3.9 and Python 3.10.
+`dlordinal v2.2.0` is the last version, supported by Python 3.8, Python 3.9 and Python 3.10.
 
 The easiest way to install `dlordinal` is via `pip`:
 
 ```bash
 pip install dlordinal
+```
+
+## 🚀 Getting started
+
+The best place to get started with `dlordinal` is the [tutorials directory](https://github.com/ayrna/dlordinal/tree/main/tutorials).
+
+Below we provide a quick example of how to use some elements of `dlordinal`, such as a dataset, a loss function or some metrics.
+
+### Loading an ordinal benchmark dataset
+
+The FGNet is a well-known benchmark dataset that is commonly used to benchmark ordinal classification methodologies. The dataset is composed of facial images and is labelled with different age categories. It can be downloaded and loaded into Python by simply using the `dlordinal.datasets.FGNet` class.
+
+```python
+import numpy as np
+from dlordinal.datasets import FGNet
+from torchvision.transforms import Compose, ToTensor
+
+fgnet_train = FGNet(
+    root="./datasets",
+    train=True,
+    target_transform=np.array,
+    transform=Compose([ToTensor()]),
+)
+fgnet_test = FGNet(
+    root="./datasets",
+    train=False,
+    target_transform=np.array,
+    transform=Compose([ToTensor()]),
+)
+
+```
+
+### Training a CNN model using the `skorch` library
+
+This example shows how to train a CNN model using the `NeuralNetClassifier` from the `skorch` library and the `TriangularCrossEntropy` from `dlordinal` as optimisation criterion.
+
+```python
+import numpy as np
+from dlordinal.datasets import FGNet
+from dlordinal.losses import TriangularCrossEntropyLoss
+from dlordinal.metrics import amae, mmae
+from skorch import NeuralNetClassifier
+from torch import nn
+from torch.optim import Adam
+from torchvision import models
+from torchvision.transforms import Compose, ToTensor
+
+# Download the FGNet dataset
+fgnet_train = FGNet(
+    root="./datasets",
+    train=True,
+    target_transform=np.array,
+    transform=Compose([ToTensor()]),
+)
+fgnet_test = FGNet(
+    root="./datasets",
+    train=False,
+    target_transform=np.array,
+    transform=Compose([ToTensor()]),
+)
+
+num_classes_fgnet = len(fgnet_train.classes)
+
+# Model
+model = models.resnet18(weights="IMAGENET1K_V1")
+model.fc = nn.Linear(model.fc.in_features, num_classes_fgnet)
+
+# Loss function
+loss_fn = TriangularCrossEntropyLoss(num_classes=num_classes_fgnet)
+
+# Skorch estimator
+estimator = NeuralNetClassifier(
+    module=model,
+    criterion=loss_fn,
+    optimizer=Adam,
+    lr=1e-3,
+    max_epochs=25,
+)
+
+estimator.fit(X=fgnet_train, y=fgnet_train.targets)
+train_probs = estimator.predict_proba(fgnet_train)
+test_probs = estimator.predict_proba(fgnet_test)
+
+# Metrics
+amae_metric = amae(np.array(fgnet_test.targets), test_probs)
+mmae_metric = mmae(np.array(fgnet_test.targets), test_probs)
+print(f"Test AMAE: {amae_metric}, Test MMAE: {mmae_metric}")
 ```
 
 ## 📖 Documentation
@@ -60,12 +154,13 @@ This is the API for the **dlordinal** package.
    :maxdepth: 2
    :caption: Contents:
 
-   losses
    datasets
-   distributions
-   layers
+   dropout
+   output_layers
+   losses
    metrics
-   sklearn_integration
+   wrappers
+   soft_labelling
    ***NEW_MODULE***
 ```
 
