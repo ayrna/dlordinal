@@ -34,6 +34,14 @@ def test_ranked_probability_score():
         assert rps == pytest.approx(0.26000000, rel=1e-6)
 
     y_true = np.array([1, 2, 0, 3])
+    y_true_one_hot = np.array(
+        [
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 1],
+        ]
+    )
     y_pred = np.array(
         [
             [0.2, 0.6, 0.1, 0.1],
@@ -44,6 +52,9 @@ def test_ranked_probability_score():
     )
     warnings.filterwarnings("error")
     assert ranked_probability_score(y_true, y_pred) == pytest.approx(0.075, rel=1e-6)
+    assert ranked_probability_score(y_true_one_hot, y_pred) == pytest.approx(
+        0.075, rel=1e-6
+    )
     warnings.resetwarnings()
 
 
