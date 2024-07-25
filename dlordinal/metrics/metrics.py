@@ -1,14 +1,24 @@
+import warnings
 import json
 import os
 from pathlib import Path
-from typing import Callable, Dict, Optional, Union
+from typing import (
+    Callable,
+    Dict,
+    Optional,
+    Union,
+)
 
 import numpy as np
-from sklearn.metrics import confusion_matrix, recall_score
+from sklearn.metrics import (
+    confusion_matrix,
+    recall_score,
+)
 
 
 def ranked_probability_score(
-    y_true: Union[np.array, list], y_proba: Union[np.array, list]
+    y_true: Union[np.array, list],
+    y_proba: Union[np.array, list],
 ):
     """Computes the ranked probability score as presented in :footcite:t:`janitza2016random`.
 
@@ -40,8 +50,22 @@ def ranked_probability_score(
     if len(y_true.shape) > 1:
         y_true = np.argmax(y_true, axis=1)
 
+    if y_proba.shape[1] != len(np.unique(y_true)):
+        warnings.warn(
+            f"Number of predicted probabilities (= {y_proba.shape[1]}) does not match"
+            f" the number of classes (= {len(np.unique(y_true))}). A hotfix will be"
+            " applied. The returned value of this metric will not be accurate.",
+        )
+
     y_oh = np.zeros(y_proba.shape)
-    y_oh[np.arange(len(y_true)), y_true] = 1
+    y_oh[
+        np.arange(len(y_true)),
+        np.clip(
+            y_true,
+            0,
+            y_proba.shape[1] - 1,
+        ),
+    ] = 1
 
     y_oh = y_oh.cumsum(axis=1)
     y_proba = y_proba.cumsum(axis=1)
@@ -56,7 +80,8 @@ def ranked_probability_score(
 
 
 def minimum_sensitivity(
-    y_true: Union[np.array, list], y_pred: Union[np.array, list]
+    y_true: Union[np.array, list],
+    y_pred: Union[np.array, list],
 ) -> float:
     """Computes the sensitivity by class and returns the lowest value.
 
@@ -95,7 +120,9 @@ def minimum_sensitivity(
 
 
 def accuracy_off1(
-    y_true: Union[np.array, list], y_pred: Union[np.array, list], labels=None
+    y_true: Union[np.array, list],
+    y_pred: Union[np.array, list],
+    labels=None,
 ) -> float:
     """Computes the accuracy of the predictions, allowing errors if they occur in an
     adjacent class.
@@ -142,7 +169,10 @@ def accuracy_off1(
     return 1.0 * np.sum(correct) / np.sum(conf_mat)
 
 
-def gmsec(y_true: Union[np.array, list], y_pred: Union[np.array, list]) -> float:
+def gmsec(
+    y_true: Union[np.array, list],
+    y_pred: Union[np.array, list],
+) -> float:
     """Geometric Mean of the Sensitivity of the Extreme Classes (GMSEC). It was proposed
     in (:footcite:t:`vargas2024improving`) with the aim of assessing the performance of
     the classification performance for the first and the last classes.
@@ -181,7 +211,10 @@ def gmsec(y_true: Union[np.array, list], y_pred: Union[np.array, list]) -> float
     return np.sqrt(sensitivities[0] * sensitivities[-1])
 
 
-def amae(y_true: Union[np.array, list], y_pred: Union[np.array, list]):
+def amae(
+    y_true: Union[np.array, list],
+    y_pred: Union[np.array, list],
+):
     """Computes the average mean absolute error computed independently for each class
     as presented in :footcite:t:`baccianella2009evaluation`.
 
@@ -217,7 +250,10 @@ def amae(y_true: Union[np.array, list], y_pred: Union[np.array, list]):
 
     cm = confusion_matrix(y_true, y_pred)
     n_class = cm.shape[0]
-    costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
+    costs = np.reshape(
+        np.tile(range(n_class), n_class),
+        (n_class, n_class),
+    )
     costs = np.abs(costs - np.transpose(costs))
     non_zero_cm_rows = ~np.all(cm == 0, axis=1)
     cm_ = cm[non_zero_cm_rows]
@@ -226,7 +262,10 @@ def amae(y_true: Union[np.array, list], y_pred: Union[np.array, list]):
     return np.mean(per_class_maes)
 
 
-def mmae(y_true: Union[np.array, list], y_pred: Union[np.array, list]):
+def mmae(
+    y_true: Union[np.array, list],
+    y_pred: Union[np.array, list],
+):
     """Computes the maximum mean absolute error computed independently for each class
     as presented in :footcite:t:`cruz2014metrics`.
 
@@ -262,7 +301,10 @@ def mmae(y_true: Union[np.array, list], y_pred: Union[np.array, list]):
 
     cm = confusion_matrix(y_true, y_pred)
     n_class = cm.shape[0]
-    costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
+    costs = np.reshape(
+        np.tile(range(n_class), n_class),
+        (n_class, n_class),
+    )
     costs = np.abs(costs - np.transpose(costs))
     non_zero_cm_rows = ~np.all(cm == 0, axis=1)
     cm_ = cm[non_zero_cm_rows]
@@ -331,7 +373,11 @@ def write_metrics_dict_to_file(
         f.write("\n")
 
 
-def write_array_to_file(array: np.ndarray, path_str: str, id: str):
+def write_array_to_file(
+    array: np.ndarray,
+    path_str: str,
+    id: str,
+):
     """Writes an array to a json file.
     The array is saved as a dictionary with the key 'id' and the value 'array'.
 

@@ -1,4 +1,5 @@
 import json
+import warnings
 import os
 
 import numpy as np
@@ -18,45 +19,32 @@ from dlordinal.metrics import (
 
 
 def test_ranked_probability_score():
-    y_true = np.array([0, 0, 3, 2])
+    y_true = np.array([1, 2, 0, 3, 4])
     y_pred = np.array(
         [
-            [0.2, 0.4, 0.2, 0.2],
+            [0.2, 0.6, 0.1, 0.1],
+            [0.1, 0.05, 0.8, 0.05],
+            [0.8, 0.05, 0.05, 0.1],
+            [0.05, 0.05, 0.2, 0.7],
             [0.7, 0.1, 0.1, 0.1],
-            [0.5, 0.05, 0.1, 0.35],
-            [0.1, 0.05, 0.65, 0.2],
         ]
     )
-    assert ranked_probability_score(y_true, y_pred) == pytest.approx(0.506875, rel=1e-6)
+    with pytest.warns(Warning, match="A hotfix will be applied"):
+        rps = ranked_probability_score(y_true, y_pred)
+        assert rps == pytest.approx(0.26000000, rel=1e-6)
 
-    y_true = np.array([[1, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    y_true = np.array([1, 2, 0, 3])
     y_pred = np.array(
         [
-            [0.2, 0.4, 0.2, 0.2],
-            [0.7, 0.1, 0.1, 0.1],
-            [0.5, 0.05, 0.1, 0.35],
-            [0.1, 0.05, 0.65, 0.2],
+            [0.2, 0.6, 0.1, 0.1],
+            [0.1, 0.05, 0.8, 0.05],
+            [0.8, 0.05, 0.05, 0.1],
+            [0.05, 0.05, 0.2, 0.7],
         ]
     )
-    assert ranked_probability_score(y_true, y_pred) == pytest.approx(0.506875, rel=1e-6)
-
-    y_true = [0, 0, 3, 2]
-    y_pred = [
-        [0.2, 0.4, 0.2, 0.2],
-        [0.7, 0.1, 0.1, 0.1],
-        [0.5, 0.05, 0.1, 0.35],
-        [0.1, 0.05, 0.65, 0.2],
-    ]
-    assert ranked_probability_score(y_true, y_pred) == pytest.approx(0.506875, rel=1e-6)
-
-    y_true = [[1, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
-    y_pred = [
-        [0.2, 0.4, 0.2, 0.2],
-        [0.7, 0.1, 0.1, 0.1],
-        [0.5, 0.05, 0.1, 0.35],
-        [0.1, 0.05, 0.65, 0.2],
-    ]
-    assert ranked_probability_score(y_true, y_pred) == pytest.approx(0.506875, rel=1e-6)
+    warnings.filterwarnings("error")
+    assert ranked_probability_score(y_true, y_pred) == pytest.approx(0.075, rel=1e-6)
+    warnings.resetwarnings()
 
 
 def test_minimum_sensitivity():
