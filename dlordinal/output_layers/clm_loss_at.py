@@ -42,7 +42,7 @@ class CLMAT(Module):
                 requires_grad=True,
             )
         else:
-            self.weights_ = 1.0
+            self.weights_ = torch.Tensor([1.0])
 
         self.clip_warning_shown_ = False
 
