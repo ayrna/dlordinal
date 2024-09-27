@@ -43,3 +43,21 @@ def test_logistic_at_loss_weighted():
     assert loss_reg.forward((None, w, x, thresholds), target) == pytest.approx(
         26.1848539295695, rel=1e-6
     )
+
+
+def test_logistic_at_init_params():
+    LogisticATLoss(5)
+    LogisticATLoss(num_classes=5)
+    LogisticATLoss(num_classes=5, reg_lambda=0.5)
+    LogisticATLoss(num_classes=5, class_weights=[1, 2, 3, 4, 5])
+    LogisticATLoss(num_classes=5, class_weights=torch.tensor([1, 2, 3, 4, 5]))
+    with pytest.raises(ValueError):
+        LogisticATLoss(num_classes=5, class_weights="invalid")
+    with pytest.raises(ValueError):
+        LogisticATLoss(num_classes=5, class_weights=5)
+    with pytest.raises(ValueError):
+        LogisticATLoss(num_classes=5, class_weights=[1, 2, 3, 4, 5, 6])
+    with pytest.raises(ValueError):
+        LogisticATLoss(num_classes=5, class_weights=torch.tensor([1, 2, 3, 4, 5, 6]))
+    with pytest.raises(ValueError):
+        LogisticATLoss(num_classes=5, class_weights=torch.tensor([1, 2, 3, 4, 5, 6]))

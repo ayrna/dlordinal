@@ -21,6 +21,11 @@ class LogisticATLoss(torch.nn.Module):
         if not isinstance(self.class_weights, Tensor):
             raise ValueError("class_weights must be a list or a Tensor")
 
+        if self.class_weights.size(0) != num_classes:
+            raise ValueError(
+                "class_weights must have the same number of elements as num_classes"
+            )
+
         super().__init__()
 
     # def forward(self, input: Tensor, target: Tensor) -> Tensor:
