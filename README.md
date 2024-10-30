@@ -218,3 +218,16 @@ pre-commit install
 * Preserve backwards-compatibility whenever possible, and make clear if something must change.
 * Document any portions of the code that might be less clear to others, especially to new developers.
 * Write API documentation as docstrings.
+
+## Citation
+
+If you use dlordinal we would appreciate a citation of the following [paper](https://arxiv.org/abs/2407.17163)
+
+```bibtex
+@article{berchez2024dlordinal,
+  title={dlordinal: a Python package for deep ordinal classification},
+  author={B{\'e}rchez-Moreno, Francisco and Vargas, V{\'\i}ctor M and Ayll{\'o}n-Gavil{\'a}n, Rafael and Guijo-Rubio, David and Herv{\'a}s-Mart{\'\i}nez, C{\'e}sar and Fern{\'a}ndez, Juan C and Guti{\'e}rrez, Pedro A},
+  journal={arXiv preprint arXiv:2407.17163},
+  year={2024}
+}
+```
