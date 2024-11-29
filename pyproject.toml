@@ -10,7 +10,7 @@ authors = [
     {name = "Víctor Manuel Vargas", email = "vvargas@uco.es"},
     {name = "Javier Barbero-Gómez", email = "jbarbero@uco.es"},
     {name = "Rafael Ayllón-Gavilán", email = "rayllong@uco.es"},
-    {name = "David Guijo-Rubio", email = "david.guijo@uah.es"}
+    {name = "David Guijo-Rubio", email = "dguijo@uco.es"}
 ]
 description = "Deep learning for ordinal classification"
 readme = "README.md"
