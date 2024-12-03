@@ -8,7 +8,7 @@ class StickBreakingLayer(Module):
     Parameters
     ----------
     input_shape: int
-        Input shape
+        Input shape, which refers to the number of neurons in the last fully connected layer
     num_classes: int
         Number of classes
     """
@@ -25,8 +25,8 @@ class StickBreakingLayer(Module):
         x : torch.Tensor
             Input tensor
 
-        Returns:
-        --------
+        Returns
+        -------
         logits : torch.Tensor
             Logits of the stick breaking layer
         """
@@ -49,8 +49,8 @@ class StickBreakingLayer(Module):
         x : torch.Tensor
             Input tensor
 
-        Returns:
-        --------
+        Returns
+        -------
         logits : torch.Tensor
             Logits of the stick breaking layer
         """

@@ -7,7 +7,7 @@ from torch import Tensor
 
 class OrdinalECOCDistanceLoss(torch.nn.Module):
     """Ordinal ECOC distance loss from :footcite:t:`barbero2023error` for use
-    with :class:`dlordinal.models.OBDECOCModel`. Computes the MSE loss
+    with :class:`dlordinal.wrappers.OBDECOCModel`. Computes the MSE loss
     between the output of the model (class threshold probabilities) and
     the ideal output vector for each class.
 
