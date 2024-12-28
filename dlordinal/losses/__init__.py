@@ -9,6 +9,7 @@ from .ordinal_ecoc_distance_loss import OrdinalECOCDistanceLoss
 from .poisson_loss import PoissonCrossEntropyLoss
 from .triangular_loss import TriangularCrossEntropyLoss
 from .wkloss import WKLoss
+from .geometric_loss import GeometricCrossEntropyLoss
 
 __all__ = [
     "CustomTargetsCrossEntropyLoss",
@@ -22,4 +23,5 @@ __all__ = [
     "OrdinalECOCDistanceLoss",
     "TriangularCrossEntropyLoss",
     "GeneralTriangularCrossEntropyLoss",
+    "GeometricCrossEntropyLoss",
 ]
