@@ -226,6 +226,42 @@ def test_get_geometric_soft_labels_list():
     np.testing.assert_allclose(expected_result, result)
 
 
+def test_get_geometric_soft_labels_list_with_zeros():
+    # Arrange
+    n = 5
+    alphas = [0.0, 0.1, 0.05, 0.1, 0.0]
+
+    # Act
+    result = get_geometric_soft_labels(n, alphas)
+
+    # Assert that unimodal smoothings for each class sum to one
+    np.testing.assert_equal(np.mean(np.sum(result, axis=1)), 1.0)
+    # Assert that true class has 1 - alpha probability mass
+    np.testing.assert_array_equal(np.diagonal(result), 1.0 - np.array(alphas))
+
+
+def test_get_geometric_soft_labels_relations_with_zeros():
+    # Arrange
+    n = 5
+    alphas = [
+        (0.0, 0.0, 1.0),
+        (0.1, 0.5, 0.5),
+        (0.05, 0.6, 0.4),
+        (0.1, 0.4, 0.6),
+        (0.0, 1.0, 0.0),
+    ]
+
+    # Act
+    result = get_geometric_soft_labels(n, alphas)
+
+    # Assert that unimodal smoothings for each class sum to one
+    np.testing.assert_equal(np.mean(np.sum(result, axis=1)), 1.0)
+    # Assert that true class has 1 - alpha probability mass
+    np.testing.assert_array_equal(
+        np.diagonal(result), 1.0 - np.array([alpha[0] for alpha in alphas])
+    )
+
+
 def test_get_geometric_soft_labels_asymmetric_a():
     # Arrange
     n = 5

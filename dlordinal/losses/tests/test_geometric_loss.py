@@ -8,7 +8,7 @@ def test_geometric_loss_creation():
     assert isinstance(loss, GeometricCrossEntropyLoss)
 
 
-def test_geometric_loss():
+def test_geometric_loss_basic():
     loss = GeometricCrossEntropyLoss(num_classes=6)
 
     input_data = torch.tensor(
@@ -28,3 +28,37 @@ def test_geometric_loss():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
+
+
+def test_geometric_loss_relative():
+    loss = GeometricCrossEntropyLoss(num_classes=6)
+
+    input_data = torch.tensor(
+        [
+            [100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+
+    input_data2 = torch.tensor(
+        [
+            [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
+        ]
+    )
+
+    input_data3 = torch.tensor(
+        [
+            [0.0, 0.0, 0.0, 0.0, 100.0, 0.0],
+        ]
+    )
+
+    target = torch.tensor([0])
+
+    # Compute the loss
+    output = loss(input_data, target)
+    output2 = loss(input_data2, target)
+    output3 = loss(input_data3, target)
+
+    # Verifies that the output is a tensor
+    assert isinstance(output, torch.Tensor)
+
+    assert output3.item() > output2.item() > output.item()

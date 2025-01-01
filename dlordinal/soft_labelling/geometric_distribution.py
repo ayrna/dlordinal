@@ -19,7 +19,21 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
           When a single alpha value in the range `[0, 1]`, e.g., `0.1`, is provided,
           all classes will be smoothed equally and symmetrically.
           This is done by deducting alpha from the actual class, :math:`1 - \\alpha`,
-          and allocating :math:`\\alpha` to the rest of the classes, decreasing from the actual class.
+          and allocating :math:`\\alpha` to the rest of the classes, decreasing monotonically
+          from the actual class in the form of the geometric distribution.
+
+          Formula ( with :math:`j` as the index of the observed class in the one-hot encoded label and :math:`k` the current class):
+
+          .. math::
+            p_{i}^G(k) = \\begin{cases}
+                1-\\alpha  & \\text{if } k = j \\\\
+                1/G_{i} \;  \\alpha^{|j-k|+1}(1-\\alpha) & \\text{if } k \\neq j  \\\\
+            \\end{cases}.
+
+          Normalizing constant:
+
+          .. math::
+            G_{i} = p_{i}^G(k \\neq j)  =  \\sum_{k \\neq j} \\alpha^{|j-k|}(1-\\alpha).
 
         - **List of alpha values**:
           Alternatively, a list of size :attr:`num_classes` can be provided to specify class-wise symmetric
@@ -29,8 +43,15 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
           To control the fraction of the left-over probability mass :math:`\\alpha` allocated to the left
           (:math:`F_l \\in [0,1]`) and right (:math:`F_r \\in [0,1]`) sides of the true class, with
           :math:`F_l + F_r = 1`, a list of smoothing relations of the form :math:`(\\alpha, F_l, F_r)`
-          can be specified. An example for five classes is:
-          `[(0.2, 1, 0), (0.05, 0.8, 0.2), (0.1, 0.5, 0.5), (0.15, 0, 1), (0.1, 0.2, 0.8)]`.
+          can be specified. This enables asymmetric unimodal smoothing. An example for five classes is:
+          `[(0.2, 0.0, 1.0), (0.05, 0.8, 0.2), (0.1, 0.5, 0.5), (0.15, 0.6, 0.4), (0.1, 1.0, 0.0)]`.
+
+          .. math::
+            p_{i}^G(k) = \\begin{cases}
+                1-\\alpha_{j}  & \\text{if } k = j \\\\
+                1/G_{i} \; F_{l,j} \;  \\alpha_{j}^{(j-k)+1}(1-\\alpha_{j}) & \\text{if } k < j \\\\
+                1/G_{i} \; F_{r,j} \;  \\alpha_{j}^{(k-j)+1}(1-\\alpha_{j}) & \\text{if } k > j  \\\\
+            \\end{cases}
 
 
     Raises
@@ -104,6 +125,11 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
 def _get_asymmetric_geometric_soft_labels(J, alphas):
     probs = np.zeros((J, J))
     for y in range(J):
+        # If alpha = 0.0 --> one-hot encoding
+        if alphas[y][0] == 0.0:
+            probs[y, :] = np.array([1 if k == y else 0 for k in range(J)])
+            continue
+
         # Normalizing constants
         G_left = sum(
             [(pow(alphas[y][0], abs(y - i)) * (1 - alphas[y][0])) for i in range(0, y)]
@@ -162,6 +188,11 @@ def _get_symmetric_geometric_soft_labels(J, alphas):
             alpha = alphas[y]
         else:
             alpha = alphas
+
+        # If alpha = 0.0 --> one-hot encoding
+        if alpha == 0.0:
+            probs[y, :] = np.array([1 if k == y else 0 for k in range(J)])
+            continue
 
         # Calculate normalizing constant
         G = sum(
