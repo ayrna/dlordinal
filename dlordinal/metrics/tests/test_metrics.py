@@ -11,9 +11,9 @@ from dlordinal.metrics import (
     gmsec,
     minimum_sensitivity,
     mmae,
+    ranked_probability_score,
     write_array_to_file,
     write_metrics_dict_to_file,
-    ranked_probability_score,
 )
 
 

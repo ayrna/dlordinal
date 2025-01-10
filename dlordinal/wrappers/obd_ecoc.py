@@ -1,9 +1,9 @@
-from torch import Tensor
+from collections import OrderedDict, namedtuple
+
 import numpy as np
 import torch
-
 import torch.nn as nn
-from collections import OrderedDict, namedtuple
+from torch import Tensor
 
 
 class OBDECOCModel(nn.Module):

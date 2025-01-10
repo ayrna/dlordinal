@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: check-ast
       - id: check-case-conflict
@@ -18,22 +18,39 @@ repos:
         args: [ "--pytest-test-first" ]
       - id: trailing-whitespace
 
+  - repo: https://github.com/lk16/detect-missing-init
+    rev: v0.1.6
+    hooks:
+      - id: detect-missing-init
+        args: [ "--create", "--python-folders", "dlordinal" ]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.8.6
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args: ["--fix"]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort
+        args: [ "--profile=black", "--multi-line=3" ]
+
   - repo: https://github.com/psf/black
-    rev: 23.12.0
+    rev: 24.10.0
     hooks:
       - id: black
         language_version: python3
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
-    rev: v0.1.8
-    hooks:
-      # Run the linter.
-      - id: ruff
-      # Run the formatter.
-      - id: ruff-format
-
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.1
+    rev: 1.9.1
     hooks:
-      - id: nbqa-ruff
+      - id: nbqa-isort
+        additional_dependencies: [ isort==5.13.2 ]
+        args: [ "--profile=black", "--multi-line=3" ]
+      - id: nbqa-black
+        additional_dependencies: [ black==24.10.0 ]
+        args: []
