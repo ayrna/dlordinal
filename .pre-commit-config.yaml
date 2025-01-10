@@ -51,6 +51,9 @@ repos:
       - id: nbqa-isort
         additional_dependencies: [ isort==5.13.2 ]
         args: [ "--profile=black", "--multi-line=3" ]
+      - id: nbqa-ruff
+        additional_dependencies: [ ruff==0.8.6 ]
+        args: []
       - id: nbqa-black
         additional_dependencies: [ black==24.10.0 ]
         args: []
