@@ -5,9 +5,9 @@ from .general_triangular_distribution import (
     get_general_triangular_params,
     get_general_triangular_soft_labels,
 )
+from .geometric_distribution import get_geometric_soft_labels
 from .poisson_distribution import get_poisson_soft_labels
 from .triangular_distribution import get_triangular_soft_labels
-from .geometric_distribution import get_geometric_soft_labels
 
 __all__ = [
     "get_beta_soft_labels",

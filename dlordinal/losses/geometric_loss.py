@@ -3,8 +3,8 @@ from typing import Optional, Union
 import torch
 from torch import Tensor
 
-from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 from ..soft_labelling import get_geometric_soft_labels
+from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 
 
 class GeometricCrossEntropyLoss(CustomTargetsCrossEntropyLoss):

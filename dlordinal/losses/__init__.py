@@ -3,13 +3,13 @@ from .binomial_loss import BinomialCrossEntropyLoss
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
 from .exponential_loss import ExponentialRegularisedCrossEntropyLoss
 from .general_triangular_loss import GeneralTriangularCrossEntropyLoss
+from .geometric_loss import GeometricCrossEntropyLoss
 from .mceloss import MCELoss
 from .mcewkloss import MCEAndWKLoss
 from .ordinal_ecoc_distance_loss import OrdinalECOCDistanceLoss
 from .poisson_loss import PoissonCrossEntropyLoss
 from .triangular_loss import TriangularCrossEntropyLoss
 from .wkloss import WKLoss
-from .geometric_loss import GeometricCrossEntropyLoss
 
 __all__ = [
     "CustomTargetsCrossEntropyLoss",
