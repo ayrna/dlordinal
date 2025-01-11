@@ -50,3 +50,33 @@ jobs:
       - name: Run tutorial notebooks
         run: build_tools/run_tutorials.sh
         shell: bash
+
+  run-notebook-skorch-tutorials:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install notebook
+          pip install jupyterlab
+          pip install .
+          pip install skorch
+
+      - name: Grant execute permissions to run_skorch_tutorials.sh
+        run: chmod +x build_tools/run_skorch_tutorials.sh
+
+      - name: Run tutorial notebooks
+        run: build_tools/run_skorch_tutorials.sh
+        shell: bash

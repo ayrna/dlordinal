@@ -6,11 +6,7 @@ set -euo pipefail
 CMD="jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.timeout=600"
 
 included=(
-    "tutorials/ecoc_tutorial.ipynb"
-    "tutorials/fgnet_tutorial.ipynb"
-    "tutorials/hybrid_dropout_tutorial.ipynb"
-    "tutorials/losses_tutorial.ipynb"
-    "tutorials/stick_breaking_tutorial.ipynb"
+    "tutorials/dlordinal_with_skorch_tutorial.ipynb"
 )
 
 shopt -s lastpipe
