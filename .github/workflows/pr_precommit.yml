@@ -12,6 +12,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+ 
 jobs:
   pre-commit:
     runs-on: ubuntu-24.04
