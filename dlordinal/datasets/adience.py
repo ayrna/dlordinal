@@ -1,4 +1,5 @@
 import re
+import sys
 import tarfile
 from pathlib import Path
 from typing import Callable, Optional, Union
@@ -174,7 +175,10 @@ class Adience(VisionDataset):
         with tarfile.open(self.data_file_path_, "r:gz") as file:
             path = self.data_file_path_.parent
             path.mkdir(exist_ok=True, parents=True)
-            file.extractall(path, members=_track_progress(file), filter="data")
+            if sys.version_info >= (3, 12):
+                file.extractall(path, members=_track_progress(file), filter="data")
+            else:
+                file.extractall(path, members=_track_progress(file))
 
     def _process_and_split(self, folds: list) -> None:
         """
