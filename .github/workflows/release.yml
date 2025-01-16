@@ -52,7 +52,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-24.04, macOS-14, windows-2022 ]
-        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -85,14 +85,14 @@ jobs:
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install "${env:WHEELNAME}[all_extras,dev]"
+          command: python -m pip install "${env:WHEELNAME}[dev,docs]"
       - if: runner.os != 'Windows'
         name: Unix install
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install "${{ env.WHEELNAME }}[all_extras,dev]"
+          command: python -m pip install "${{ env.WHEELNAME }}[dev,docs]"
 
       - name: Tests
         run: python -m pytest -n logical
