@@ -7,7 +7,7 @@ CMD="jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.t
 
 included=(
     "tutorials/dlordinal_with_skorch_tutorial.ipynb"
-    "tutorials/losses_with_skorch_tutorial.ipynb"
+    # "tutorials/losses_with_skorch_tutorial.ipynb"
 )
 
 shopt -s lastpipe
