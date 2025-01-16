@@ -38,8 +38,18 @@ Source = "https://github.com/ayrna/dlordinal"
 Documentation = "https://dlordinal.readthedocs.io/en/latest/"
 
 [project.optional-dependencies]
-dev = ["pytest", "pre-commit"]
-docs = ["sphinx", "sphinxcontrib-bibtex", "sphinx-rtd-theme"]
+dev = [
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist[psutil]",
+]
+
+docs = [
+    "sphinx",
+    "sphinxcontrib-bibtex",
+    "sphinx-rtd-theme",
+]
 
 [tool.setuptools.packages.find]
 include = ["dlordinal", "dlordinal.*"]
