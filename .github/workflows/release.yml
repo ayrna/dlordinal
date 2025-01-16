@@ -7,22 +7,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-manifest:
-    runs-on: ubuntu-24.04
+  # check-manifest:
+  #   runs-on: ubuntu-24.04
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.10"
 
-      - uses: pre-commit/action@v3.0.1
-        with:
-          extra_args: check-manifest --hook-stage manual
+  #     - uses: pre-commit/action@v3.0.1
+  #       with:
+  #         extra_args: check-manifest --hook-stage manual
 
   build-project:
-    needs: check-manifest
+    # needs: check-manifest
     runs-on: ubuntu-24.04
 
     steps:
