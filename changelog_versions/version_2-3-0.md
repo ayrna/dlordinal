@@ -11,7 +11,7 @@ January 2025
 - Pre-commit configuration updated to work seamlessly across different operating systems.
 - Development of a new workflow to run Skorch tutorials independently with their own dependencies.
 
-# Anomaly detection
+# General
 
 ## Bug fixes
 
