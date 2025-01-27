@@ -28,3 +28,33 @@ def test_get_binomial_soft_labels():
 
     # Individual probabilities should be within [0, 1]
     assert np.all(result >= 0) and np.all(result <= 1)
+
+
+def test_get_binomial_soft_labels_invalid_input():
+    with pytest.raises(ValueError):
+        get_binomial_soft_labels(1)
+
+    with pytest.raises(ValueError):
+        get_binomial_soft_labels(1.0)
+
+    with pytest.raises(ValueError):
+        get_binomial_soft_labels(0)
+
+    with pytest.raises(ValueError):
+        get_binomial_soft_labels(-1)
+
+
+def test_get_binomial_soft_labels_valid_input():
+    for i in range(2, 11):
+        soft_labels = get_binomial_soft_labels(i)
+
+        # Sum of probabilities in each row should be approximately 1
+        row_sums = np.sum(soft_labels, axis=1)
+        for row_sum in row_sums:
+            assert row_sum == pytest.approx(1.0, abs=1e-6)
+
+        # Check that all the elements in the matrix are less than or equal to the
+        # element in the diagonal
+        diagonal = np.diag(soft_labels)
+        diff = soft_labels - diagonal[:, np.newaxis]
+        assert np.all(diff <= 1e-9)

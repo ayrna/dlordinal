@@ -46,20 +46,11 @@ def get_binomial_soft_labels(J):
     if J < 2 or not isinstance(J, int):
         raise ValueError(f"{J=} must be a positive integer greater than 1")
 
-    params = {}
-
-    params["4"] = np.linspace(0.1, 0.9, 4)
-    params["5"] = np.linspace(0.1, 0.9, 5)
-    params["6"] = np.linspace(0.1, 0.9, 6)
-    params["7"] = np.linspace(0.1, 0.9, 7)
-    params["8"] = np.linspace(0.1, 0.9, 8)
-    params["10"] = np.linspace(0.1, 0.9, 10)
-    params["12"] = np.linspace(0.1, 0.9, 12)
-    params["14"] = np.linspace(0.1, 0.9, 14)
+    params = np.linspace(0.1, 0.9, J)
 
     probs = []
 
     for true_class in range(0, J):
-        probs.append(binom.pmf(np.arange(0, J), J - 1, params[str(J)][true_class]))
+        probs.append(binom.pmf(np.arange(0, J), J - 1, params[true_class]))
 
     return np.array(probs)
