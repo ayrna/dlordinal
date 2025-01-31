@@ -9,7 +9,7 @@
 project = "dlordinal"
 copyright = "2023, Francisco Bérchez, Víctor Vargas"
 author = "Francisco Bérchez, Víctor Vargas"
-release = "2.3.0"
+release = "2.3.2"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
