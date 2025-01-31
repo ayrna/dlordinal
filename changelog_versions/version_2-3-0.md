@@ -15,11 +15,11 @@ January 2025
 
 ## Bug fixes
 
-- [BUG] A bug was detected in the pre-commit configuration related to an issue with extending the package to include a new loss function oriented to soft labelling. ([#87](https://github.com/ayrna/dlordinal/issues/87))([stefanahaas41](https://github.com/stefanahaas41))
+- [BUG] A bug was detected in the pre-commit configuration related to an issue with extending the package to include a new loss function oriented to soft labelling. ([#87](https://github.com/ayrna/dlordinal/issues/87))([stefanahaas41] (https://github.com/stefanahaas41))
 
 ## Maintenance
 
-- [MNT] Pre-commit fixes ([#89](https://github.com/ayrna/dlordinal/pull/89))([victormvy](https://github.com/victormvy))
+- [MNT] Pre-commit fixes ([#89](https://github.com/ayrna/dlordinal/pull/89)) ([victormvy](https://github.com/victormvy))
 
 
 # Tutorials
