@@ -98,6 +98,12 @@ def test_amae():
     expected_result = 0.5
     assert result == pytest.approx(expected_result, rel=1e-6)
 
+    y_true = np.array([0, 1, 2, 3, 3])
+    y_pred = np.array([0, 1, 2, 3, 4])
+    result = amae(y_true, y_pred)
+    expected_result = 0.125
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
 
 def test_mmae():
     y_true = np.array([0, 0, 1, 1])
@@ -127,6 +133,12 @@ def test_mmae():
     # Test using one-hot and probabilities
     y_true = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
     y_pred = np.array([[1, 0], [0, 1], [1, 0], [0, 1]])
+    result = mmae(y_true, y_pred)
+    expected_result = 0.5
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 1, 2, 3, 3])
+    y_pred = np.array([0, 1, 2, 3, 4])
     result = mmae(y_true, y_pred)
     expected_result = 0.5
     assert result == pytest.approx(expected_result, rel=1e-6)
