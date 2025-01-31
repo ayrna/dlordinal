@@ -2,7 +2,7 @@
 
 `dlordinal` is a Python library that unifies many recent deep ordinal classification methodologies available in the literature. Developed using PyTorch as underlying framework, it implements the top performing state-of-the-art deep learning techniques for ordinal classification problems. Ordinal approaches are designed to leverage the ordering information present in the target variable. Specifically, it includes loss functions, various output layers, dropout techniques, soft labelling methodologies, and other classification strategies, all of which are appropriately designed to incorporate the ordinal information. Furthermore, as the performance metrics to assess novel proposals in ordinal classification depend on the distance between target and predicted classes in the ordinal scale, suitable ordinal evaluation metrics are also included.
 
-The latest `dlordinal` release is `v2.3.1`. You can view all the changes made in the current and previous versions in the [CHANGELOG](./CHANGELOG.md).
+The latest `dlordinal` release is `v2.3.2`. You can view all the changes made in the current and previous versions in the [CHANGELOG](./CHANGELOG.md).
 
 | Overview  |                                                                                                                                          |
 |-----------|------------------------------------------------------------------------------------------------------------------------------------------|
@@ -24,7 +24,7 @@ The latest `dlordinal` release is `v2.3.1`. You can view all the changes made in
 
 ## ⚙️ Installation
 
-`dlordinal v2.3.0` is the last version, supported from Python 3.8 to Python 3.12.
+`dlordinal v2.3.2` is the last version, supported from Python 3.8 to Python 3.12.
 
 The easiest way to install `dlordinal` is via `pip`:
 
@@ -120,6 +120,8 @@ print(f"Test AMAE: {amae_metric}, Test MMAE: {mmae_metric}")
 ```
 
 ## 📖 Documentation
+
+You can check the documentation [here](https://dlordinal.readthedocs.io/en/latest/).
 
 `Sphinx` is a documentation generator tool that is commonly used in the Python ecosystem. It allows developers to write documentation in a markup language called reStructuredText (reST) and generates HTML, PDF, and other formats from it. Sphinx provides a powerful and flexible way to document code, making it easier for developers to create comprehensive and user-friendly documentation for their projects.
 
@@ -225,12 +227,12 @@ pre-commit install
 If you use dlordinal we would appreciate a citation of the following [paper](https://arxiv.org/abs/2407.17163)
 
 ```bibtex
-@article{berchez2024dlordinal,
+@article{berchez2025dlordinal,
   title={dlordinal: A Python package for deep ordinal classification},
   author={B{\'e}rchez-Moreno, Francisco and Ayll{\'o}n-Gavil{\'a}n, Rafael and Vargas, V{\'\i}ctor M and Guijo-Rubio, David and Herv{\'a}s-Mart{\'\i}nez, C{\'e}sar and Fern{\'a}ndez, Juan C and Guti{\'e}rrez, Pedro A},
   journal={Neurocomputing},
   pages={129305},
-  year={2024},
+  year={2025},
   publisher={Elsevier},
   doi={doi.org/10.1016/j.neucom.2024.129305}
 }
