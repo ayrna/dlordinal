@@ -35,6 +35,38 @@ def test_wkloss_basic():
     assert output.item() > 0
 
 
+def test_wkloss_basic_onehot():
+    num_classes = 6
+    penalization_type = "quadratic"
+
+    loss = WKLoss(num_classes, penalization_type)
+
+    input_data = torch.tensor(
+        [
+            [-2.4079, -2.5133, -2.6187, -2.0652, -3.7299, -5.1068],
+            [-2.4079, -2.1725, -2.1459, -3.3318, -3.9624, -4.4700],
+            [-2.4079, -1.7924, -2.0101, -4.1030, -3.3445, -4.4812],
+        ]
+    )
+
+    target = torch.tensor(
+        [
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0],
+        ]
+    )
+
+    # Compute the loss
+    output = loss(input_data, target)
+
+    # Verifies that the output is a tensor
+    assert isinstance(output, torch.Tensor)
+
+    # Verifies that the loss is greater than zero
+    assert output.item() > 0
+
+
 def test_wkloss_custom_weight():
     num_classes = 6
     penalization_type = "quadratic"

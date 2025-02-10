@@ -43,8 +43,11 @@ class WKLoss(nn.Module):
 
     def forward(self, y_pred, y_true):
         num_classes = self.num_classes
-        y = torch.eye(num_classes)
-        y_true = y[y_true]
+
+        # Convert to onehot if integer labels are provided
+        if y_true.dim() == 1:
+            y = torch.eye(num_classes)
+            y_true = y[y_true]
 
         y_true = y_true.float()
 
