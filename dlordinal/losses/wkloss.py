@@ -46,21 +46,21 @@ class WKLoss(nn.Module):
 
         # Convert to onehot if integer labels are provided
         if y_true.dim() == 1:
-            y = torch.eye(num_classes)
+            y = torch.eye(num_classes).to(y_true.device)
             y_true = y[y_true]
 
         y_true = y_true.float()
 
         repeat_op = (
             torch.Tensor(list(range(num_classes))).unsqueeze(1).repeat((1, num_classes))
-        )
+        ).to(y_pred.device)
         repeat_op_sq = torch.square((repeat_op - repeat_op.T))
         weights = repeat_op_sq / ((num_classes - 1) ** 2)
 
         # Apply class weight
         if self.weight is not None:
             # Repeat weight num_classes times in columns
-            tiled_weight = self.weight.repeat((num_classes, 1))
+            tiled_weight = self.weight.repeat((num_classes, 1)).to(y_pred.device)
             weights *= tiled_weight
 
         pred_ = y_pred**self.y_pow
