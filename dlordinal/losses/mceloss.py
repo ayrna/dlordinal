@@ -61,7 +61,7 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
         target : torch.Tensor
             Ground truth labels
 
-        Returns:
+        Returns
         --------
         mses : torch.Tensor
             MSE values
