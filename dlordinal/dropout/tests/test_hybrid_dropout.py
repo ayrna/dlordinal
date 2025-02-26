@@ -1,6 +1,6 @@
 import pytest
 import torch
-from torch import nn
+from torch import cuda, nn
 
 from dlordinal.dropout import HybridDropout, HybridDropoutContainer
 
@@ -29,22 +29,37 @@ def hybrid_dropout_container(model):
     return HybridDropoutContainer(model)
 
 
-def test_set_targets(hybrid_dropout_container):
-    targets = torch.tensor([1, 2, 3, 4, 5])
+@pytest.fixture
+def device():
+    d = "cpu"
+
+    if cuda.is_available():
+        d = "cuda"
+
+    return d
+
+
+def test_set_targets(hybrid_dropout_container, device):
+    targets = torch.tensor([1, 2, 3, 4, 5]).to(device)
     hybrid_dropout_container.set_targets(targets)
+
+    hybrid_dropout_container = hybrid_dropout_container.to(device)
+
     hybrid_dropout = None
     for module in hybrid_dropout_container.model.modules():
         if isinstance(module, HybridDropout):
             hybrid_dropout = module
+            hybrid_dropout = hybrid_dropout.to(device)
             break
     assert hybrid_dropout is not None
     assert torch.all(torch.eq(hybrid_dropout.batch_targets, targets))
 
 
-def test_forward_with_targets():
-    model = ModelWithHybridDropout()
-    inputs = torch.randn(32, 10)
-    targets = torch.randn(32)
+def test_forward_with_targets(device):
+    print(device)
+    model = ModelWithHybridDropout().to(device)
+    inputs = torch.randn(32, 10).to(device)
+    targets = torch.randn(32).to(device)
     model.hybrid_dropout.batch_targets = targets
     outputs = model(inputs)
 
@@ -52,7 +67,9 @@ def test_forward_with_targets():
     assert outputs.shape == (32, 5)
 
 
-def test_forward_without_targets(hybrid_dropout_container):
-    inputs = torch.randn(32, 10)
+def test_forward_without_targets(hybrid_dropout_container, device):
+    inputs = torch.randn(32, 10).to(device)
+
     with pytest.raises(ValueError):
+        hybrid_dropout_container = hybrid_dropout_container.to(device)
         hybrid_dropout_container(inputs)
