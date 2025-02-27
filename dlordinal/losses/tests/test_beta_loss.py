@@ -4,13 +4,23 @@ import torch
 from dlordinal.losses import BetaCrossEntropyLoss
 
 
-def test_beta_loss_creation():
-    loss = BetaCrossEntropyLoss(num_classes=5)
+@pytest.fixture
+def device():
+    d = "cpu"
+
+    if torch.cuda.is_available():
+        d = "cuda"
+
+    return d
+
+
+def test_beta_loss_creation(device):
+    loss = BetaCrossEntropyLoss(num_classes=5).to(device)
     assert isinstance(loss, BetaCrossEntropyLoss)
 
 
-def test_beta_loss_basic():
-    loss = BetaCrossEntropyLoss(num_classes=6)
+def test_beta_loss_basic(device):
+    loss = BetaCrossEntropyLoss(num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -18,8 +28,8 @@ def test_beta_loss_basic():
             [-0.4715, -0.7595, 1.1330, 0.7932, 0.0749, 1.2884],
             [0.8929, 0.5330, 0.0984, 0.3900, -0.7238, 0.4939],
         ]
-    )
-    target = torch.tensor([5, 3, 1])
+    ).to(device)
+    target = torch.tensor([5, 3, 1]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -31,8 +41,8 @@ def test_beta_loss_basic():
     assert output.item() > 0
 
 
-def test_beta_loss_exactvalue():
-    loss = BetaCrossEntropyLoss(num_classes=6)
+def test_beta_loss_exactvalue(device):
+    loss = BetaCrossEntropyLoss(num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -40,8 +50,8 @@ def test_beta_loss_exactvalue():
             [0.1, 0.8, 0.1, 0.0, 0.0, 0.0],
             [0.0, 0.1, 0.8, 0.1, 0.0, 0.0],
         ]
-    )
-    target = torch.tensor([0, 1, 2])
+    ).to(device)
+    target = torch.tensor([0, 1, 2]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -53,28 +63,28 @@ def test_beta_loss_exactvalue():
     assert output.item() == pytest.approx(1.3925, rel=1e-3)
 
 
-def test_beta_loss_relative():
-    loss = BetaCrossEntropyLoss(num_classes=6)
+def test_beta_loss_relative(device):
+    loss = BetaCrossEntropyLoss(num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
             [100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
     input_data2 = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
     input_data3 = torch.tensor(
         [
             [0.0, 0.0, 0.0, 0.0, 100.0, 0.0],
         ]
-    )
+    ).to(device)
 
-    target = torch.tensor([0])
+    target = torch.tensor([0]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -87,18 +97,18 @@ def test_beta_loss_relative():
     assert output3.item() > output2.item() > output.item()
 
 
-def test_beta_loss_eta():
+def test_beta_loss_eta(device):
     input_data = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
-    target = torch.tensor([0])
+    target = torch.tensor([0]).to(device)
 
     last_loss = None
     for eta in [0.1, 0.3, 0.5, 0.7, 1.0]:
-        loss = BetaCrossEntropyLoss(num_classes=6, eta=eta)
+        loss = BetaCrossEntropyLoss(num_classes=6, eta=eta).to(device)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -109,19 +119,19 @@ def test_beta_loss_eta():
         last_loss = output
 
 
-def test_beta_loss_weights():
-    weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1])
-    loss = BetaCrossEntropyLoss(num_classes=6, weight=weights)
+def test_beta_loss_weights(device):
+    weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1]).to(device)
+    loss = BetaCrossEntropyLoss(num_classes=6, weight=weights).to(device)
 
     input_data = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
-    target = torch.tensor([0])
-    target2 = torch.tensor([1])
-    target3 = torch.tensor([3])
+    target = torch.tensor([0]).to(device)
+    target2 = torch.tensor([1]).to(device)
+    target3 = torch.tensor([3]).to(device)
 
     loss1 = loss(input_data, target)
     loss2 = loss(input_data, target2)
