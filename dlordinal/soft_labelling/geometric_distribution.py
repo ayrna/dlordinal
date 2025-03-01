@@ -68,6 +68,16 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
     probs : 2d array-like of shape (J, J)
         Matrix of probabilities where each row represents the true class
         and each column the probability for class j.
+
+    Example
+    -------
+    >>> from dlordinal.soft_labelling import get_geometric_soft_labels
+    >>> get_geometric_soft_labels(5)
+    array([[0.9       , 0.090009  , 0.0090009 , 0.00090009, 0.00009001],
+       [0.04739336, 0.9       , 0.04739336, 0.00473934, 0.00047393],
+       [0.00454545, 0.04545455, 0.9       , 0.04545455, 0.00454545],
+       [0.00047393, 0.00473934, 0.04739336, 0.9       , 0.04739336],
+       [0.00009001, 0.00090009, 0.0090009 , 0.090009  , 0.9       ]])
     """
 
     if not isinstance(J, int) or J < 2:
