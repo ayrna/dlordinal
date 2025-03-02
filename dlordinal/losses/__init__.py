@@ -2,6 +2,7 @@ from .beta_loss import BetaCrossEntropyLoss
 from .binomial_loss import BinomialCrossEntropyLoss
 from .cdw import CDWCELoss
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss
+from .emd_loss import EMDLoss
 from .exponential_loss import ExponentialRegularisedCrossEntropyLoss
 from .general_triangular_loss import GeneralTriangularCrossEntropyLoss
 from .geometric_loss import GeometricCrossEntropyLoss
@@ -26,4 +27,5 @@ __all__ = [
     "GeneralTriangularCrossEntropyLoss",
     "GeometricCrossEntropyLoss",
     "CDWCELoss",
+    "EMDLoss",
 ]
