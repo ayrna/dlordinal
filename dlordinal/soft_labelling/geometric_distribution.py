@@ -27,7 +27,7 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
           .. math::
             p_{i}^G(k) = \\begin{cases}
                 1-\\alpha  & \\text{if } k = j \\\\
-                1/G_{i} \;  \\alpha^{|j-k|+1}(1-\\alpha) & \\text{if } k \\neq j  \\\\
+                1/G_{i} \\;  \\alpha^{|j-k|+1}(1-\\alpha) & \\text{if } k \\neq j  \\\\
             \\end{cases}.
 
           Normalizing constant:
@@ -49,8 +49,8 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
           .. math::
             p_{i}^G(k) = \\begin{cases}
                 1-\\alpha_{j}  & \\text{if } k = j \\\\
-                1/G_{i} \; F_{l,j} \;  \\alpha_{j}^{(j-k)+1}(1-\\alpha_{j}) & \\text{if } k < j \\\\
-                1/G_{i} \; F_{r,j} \;  \\alpha_{j}^{(k-j)+1}(1-\\alpha_{j}) & \\text{if } k > j  \\\\
+                1/G_{i} \\; F_{l,j} \\;  \\alpha_{j}^{(j-k)+1}(1-\\alpha_{j}) & \\text{if } k < j \\\\
+                1/G_{i} \\; F_{r,j} \\;  \\alpha_{j}^{(k-j)+1}(1-\\alpha_{j}) & \\text{if } k > j  \\\\
             \\end{cases}
 
 
@@ -68,6 +68,34 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
     probs : 2d array-like of shape (J, J)
         Matrix of probabilities where each row represents the true class
         and each column the probability for class j.
+
+    Example
+    -------
+    >>> from dlordinal.soft_labelling import get_geometric_soft_labels
+    >>> get_geometric_soft_labels(5)
+    array([[0.9       , 0.090009  , 0.0090009 , 0.00090009, 0.00009001],
+       [0.04739336, 0.9       , 0.04739336, 0.00473934, 0.00047393],
+       [0.00454545, 0.04545455, 0.9       , 0.04545455, 0.00454545],
+       [0.00047393, 0.00473934, 0.04739336, 0.9       , 0.04739336],
+       [0.00009001, 0.00090009, 0.0090009 , 0.090009  , 0.9       ]])
+    >>> get_geometric_soft_labels(5, alphas=0.3)
+    array([[0.7       , 0.21171489, 0.06351447, 0.01905434, 0.0057163 ],
+       [0.12552301, 0.7       , 0.12552301, 0.0376569 , 0.01129707],
+       [0.03461538, 0.11538462, 0.7       , 0.11538462, 0.03461538],
+       [0.01129707, 0.0376569 , 0.12552301, 0.7       , 0.12552301],
+       [0.0057163 , 0.01905434, 0.06351447, 0.21171489, 0.7       ]])
+    >>> get_geometric_soft_labels(5, alphas=[0.3,0.2,0.05,0.02,0.5])
+    array([[0.7       , 0.21171489, 0.06351447, 0.01905434, 0.0057163 ],
+       [0.08928571, 0.8       , 0.08928571, 0.01785714, 0.00357143],
+       [0.00119048, 0.02380952, 0.95      , 0.02380952, 0.00119048],
+       [0.00000396, 0.00019798, 0.00989903, 0.98      , 0.00989903],
+       [0.03333333, 0.06666667, 0.13333333, 0.26666667, 0.5       ]])
+    >>> get_geometric_soft_labels(5, alphas=[(0.2, 0.0, 1.0), (0.05, 0.8, 0.2), (0.1, 0.5, 0.5), (0.15, 0.6, 0.4), (0.1, 1.0, 0.0)])
+    array([[0.8       , 0.16025641, 0.03205128, 0.00641026, 0.00128205],
+       [0.04      , 0.95      , 0.00950119, 0.00047506, 0.00002375],
+       [0.00454545, 0.04545455, 0.9       , 0.04545455, 0.00454545],
+       [0.00172708, 0.01151386, 0.07675906, 0.85      , 0.06      ],
+       [0.00009001, 0.00090009, 0.0090009 , 0.090009  , 0.9       ]])
     """
 
     if not isinstance(J, int) or J < 2:
