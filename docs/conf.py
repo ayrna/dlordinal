@@ -32,3 +32,7 @@ bibtex_bibfiles = ["references.bib"]
 
 html_theme = "sphinx_rtd_theme"
 # html_static_path = ["_static"]
+
+html_math_renderer = "imgmath"
+imgmath_image_format = "svg"
+imgmath_latex_preamble = "\\usepackage{fouriernc}"
