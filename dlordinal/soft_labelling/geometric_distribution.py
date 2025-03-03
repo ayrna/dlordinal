@@ -27,7 +27,7 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
           .. math::
             p_{i}^G(k) = \\begin{cases}
                 1-\\alpha  & \\text{if } k = j \\\\
-                1/G_{i} \;  \\alpha^{|j-k|+1}(1-\\alpha) & \\text{if } k \\neq j  \\\\
+                1/G_{i} \\;  \\alpha^{|j-k|+1}(1-\\alpha) & \\text{if } k \\neq j  \\\\
             \\end{cases}.
 
           Normalizing constant:
@@ -49,8 +49,8 @@ def get_geometric_soft_labels(J: int, alphas: Union[float, list] = 0.1):
           .. math::
             p_{i}^G(k) = \\begin{cases}
                 1-\\alpha_{j}  & \\text{if } k = j \\\\
-                1/G_{i} \; F_{l,j} \;  \\alpha_{j}^{(j-k)+1}(1-\\alpha_{j}) & \\text{if } k < j \\\\
-                1/G_{i} \; F_{r,j} \;  \\alpha_{j}^{(k-j)+1}(1-\\alpha_{j}) & \\text{if } k > j  \\\\
+                1/G_{i} \\; F_{l,j} \\;  \\alpha_{j}^{(j-k)+1}(1-\\alpha_{j}) & \\text{if } k < j \\\\
+                1/G_{i} \\; F_{r,j} \\;  \\alpha_{j}^{(k-j)+1}(1-\\alpha_{j}) & \\text{if } k > j  \\\\
             \\end{cases}
 
 
