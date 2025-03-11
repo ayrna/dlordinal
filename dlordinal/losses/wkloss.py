@@ -22,6 +22,9 @@ class WKLoss(nn.Module):
         Increment to avoid log zero,
         so the loss will be :math:`\\log(1 - k + \\epsilon)`, where :math:`k` lies
         in :math:`[-1, 1]`. Defaults to ``1e-10``.
+    use_logits : bool, default=False
+        If True, the input y_pred will be treated as logits.
+        If False, the input y_pred will be treated as probabilities.
     """
 
     def __init__(
@@ -72,7 +75,8 @@ class WKLoss(nn.Module):
             self.first_forward = False
 
         if self.use_logits:
-            y_pred = torch.nn.functional.softmax(y_pred, dim=1)
+            y_pred_max = torch.max(y_pred, dim=1, keepdim=True).values
+            y_pred = torch.exp(y_pred - y_pred_max)
 
         repeat_op = (
             torch.Tensor(list(range(num_classes))).unsqueeze(1).repeat((1, num_classes))
