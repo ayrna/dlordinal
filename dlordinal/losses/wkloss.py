@@ -75,8 +75,7 @@ class WKLoss(nn.Module):
             self.first_forward = False
 
         if self.use_logits:
-            y_pred_max = torch.max(y_pred, dim=1, keepdim=True).values
-            y_pred = torch.exp(y_pred - y_pred_max)
+            y_pred = torch.nn.functional.softmax(y_pred, dim=1)
 
         repeat_op = (
             torch.Tensor(list(range(num_classes))).unsqueeze(1).repeat((1, num_classes))

@@ -499,3 +499,26 @@ def test_wkloss_input_errors(device):
 
     with pytest.raises(ValueError):
         loss_logits(torch.nn.functional.softmax(input_data, dim=1), target)
+
+
+def test_wkloss_softmax_simplification(device):
+    for num_classes in range(4, 10):
+        for penalization_type in ["linear", "quadratic"]:
+            loss = WKLoss(num_classes, penalization_type).to(device)
+            loss_logits = WKLoss(num_classes, penalization_type, use_logits=True).to(
+                device
+            )
+
+            for input_scale in [1.0, 10.0, 100.0]:
+                for _ in range(20):
+                    input = (
+                        torch.rand(100, num_classes) * input_scale - input_scale * 0.5
+                    ).to(device)
+                    target = torch.randint(0, num_classes, (100,)).to(device)
+
+                    output = loss(torch.nn.functional.softmax(input, dim=1), target)
+                    output_logits = loss_logits(input, target)
+
+                    assert output.item() == pytest.approx(
+                        output_logits.item(), rel=1e-6
+                    )
