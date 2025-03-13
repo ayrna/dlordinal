@@ -22,6 +22,9 @@ class WKLoss(nn.Module):
         Increment to avoid log zero,
         so the loss will be :math:`\\log(1 - k + \\epsilon)`, where :math:`k` lies
         in :math:`[-1, 1]`. Defaults to ``1e-10``.
+    use_logits : bool, default=False
+        If True, the input y_pred will be treated as logits.
+        If False, the input y_pred will be treated as probabilities.
     """
 
     def __init__(
@@ -30,6 +33,7 @@ class WKLoss(nn.Module):
         penalization_type: str = "quadratic",
         weight: Optional[torch.Tensor] = None,
         epsilon: Optional[float] = 1e-10,
+        use_logits=False,
     ):
         super(WKLoss, self).__init__()
         self.num_classes = num_classes
@@ -40,6 +44,8 @@ class WKLoss(nn.Module):
 
         self.epsilon = epsilon
         self.weight = weight
+        self.use_logits = use_logits
+        self.first_forward = True
 
     def forward(self, y_pred, y_true):
         num_classes = self.num_classes
@@ -50,6 +56,26 @@ class WKLoss(nn.Module):
             y_true = y[y_true]
 
         y_true = y_true.float()
+
+        if self.first_forward:
+            if not self.use_logits and not torch.allclose(
+                y_pred.sum(dim=1), torch.tensor(1.0, device=y_pred.device)
+            ):
+                raise ValueError(
+                    "When passing use_logits=False, the input y_pred"
+                    " should be probabilities, not logits."
+                )
+            elif self.use_logits and torch.allclose(
+                y_pred.sum(dim=1), torch.tensor(1.0, device=y_pred.device)
+            ):
+                raise ValueError(
+                    "When passing use_logits=True, the input y_pred"
+                    " should be logits, not probabilities."
+                )
+            self.first_forward = False
+
+        if self.use_logits:
+            y_pred = torch.nn.functional.softmax(y_pred, dim=1)
 
         repeat_op = (
             torch.Tensor(list(range(num_classes))).unsqueeze(1).repeat((1, num_classes))

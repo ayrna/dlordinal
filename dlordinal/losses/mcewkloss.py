@@ -30,6 +30,9 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
         the output will be divided by the number of elements in the output,
         ``'sum'``: the output will be summed.
+    use_logits : bool, default=False
+        If True, the input y_pred will be treated as logits.
+        If False, the input y_pred will be treated as probabilities.
     """
 
     def __init__(
@@ -39,6 +42,7 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         wk_penalization_type: str = "quadratic",
         weight: Optional[Tensor] = None,
         reduction: str = "mean",
+        use_logits=False,
     ) -> None:
         super().__init__(
             weight=weight, size_average=None, reduce=None, reduction=reduction
@@ -63,12 +67,15 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
                 + " Please use 'mean', 'sum' or 'none'"
             )
 
+        self.use_logits = use_logits
+
         self.wk = WKLoss(
             self.num_classes,
             penalization_type=self.wk_penalization_type,
             weight=weight,
+            use_logits=self.use_logits,
         )
-        self.mce = MCELoss(self.num_classes, weight=weight)
+        self.mce = MCELoss(self.num_classes, weight=weight, use_logits=self.use_logits)
 
     def forward(self, y_true: torch.Tensor, y_pred: torch.Tensor):
         """
