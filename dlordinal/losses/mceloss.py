@@ -24,6 +24,9 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
         ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
         the output will be divided by the number of elements in the output,
         ``'sum'``: the output will be summed.
+    use_logits : bool, default=False
+        If True, the input y_pred will be treated as logits.
+        If False, the input y_pred will be treated as probabilities.
     """
 
     def __init__(
@@ -31,6 +34,7 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
         num_classes: int,
         weight: Optional[Tensor] = None,
         reduction: str = "mean",
+        use_logits=False,
     ) -> None:
         super().__init__(
             weight=weight, size_average=None, reduce=None, reduction=reduction
@@ -49,6 +53,8 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
                 f"Reduction {reduction} is not supported."
                 + " Please use 'mean', 'sum' or 'none'"
             )
+
+        self.use_logits = use_logits
 
     def compute_per_class_mse(self, input: torch.Tensor, target: torch.Tensor):
         """
@@ -76,6 +82,9 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
                 + f"{target.shape}"
             )
 
+        if self.use_logits:
+            input = torch.nn.functional.softmax(input, dim=1)
+
         # Compute the squared error for each class
         per_class_se = torch.pow(target - input, 2)
 
@@ -94,7 +103,8 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
         Parameters
         ----------
         input : torch.Tensor
-            Predicted labels
+            Predicted labels. Should be logits if `use_logits` is True, otherwise
+            probabilities.
         target : torch.Tensor
             Ground truth labels
 
@@ -105,7 +115,6 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
             then a tensor with the MSE for each class is returned.
         """
 
-        input = torch.nn.functional.softmax(input, dim=1)
         target_oh = torch.nn.functional.one_hot(target, num_classes=self.num_classes)
 
         per_class_mse = self.compute_per_class_mse(input, target_oh)
