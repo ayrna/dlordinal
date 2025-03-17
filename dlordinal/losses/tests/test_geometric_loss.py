@@ -1,15 +1,21 @@
+import pytest
 import torch
 
 from dlordinal.losses import GeometricCrossEntropyLoss
 
 
-def test_geometric_loss_creation():
-    loss = GeometricCrossEntropyLoss(num_classes=5)
+@pytest.fixture
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def test_geometric_loss_creation(device):
+    loss = GeometricCrossEntropyLoss(num_classes=5).to(device)
     assert isinstance(loss, GeometricCrossEntropyLoss)
 
 
-def test_geometric_loss_basic():
-    loss = GeometricCrossEntropyLoss(num_classes=6)
+def test_geometric_loss_basic(device):
+    loss = GeometricCrossEntropyLoss(num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -17,8 +23,8 @@ def test_geometric_loss_basic():
             [-1.7872, -3.9560, -6.2586, -8.3967, -7.9779, -8.0079],
             [-2.4078, -2.5133, -2.5584, -1.7485, -2.3675, -2.6099],
         ]
-    )
-    target = torch.tensor([4, 0, 5])
+    ).to(device)
+    target = torch.tensor([4, 0, 5]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -30,28 +36,28 @@ def test_geometric_loss_basic():
     assert output.item() > 0
 
 
-def test_geometric_loss_relative():
-    loss = GeometricCrossEntropyLoss(num_classes=6)
+def test_geometric_loss_relative(device):
+    loss = GeometricCrossEntropyLoss(num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
             [100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
     input_data2 = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
     input_data3 = torch.tensor(
         [
             [0.0, 0.0, 0.0, 0.0, 100.0, 0.0],
         ]
-    )
+    ).to(device)
 
-    target = torch.tensor([0])
+    target = torch.tensor([0]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
