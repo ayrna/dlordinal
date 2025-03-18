@@ -1,6 +1,6 @@
 import pytest
 import torch
-from torch import cuda, nn
+from torch import nn
 
 from dlordinal.dropout import HybridDropout, HybridDropoutContainer
 
@@ -20,6 +20,11 @@ class ModelWithHybridDropout(nn.Module):
 
 
 @pytest.fixture
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+@pytest.fixture
 def model():
     return ModelWithHybridDropout()
 
@@ -27,16 +32,6 @@ def model():
 @pytest.fixture
 def hybrid_dropout_container(model):
     return HybridDropoutContainer(model)
-
-
-@pytest.fixture
-def device():
-    d = "cpu"
-
-    if cuda.is_available():
-        d = "cuda"
-
-    return d
 
 
 def test_set_targets(hybrid_dropout_container, device):
