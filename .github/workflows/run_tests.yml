@@ -68,7 +68,7 @@ jobs:
         pip install .[dev]
 
     - name: Run tests
-      run: python -m pytest -n logical
+      run: python -m pytest -n 10
 
   tests-codecov:
     runs-on: ubuntu-22.04
