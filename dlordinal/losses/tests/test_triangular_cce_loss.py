@@ -1,19 +1,16 @@
 import pytest
 import torch
-from torch.nn import CrossEntropyLoss
 
-from dlordinal.losses import TriangularLoss
+from dlordinal.losses import TriangularCrossEntropyLoss
 
 
 def test_triangular_loss_creation():
-    base_loss = CrossEntropyLoss()
-    loss = TriangularLoss(base_loss=base_loss, num_classes=5)
-    assert isinstance(loss, TriangularLoss)
+    loss = TriangularCrossEntropyLoss(num_classes=5)
+    assert isinstance(loss, TriangularCrossEntropyLoss)
 
 
 def test_triangular_loss_basic():
-    base_loss = CrossEntropyLoss()
-    loss = TriangularLoss(base_loss=base_loss, num_classes=6)
+    loss = TriangularCrossEntropyLoss(num_classes=6)
 
     input_data = torch.tensor(
         [
@@ -35,8 +32,7 @@ def test_triangular_loss_basic():
 
 
 def test_triangular_loss_exactvalue():
-    base_loss = CrossEntropyLoss()
-    loss = TriangularLoss(base_loss=base_loss, num_classes=6)
+    loss = TriangularCrossEntropyLoss(num_classes=6)
 
     input_data = torch.tensor(
         [
@@ -58,8 +54,7 @@ def test_triangular_loss_exactvalue():
 
 
 def test_triangular_loss_relative():
-    base_loss = CrossEntropyLoss()
-    loss = TriangularLoss(base_loss=base_loss, num_classes=6)
+    loss = TriangularCrossEntropyLoss(num_classes=6)
 
     input_data = torch.tensor(
         [
@@ -103,8 +98,7 @@ def test_triangular_loss_eta():
 
     last_loss = None
     for eta in [0.1, 0.3, 0.5, 0.7, 1.0]:
-        base_loss = CrossEntropyLoss()
-        loss = TriangularLoss(base_loss=base_loss, num_classes=6, eta=eta)
+        loss = TriangularCrossEntropyLoss(num_classes=6, eta=eta)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -126,8 +120,7 @@ def test_triangular_loss_alpha2():
 
     last_loss = None
     for alpha2 in [0.01, 0.05, 0.1, 0.15, 0.2]:
-        base_loss = CrossEntropyLoss()
-        loss = TriangularLoss(base_loss=base_loss, num_classes=6, alpha2=alpha2)
+        loss = TriangularCrossEntropyLoss(num_classes=6, alpha2=alpha2)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -140,8 +133,7 @@ def test_triangular_loss_alpha2():
 
 def test_triangular_loss_weights():
     weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1])
-    base_loss = CrossEntropyLoss(weight=weights)
-    loss = TriangularLoss(base_loss=base_loss, num_classes=6)
+    loss = TriangularCrossEntropyLoss(num_classes=6, weight=weights)
 
     input_data = torch.tensor(
         [

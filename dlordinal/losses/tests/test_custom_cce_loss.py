@@ -1,21 +1,18 @@
 import torch
-from torch.nn import CrossEntropyLoss
 
-from dlordinal.losses import CustomTargetsLoss
+from dlordinal.losses import CustomTargetsCrossEntropyLoss
 
 
 # Auxiliar function to get a test class
 def create_loss_class():
     cls_probs = torch.tensor([[0.6, 0.2, 0.2], [0.4, 0.5, 0.1], [0.1, 0.2, 0.7]])
-    base_loss = CrossEntropyLoss()
-    loss = CustomTargetsLoss(base_loss=base_loss, cls_probs=cls_probs)
-    return loss
+    return CustomTargetsCrossEntropyLoss(cls_probs)
 
 
 # Test the creation of the CustomTargetsCrossEntropyLoss class
 def test_custom_loss_creation():
     loss = create_loss_class()
-    assert isinstance(loss, CustomTargetsLoss)
+    assert isinstance(loss, CustomTargetsCrossEntropyLoss)
 
 
 # Test the calculation of the loss

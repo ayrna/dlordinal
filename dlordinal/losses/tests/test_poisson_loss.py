@@ -1,16 +1,19 @@
 import pytest
 import torch
+from torch.nn import CrossEntropyLoss
 
-from dlordinal.losses import PoissonCrossEntropyLoss
+from dlordinal.losses import PoissonLoss
 
 
 def test_poisson_loss_creation():
-    loss = PoissonCrossEntropyLoss(num_classes=5)
-    assert isinstance(loss, PoissonCrossEntropyLoss)
+    base_loss = CrossEntropyLoss()
+    loss = PoissonLoss(base_loss=base_loss, num_classes=5)
+    assert isinstance(loss, PoissonLoss)
 
 
 def test_poisson_loss_basic():
-    loss = PoissonCrossEntropyLoss(num_classes=6)
+    base_loss = CrossEntropyLoss()
+    loss = PoissonLoss(base_loss=base_loss, num_classes=6)
 
     input_data = torch.tensor(
         [
@@ -32,7 +35,8 @@ def test_poisson_loss_basic():
 
 
 def test_poisson_loss_exactvalue():
-    loss = PoissonCrossEntropyLoss(num_classes=6)
+    base_loss = CrossEntropyLoss()
+    loss = PoissonLoss(base_loss=base_loss, num_classes=6)
 
     input_data = torch.tensor(
         [
@@ -54,7 +58,8 @@ def test_poisson_loss_exactvalue():
 
 
 def test_poisson_loss_relative():
-    loss = PoissonCrossEntropyLoss(num_classes=6)
+    base_loss = CrossEntropyLoss()
+    loss = PoissonLoss(base_loss=base_loss, num_classes=6)
 
     input_data = torch.tensor(
         [
@@ -98,7 +103,8 @@ def test_poisson_loss_eta():
 
     last_loss = None
     for eta in [0.1, 0.3, 0.5, 0.7, 1.0]:
-        loss = PoissonCrossEntropyLoss(num_classes=6, eta=eta)
+        base_loss = CrossEntropyLoss()
+        loss = PoissonLoss(base_loss=base_loss, num_classes=6, eta=eta)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -111,7 +117,8 @@ def test_poisson_loss_eta():
 
 def test_poisson_loss_weights():
     weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1])
-    loss = PoissonCrossEntropyLoss(num_classes=6, weight=weights)
+    base_loss = CrossEntropyLoss(weight=weights)
+    loss = PoissonLoss(base_loss=base_loss, num_classes=6)
 
     input_data = torch.tensor(
         [

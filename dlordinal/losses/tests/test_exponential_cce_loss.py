@@ -1,19 +1,16 @@
 import pytest
 import torch
-from torch.nn import CrossEntropyLoss
 
-from dlordinal.losses import ExponentialLoss
+from dlordinal.losses import ExponentialCrossEntropyLoss
 
 
 def test_exponential_loss_creation():
-    base_loss = CrossEntropyLoss()
-    loss = ExponentialLoss(base_loss=base_loss, num_classes=5)
-    assert isinstance(loss, ExponentialLoss)
+    loss = ExponentialCrossEntropyLoss(num_classes=5)
+    assert isinstance(loss, ExponentialCrossEntropyLoss)
 
 
 def test_exponential_loss_basic():
-    base_loss = CrossEntropyLoss()
-    loss = ExponentialLoss(base_loss=base_loss, num_classes=6)
+    loss = ExponentialCrossEntropyLoss(num_classes=6)
 
     input_data = torch.tensor(
         [
@@ -43,8 +40,7 @@ def test_exponential_loss_exactvalue():
         (1.8, 1.47952),
         (2.0, 1.47439),
     ]:
-        base_loss = CrossEntropyLoss()
-        loss = ExponentialLoss(base_loss=base_loss, num_classes=6, p=p)
+        loss = ExponentialCrossEntropyLoss(num_classes=6, p=p)
 
         input_data = torch.tensor(
             [
@@ -66,8 +62,7 @@ def test_exponential_loss_exactvalue():
 
 
 def test_exponential_loss_relative():
-    base_loss = CrossEntropyLoss()
-    loss = ExponentialLoss(base_loss=base_loss, num_classes=6)
+    loss = ExponentialCrossEntropyLoss(num_classes=6)
 
     input_data = torch.tensor(
         [
@@ -111,8 +106,7 @@ def test_exponential_loss_eta():
 
     last_loss = None
     for eta in [0.1, 0.3, 0.5, 0.7, 1.0]:
-        base_loss = CrossEntropyLoss()
-        loss = ExponentialLoss(base_loss=base_loss, num_classes=6, eta=eta)
+        loss = ExponentialCrossEntropyLoss(num_classes=6, eta=eta)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -134,8 +128,7 @@ def test_exponential_loss_p():
 
     last_loss = None
     for p in [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]:
-        base_loss = CrossEntropyLoss()
-        loss = ExponentialLoss(base_loss=base_loss, num_classes=6, p=p)
+        loss = ExponentialCrossEntropyLoss(num_classes=6, p=p)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -148,8 +141,7 @@ def test_exponential_loss_p():
 
 def test_exponential_loss_weights():
     weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1])
-    base_loss = CrossEntropyLoss(weight=weights)
-    loss = ExponentialLoss(base_loss=base_loss, num_classes=6)
+    loss = ExponentialCrossEntropyLoss(num_classes=6, weight=weights)
 
     input_data = torch.tensor(
         [

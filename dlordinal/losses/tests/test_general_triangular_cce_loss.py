@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
 import torch
-from torch.nn import CrossEntropyLoss
 
-from dlordinal.losses import GeneralTriangularLoss
+from dlordinal.losses import GeneralTriangularCrossEntropyLoss
 
 
 def test_general_triangular_loss_creation():
@@ -27,11 +26,8 @@ def test_general_triangular_loss_creation():
 
     num_classes = 6
 
-    base_loss = CrossEntropyLoss()
-    loss = GeneralTriangularLoss(
-        base_loss=base_loss, num_classes=num_classes, alphas=alphas
-    )
-    assert isinstance(loss, GeneralTriangularLoss)
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
+    assert isinstance(loss, GeneralTriangularCrossEntropyLoss)
 
 
 def test_general_triangular_loss_basic():
@@ -54,10 +50,7 @@ def test_general_triangular_loss_basic():
 
     num_classes = 6
 
-    base_loss = CrossEntropyLoss()
-    loss = GeneralTriangularLoss(
-        base_loss=base_loss, num_classes=num_classes, alphas=alphas
-    )
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
 
     input_data = torch.tensor(
         [
@@ -98,10 +91,7 @@ def test_general_triangular_loss_exactvalue():
 
     num_classes = 6
 
-    base_loss = CrossEntropyLoss()
-    loss = GeneralTriangularLoss(
-        base_loss=base_loss, num_classes=num_classes, alphas=alphas
-    )
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
 
     input_data = torch.tensor(
         [
@@ -142,10 +132,7 @@ def test_general_triangular_loss_relative():
 
     num_classes = 6
 
-    base_loss = CrossEntropyLoss()
-    loss = GeneralTriangularLoss(
-        base_loss=base_loss, num_classes=num_classes, alphas=alphas
-    )
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
 
     input_data = torch.tensor(
         [
@@ -192,10 +179,7 @@ def test_general_triangular_loss_same_alphas():
 
     num_classes = 6
 
-    base_loss = CrossEntropyLoss()
-    loss = GeneralTriangularLoss(
-        base_loss=base_loss, num_classes=num_classes, alphas=alphas
-    )
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
 
     input_data = torch.tensor(
         [
@@ -236,10 +220,7 @@ def test_general_triangular_loss_different_alphas():
 
     num_classes = 6
 
-    base_loss = CrossEntropyLoss()
-    loss = GeneralTriangularLoss(
-        base_loss=base_loss, num_classes=num_classes, alphas=alphas
-    )
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
 
     input_data = torch.tensor(
         [
