@@ -32,7 +32,7 @@ class ExponentialLoss(CustomTargetsLoss):
     >>> loss = ExponentialLoss(base_loss, num_classes)
     >>> input = torch.randn(3, num_classes)
     >>> target = torch.randint(0, num_classes, (3,))
-    >>> output = loss(input, target
+    >>> output = loss(input, target)
     """
 
     def __init__(
