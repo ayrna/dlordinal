@@ -1,17 +1,20 @@
+import pytest
 import torch
-from torch import cuda
 
 from dlordinal.losses import OrdinalECOCDistanceLoss
 
 
-def test_ordinal_ecoc_distance_loss_creation():
-    loss = OrdinalECOCDistanceLoss(num_classes=6)
+@pytest.fixture
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def test_ordinal_ecoc_distance_loss_creation(device):
+    loss = OrdinalECOCDistanceLoss(num_classes=6).to(device)
     assert isinstance(loss, OrdinalECOCDistanceLoss)
 
 
-def test_ordinal_ecoc_distance_loss_output():
-    device = "cuda" if cuda.is_available() else "cpu"
-
+def test_ordinal_ecoc_distance_loss_output(device):
     num_classes = 6
     loss = OrdinalECOCDistanceLoss(num_classes).to(device)
 

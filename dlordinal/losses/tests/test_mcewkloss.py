@@ -124,7 +124,7 @@ def test_mcewkloss_weights(device):
             [-0.2673, 0.0656, 0.7692, 1.4546, -0.3020, 0.3431],
             [0.8162, 1.3829, 0.1576, -0.1615, 1.2485, 0.2667],
         ]
-    )
+    ).to(device)
 
     # Error in classes 1 and 3 (pattern from class 1 classified as 3)
     target = torch.tensor([3, 3, 1]).to(device)

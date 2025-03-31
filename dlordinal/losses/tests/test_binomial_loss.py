@@ -4,13 +4,18 @@ import torch
 from dlordinal.losses import BinomialCrossEntropyLoss
 
 
-def test_binomial_loss_creation():
-    loss = BinomialCrossEntropyLoss(num_classes=5)
+@pytest.fixture
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def test_binomial_loss_creation(device):
+    loss = BinomialCrossEntropyLoss(num_classes=5).to(device)
     assert isinstance(loss, BinomialCrossEntropyLoss)
 
 
-def test_binomial_loss_basic():
-    loss = BinomialCrossEntropyLoss(num_classes=6)
+def test_binomial_loss_basic(device):
+    loss = BinomialCrossEntropyLoss(num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -18,9 +23,9 @@ def test_binomial_loss_basic():
             [-2.4079, -2.5133, -2.6187, -1.7665, -2.1753, -2.9375],
             [-2.4079, -2.5133, -2.6187, -2.7240, -2.0245, -2.1541],
         ]
-    )
+    ).to(device)
 
-    target = torch.tensor([1, 3, 4])
+    target = torch.tensor([1, 3, 4]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -32,8 +37,8 @@ def test_binomial_loss_basic():
     assert output.item() > 0
 
 
-def test_binomial_loss_exactvalue():
-    loss = BinomialCrossEntropyLoss(num_classes=6)
+def test_binomial_loss_exactvalue(device):
+    loss = BinomialCrossEntropyLoss(num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -41,8 +46,8 @@ def test_binomial_loss_exactvalue():
             [0.1, 0.8, 0.1, 0.0, 0.0, 0.0],
             [0.0, 0.1, 0.8, 0.1, 0.0, 0.0],
         ]
-    )
-    target = torch.tensor([0, 1, 2])
+    ).to(device)
+    target = torch.tensor([0, 1, 2]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -54,28 +59,28 @@ def test_binomial_loss_exactvalue():
     assert output.item() == pytest.approx(1.60699, rel=1e-3)
 
 
-def test_binomial_loss_relative():
-    loss = BinomialCrossEntropyLoss(num_classes=6)
+def test_binomial_loss_relative(device):
+    loss = BinomialCrossEntropyLoss(num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
             [100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
     input_data2 = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
     input_data3 = torch.tensor(
         [
             [0.0, 0.0, 0.0, 0.0, 100.0, 0.0],
         ]
-    )
+    ).to(device)
 
-    target = torch.tensor([0])
+    target = torch.tensor([0]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -88,18 +93,18 @@ def test_binomial_loss_relative():
     assert output3.item() > output2.item() > output.item()
 
 
-def test_binomial_loss_eta():
+def test_binomial_loss_eta(device):
     input_data = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
-    target = torch.tensor([0])
+    target = torch.tensor([0]).to(device)
 
     last_loss = None
     for eta in [0.1, 0.3, 0.5, 0.7, 1.0]:
-        loss = BinomialCrossEntropyLoss(num_classes=6, eta=eta)
+        loss = BinomialCrossEntropyLoss(num_classes=6, eta=eta).to(device)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -110,19 +115,19 @@ def test_binomial_loss_eta():
         last_loss = output
 
 
-def test_binomial_loss_weights():
-    weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1])
-    loss = BinomialCrossEntropyLoss(num_classes=6, weight=weights)
+def test_binomial_loss_weights(device):
+    weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1]).to(device)
+    loss = BinomialCrossEntropyLoss(num_classes=6, weight=weights).to(device)
 
     input_data = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
 
-    target = torch.tensor([0])
-    target2 = torch.tensor([1])
-    target3 = torch.tensor([3])
+    target = torch.tensor([0]).to(device)
+    target2 = torch.tensor([1]).to(device)
+    target3 = torch.tensor([3]).to(device)
 
     loss1 = loss(input_data, target)
     loss2 = loss(input_data, target2)

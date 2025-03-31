@@ -5,7 +5,12 @@ import torch
 from dlordinal.losses import GeneralTriangularCrossEntropyLoss
 
 
-def test_general_triangular_loss_creation():
+@pytest.fixture
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def test_general_triangular_loss_creation(device):
     # Generate 12 random values between 0.01 and 0.2
     alphas = np.array(
         [
@@ -26,11 +31,13 @@ def test_general_triangular_loss_creation():
 
     num_classes = 6
 
-    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas).to(
+        device
+    )
     assert isinstance(loss, GeneralTriangularCrossEntropyLoss)
 
 
-def test_general_triangular_loss_basic():
+def test_general_triangular_loss_basic(device):
     alphas = np.array(
         [
             0.11073934,
@@ -50,7 +57,9 @@ def test_general_triangular_loss_basic():
 
     num_classes = 6
 
-    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas).to(
+        device
+    )
 
     input_data = torch.tensor(
         [
@@ -58,8 +67,8 @@ def test_general_triangular_loss_basic():
             [-1.7872, -3.9560, -6.2586, -8.3967, -7.9779, -8.0079],
             [-2.4078, -2.5133, -2.5584, -1.7485, -2.3675, -2.6099],
         ]
-    )
-    target = torch.tensor([4, 0, 5])
+    ).to(device)
+    target = torch.tensor([4, 0, 5]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -71,7 +80,7 @@ def test_general_triangular_loss_basic():
     assert output.item() > 0
 
 
-def test_general_triangular_loss_exactvalue():
+def test_general_triangular_loss_exactvalue(device):
     alphas = np.array(
         [
             0.11073934,
@@ -91,7 +100,9 @@ def test_general_triangular_loss_exactvalue():
 
     num_classes = 6
 
-    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas).to(
+        device
+    )
 
     input_data = torch.tensor(
         [
@@ -99,8 +110,8 @@ def test_general_triangular_loss_exactvalue():
             [-1.7872, -3.9560, -6.2586, -8.3967, -7.9779, -8.0079],
             [-2.4078, -2.5133, -2.5584, -1.7485, -2.3675, -2.6099],
         ]
-    )
-    target = torch.tensor([4, 0, 5])
+    ).to(device)
+    target = torch.tensor([4, 0, 5]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -112,7 +123,7 @@ def test_general_triangular_loss_exactvalue():
     assert output.item() == pytest.approx(1.3814, rel=1e-3)
 
 
-def test_general_triangular_loss_relative():
+def test_general_triangular_loss_relative(device):
     alphas = np.array(
         [
             0.11073934,
@@ -132,24 +143,26 @@ def test_general_triangular_loss_relative():
 
     num_classes = 6
 
-    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas).to(
+        device
+    )
 
     input_data = torch.tensor(
         [
             [100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
     input_data2 = torch.tensor(
         [
             [0.0, 0.0, 0.0, 100.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
     input_data3 = torch.tensor(
         [
             [0.0, 0.0, 0.0, 0.0, 100.0, 0.0],
         ]
-    )
-    target = torch.tensor([1])
+    ).to(device)
+    target = torch.tensor([1]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -159,7 +172,7 @@ def test_general_triangular_loss_relative():
     assert output3.item() >= output2.item() > output.item()
 
 
-def test_general_triangular_loss_same_alphas():
+def test_general_triangular_loss_same_alphas(device):
     alphas = np.array(
         [
             0.05,
@@ -179,19 +192,21 @@ def test_general_triangular_loss_same_alphas():
 
     num_classes = 6
 
-    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas).to(
+        device
+    )
 
     input_data = torch.tensor(
         [
             [100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
     input_data2 = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
-    target = torch.tensor([1])
+    ).to(device)
+    target = torch.tensor([1]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
@@ -200,7 +215,7 @@ def test_general_triangular_loss_same_alphas():
     assert output2.item() == output.item()
 
 
-def test_general_triangular_loss_different_alphas():
+def test_general_triangular_loss_different_alphas(device):
     alphas = np.array(
         [
             0.05,
@@ -220,19 +235,21 @@ def test_general_triangular_loss_different_alphas():
 
     num_classes = 6
 
-    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas)
+    loss = GeneralTriangularCrossEntropyLoss(num_classes=num_classes, alphas=alphas).to(
+        device
+    )
 
     input_data = torch.tensor(
         [
             [100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ]
-    )
+    ).to(device)
     input_data2 = torch.tensor(
         [
             [0.0, 0.0, 100.0, 0.0, 0.0, 0.0],
         ]
-    )
-    target = torch.tensor([1])
+    ).to(device)
+    target = torch.tensor([1]).to(device)
 
     # Compute the loss
     output = loss(input_data, target)
