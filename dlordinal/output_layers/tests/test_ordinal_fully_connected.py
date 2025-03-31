@@ -1,3 +1,4 @@
+import pytest
 import torch
 from torch import nn
 
@@ -7,21 +8,26 @@ from dlordinal.output_layers import (
 )
 
 
-def test_ordinal_resnet_fc_creation():
+@pytest.fixture
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def test_ordinal_resnet_fc_creation(device):
     input_size = 10
     num_classes = 5
-    resnet_fc = ResNetOrdinalFullyConnected(input_size, num_classes)
+    resnet_fc = ResNetOrdinalFullyConnected(input_size, num_classes).to(device)
 
     assert isinstance(resnet_fc, ResNetOrdinalFullyConnected)
 
 
-def test_ordinal_resnet_fc_output():
+def test_ordinal_resnet_fc_output(device):
     input_size = 10
     num_classes = 5
 
-    resnet_fc = ResNetOrdinalFullyConnected(input_size, num_classes)
+    resnet_fc = ResNetOrdinalFullyConnected(input_size, num_classes).to(device)
 
-    input_data = torch.randn(16, input_size)
+    input_data = torch.randn(16, input_size).to(device)
 
     output = resnet_fc(input_data)
 
@@ -34,12 +40,14 @@ def test_ordinal_resnet_fc_output():
     assert (output <= 1).all()
 
 
-def test_initialisation_VGG():
+def test_initialisation_VGG(device):
     input_size = 512
     num_classes = 5
     activation_function = nn.ReLU
 
-    model = VGGOrdinalFullyConnected(input_size, num_classes, activation_function)
+    model = VGGOrdinalFullyConnected(input_size, num_classes, activation_function).to(
+        device
+    )
 
     assert len(model.classifiers) == num_classes - 1
     for classifier in model.classifiers:
@@ -54,13 +62,15 @@ def test_initialisation_VGG():
         assert isinstance(layers[6], nn.Linear)
 
 
-def test_forward_VGG():
+def test_forward_VGG(device):
     input_size = 512
     num_classes = 5
     activation_function = nn.ReLU
 
-    model = VGGOrdinalFullyConnected(input_size, num_classes, activation_function)
-    x = torch.randn(10, input_size)  # Batch size of 10
+    model = VGGOrdinalFullyConnected(input_size, num_classes, activation_function).to(
+        device
+    )
+    x = torch.randn(10, input_size).to(device)  # Batch size of 10
     output = model(x)
 
     assert output.shape == (10, num_classes - 1)

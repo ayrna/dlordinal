@@ -6,8 +6,14 @@ from torch import nn
 from dlordinal.losses import CDWCELoss
 
 
-def cdwce_loop_softmax(y_pred, y_true, alpha):
-    y_pred = nn.functional.softmax(y_pred, dim=1)
+@pytest.fixture
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def cdwce_loop_softmax(y_pred, y_true, alpha, device):
+    y_pred = nn.functional.softmax(y_pred, dim=1).to(device)
+    y_true = y_true.to(device)
     N = y_true.size(0)
     J = y_true.size(1)
 
@@ -15,59 +21,66 @@ def cdwce_loop_softmax(y_pred, y_true, alpha):
     for i in range(N):
         for j in range(J):
             loss += (
-                torch.log(1.0 - y_pred[i, j] + 1e-8)
-                * torch.abs(j - torch.argmax(y_true[i])) ** alpha
+                torch.log(1.0 - y_pred[i, j] + 1e-8).to(device)
+                * torch.abs(j - torch.argmax(y_true[i])).to(device) ** alpha
             )
     return -loss / N
 
 
-def cdwce_vect_softmax(y_pred, y_true, alpha):
-    y_pred = nn.functional.softmax(y_pred, dim=1)
+def cdwce_vect_softmax(y_pred, y_true, alpha, device):
+    y_pred = nn.functional.softmax(y_pred, dim=1).to(device)
+    y_true = y_true.to(device)
+
     N = y_true.size(0)
     J = y_true.size(1)
 
     # Create a matrix of indices
-    indices = torch.arange(J).unsqueeze(0).repeat(N, 1)
+    indices = torch.arange(J).unsqueeze(0).repeat(N, 1).to(device)
     # Get the true class indices
-    true_indices = torch.argmax(y_true, dim=1).unsqueeze(1)
+    true_indices = torch.argmax(y_true, dim=1).unsqueeze(1).to(device)
     # Calculate the absolute differences
-    abs_diff = torch.abs(indices - true_indices)
+    abs_diff = torch.abs(indices - true_indices).to(device)
     # Calculate the loss
-    loss = torch.log(1.0 - y_pred + 1e-8) * (abs_diff**alpha)
+    loss = torch.log(1.0 - y_pred + 1e-8).to(device) * (abs_diff**alpha)
     return -loss.sum() / N
 
 
-def cdwce_loop(y_pred, y_true, alpha):
+def cdwce_loop(y_pred, y_true, alpha, device):
     N = y_true.size(0)
     J = y_true.size(1)
+
+    y_true = y_true.to(device)
+    y_pred = y_pred.to(device)
 
     loss = 0.0
     for n in range(N):
         for i in range(J):
             s = 0
             for j in range(J):
-                s += torch.exp(y_pred[n, j])
+                s += torch.exp(y_pred[n, j]).to(device)
 
-            l1 = torch.log(s - torch.exp(y_pred[n, i]))
-            l2 = torch.log(s)
+            l1 = torch.log(s - torch.exp(y_pred[n, i])).to(device)
+            l2 = torch.log(s).to(device)
             l_1_2 = l1 - l2
-            loss += l_1_2 * (abs(i - torch.argmax(y_true[n])) ** alpha)
+            loss += l_1_2 * (abs(i - torch.argmax(y_true[n])).to(device) ** alpha)
 
     return -loss / N
 
 
-def test_cdwce_exact_value():
+def test_cdwce_exact_value(device):
     for alpha, result in [(0.5, 1.73862), (1.0, 2.37753), (2.0, 4.99029)]:
-        loss = CDWCELoss(num_classes=4, alpha=alpha)
-        y_true = torch.tensor([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        loss = CDWCELoss(num_classes=4, alpha=alpha).to(device)
+        y_true = torch.tensor(
+            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+        ).to(device)
         y_pred = torch.tensor(
             [[1, 2, 3, 4], [5, 8, 1, 0], [-2, 5, 3, 2], [-4, 5, 3, 2]]
-        )
+        ).to(device)
         loss_value = loss(y_pred, y_true)
         assert loss_value.item() == pytest.approx(result, abs=1e-4)
 
 
-def test_cdwce_exact_value_class_weights():
+def test_cdwce_exact_value_class_weights(device):
     tests = [
         (0.5, torch.tensor([5, 1, 1.1, 6.6]), 0.57611),
         (1.0, torch.tensor([5, 1, 1.1, 6.6]), 0.84099),
@@ -77,27 +90,31 @@ def test_cdwce_exact_value_class_weights():
         (2.0, torch.tensor([1, 2, 3, 4]), 1.16119),
     ]
     for alpha, weight, result in tests:
-        loss = CDWCELoss(num_classes=4, alpha=alpha, weight=weight)
-        y_true = torch.tensor([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        loss = CDWCELoss(num_classes=4, alpha=alpha, weight=weight).to(device)
+        y_true = torch.tensor(
+            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+        ).to(device)
         y_pred = torch.tensor(
             [[1, 2, 3, 4], [5, 8, 1, 0], [-2, 5, 3, 2], [-4, 5, 3, 2]]
-        )
+        ).to(device)
         loss_value = loss(y_pred, y_true)
         assert loss_value.item() == pytest.approx(result, abs=1e-4)
 
 
-def test_cdwce_compare_different_versions():
+def test_cdwce_compare_different_versions(device):
     alpha = 0.5
-    loss = CDWCELoss(num_classes=4, alpha=alpha)
-    y_true = torch.tensor([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    loss = CDWCELoss(num_classes=4, alpha=alpha).to(device)
+    y_true = torch.tensor([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]).to(
+        device
+    )
     y_pred = torch.tensor(
         [[1, 0, 0, 0], [0.2, 0.3, 0.5, 0], [0.7, 0.1, 0.1, 0.1], [0, 0, 0.05, 0.95]]
-    )
+    ).to(device)
     loss_value = loss(y_pred, y_true)
 
-    loss_value_loop_softmax = cdwce_loop_softmax(y_pred, y_true, alpha)
-    loss_value_vect = cdwce_vect_softmax(y_pred, y_true, alpha)
-    loss_value_loop = cdwce_loop(y_pred, y_true, alpha)
+    loss_value_loop_softmax = cdwce_loop_softmax(y_pred, y_true, alpha, device)
+    loss_value_vect = cdwce_vect_softmax(y_pred, y_true, alpha, device)
+    loss_value_loop = cdwce_loop(y_pred, y_true, alpha, device)
 
     # First test that all the versions implemented in this test are the same
     assert loss_value_loop_softmax.item() == pytest.approx(
@@ -114,9 +131,9 @@ def test_cdwce_compare_different_versions():
     assert loss_value.item() == pytest.approx(loss_value_loop.item(), abs=1e-4)
 
 
-def test_cdwce_random_y():
+def test_cdwce_random_y(device):
     for alpha in np.linspace(0.05, 3.0, 10):
-        loss = CDWCELoss(num_classes=10, alpha=alpha)
+        loss = CDWCELoss(num_classes=10, alpha=alpha).to(device)
         y_true = torch.tensor(
             [
                 [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
@@ -220,7 +237,7 @@ def test_cdwce_random_y():
                 [1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
                 [1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             ]
-        )
+        ).to(device)
         # fmt: off
         y_pred = torch.tensor(
             [[-7.4033e-01, -7.5837e-02, -1.9534e+00, -4.3210e-01, -1.2681e+00,
@@ -423,14 +440,14 @@ def test_cdwce_random_y():
             8.7510e-01, -6.8746e-01,  3.2069e-01,  6.8680e-01,  1.7246e+00],
             [-3.6245e-01, -2.5166e-01, -6.7368e-01,  1.1523e+00,  5.6932e-01,
             -1.1918e+00,  1.6914e+00,  1.7816e+00, -9.7225e-01,  6.2170e-01]]
-         )
+         ).to(device)
 
         # fmt: on
         loss_value = loss(y_pred, y_true)
 
-        loss_value_loop_softmax = cdwce_loop_softmax(y_pred, y_true, alpha)
-        loss_value_vect = cdwce_vect_softmax(y_pred, y_true, alpha)
-        loss_value_loop = cdwce_loop(y_pred, y_true, alpha)
+        loss_value_loop_softmax = cdwce_loop_softmax(y_pred, y_true, alpha, device)
+        loss_value_vect = cdwce_vect_softmax(y_pred, y_true, alpha, device)
+        loss_value_loop = cdwce_loop(y_pred, y_true, alpha, device)
 
         assert loss_value.item() == pytest.approx(
             loss_value_loop_softmax.item(), abs=1e-4
