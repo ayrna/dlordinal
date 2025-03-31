@@ -13,7 +13,8 @@ class CustomTargetsLoss(torch.nn.Module):
     Parameters
     ----------
     base_loss : Module
-        The base loss function.
+        The base loss function. It must accept y_true as a probability distribution
+        (e.g., one-hot or soft labels).
     cls_probs : Tensor
         The class probabilities tensor.
     eta : float, default=1.0

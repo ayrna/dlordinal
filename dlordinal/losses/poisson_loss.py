@@ -15,7 +15,8 @@ class PoissonLoss(CustomTargetsLoss):
     Parameters
     ----------
     base_loss : Module
-        The base loss function.
+        The base loss function. It must accept y_true as a probability distribution
+        (e.g., one-hot or soft labels).
     num_classes : int
         Number of classes.
     eta : float, default=1.0
