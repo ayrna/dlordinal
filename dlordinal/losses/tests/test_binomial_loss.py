@@ -1,7 +1,8 @@
 import pytest
 import torch
+from torch.nn import CrossEntropyLoss
 
-from dlordinal.losses import BinomialCrossEntropyLoss
+from dlordinal.losses import BinomialLoss
 
 
 @pytest.fixture
@@ -10,12 +11,14 @@ def device():
 
 
 def test_binomial_loss_creation(device):
-    loss = BinomialCrossEntropyLoss(num_classes=5).to(device)
-    assert isinstance(loss, BinomialCrossEntropyLoss)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = BinomialLoss(base_loss=base_loss, num_classes=5).to(device)
+    assert isinstance(loss, BinomialLoss)
 
 
 def test_binomial_loss_basic(device):
-    loss = BinomialCrossEntropyLoss(num_classes=6).to(device)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = BinomialLoss(base_loss=base_loss, num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -38,7 +41,8 @@ def test_binomial_loss_basic(device):
 
 
 def test_binomial_loss_exactvalue(device):
-    loss = BinomialCrossEntropyLoss(num_classes=6).to(device)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = BinomialLoss(base_loss=base_loss, num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -60,7 +64,8 @@ def test_binomial_loss_exactvalue(device):
 
 
 def test_binomial_loss_relative(device):
-    loss = BinomialCrossEntropyLoss(num_classes=6).to(device)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = BinomialLoss(base_loss=base_loss, num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -104,7 +109,8 @@ def test_binomial_loss_eta(device):
 
     last_loss = None
     for eta in [0.1, 0.3, 0.5, 0.7, 1.0]:
-        loss = BinomialCrossEntropyLoss(num_classes=6, eta=eta).to(device)
+        base_loss = CrossEntropyLoss().to(device)
+        loss = BinomialLoss(base_loss=base_loss, num_classes=6, eta=eta).to(device)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -117,7 +123,8 @@ def test_binomial_loss_eta(device):
 
 def test_binomial_loss_weights(device):
     weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1]).to(device)
-    loss = BinomialCrossEntropyLoss(num_classes=6, weight=weights).to(device)
+    base_loss = CrossEntropyLoss(weight=weights).to(device)
+    loss = BinomialLoss(base_loss=base_loss, num_classes=6).to(device)
 
     input_data = torch.tensor(
         [

@@ -1,7 +1,8 @@
 import pytest
 import torch
+from torch.nn import CrossEntropyLoss
 
-from dlordinal.losses import CustomTargetsCrossEntropyLoss
+from dlordinal.losses import CustomTargetsLoss
 
 
 @pytest.fixture
@@ -14,13 +15,15 @@ def create_loss_class(device):
     cls_probs = torch.tensor([[0.6, 0.2, 0.2], [0.4, 0.5, 0.1], [0.1, 0.2, 0.7]]).to(
         device
     )
-    return CustomTargetsCrossEntropyLoss(cls_probs)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = CustomTargetsLoss(base_loss=base_loss, cls_probs=cls_probs).to(device)
+    return loss
 
 
 # Test the creation of the CustomTargetsCrossEntropyLoss class
 def test_custom_loss_creation(device):
     loss = create_loss_class(device)
-    assert isinstance(loss, CustomTargetsCrossEntropyLoss)
+    assert isinstance(loss, CustomTargetsLoss)
 
 
 # Test the calculation of the loss

@@ -1,7 +1,8 @@
 import pytest
 import torch
+from torch.nn import CrossEntropyLoss
 
-from dlordinal.losses import PoissonCrossEntropyLoss
+from dlordinal.losses import PoissonLoss
 
 
 @pytest.fixture
@@ -10,12 +11,14 @@ def device():
 
 
 def test_poisson_loss_creation(device):
-    loss = PoissonCrossEntropyLoss(num_classes=5).to(device)
-    assert isinstance(loss, PoissonCrossEntropyLoss)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = PoissonLoss(base_loss=base_loss, num_classes=5).to(device)
+    assert isinstance(loss, PoissonLoss)
 
 
 def test_poisson_loss_basic(device):
-    loss = PoissonCrossEntropyLoss(num_classes=6).to(device)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = PoissonLoss(base_loss=base_loss, num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -37,7 +40,8 @@ def test_poisson_loss_basic(device):
 
 
 def test_poisson_loss_exactvalue(device):
-    loss = PoissonCrossEntropyLoss(num_classes=6).to(device)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = PoissonLoss(base_loss=base_loss, num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -59,7 +63,8 @@ def test_poisson_loss_exactvalue(device):
 
 
 def test_poisson_loss_relative(device):
-    loss = PoissonCrossEntropyLoss(num_classes=6).to(device)
+    base_loss = CrossEntropyLoss().to(device)
+    loss = PoissonLoss(base_loss=base_loss, num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
@@ -103,7 +108,8 @@ def test_poisson_loss_eta(device):
 
     last_loss = None
     for eta in [0.1, 0.3, 0.5, 0.7, 1.0]:
-        loss = PoissonCrossEntropyLoss(num_classes=6, eta=eta).to(device)
+        base_loss = CrossEntropyLoss().to(device)
+        loss = PoissonLoss(base_loss=base_loss, num_classes=6, eta=eta).to(device)
 
         # Compute the loss
         output = loss(input_data, target)
@@ -116,7 +122,8 @@ def test_poisson_loss_eta(device):
 
 def test_poisson_loss_weights(device):
     weights = torch.tensor([5.0, 2.0, 1.0, 0.5, 0.1, 0.1]).to(device)
-    loss = PoissonCrossEntropyLoss(num_classes=6, weight=weights).to(device)
+    base_loss = CrossEntropyLoss(weight=weights).to(device)
+    loss = PoissonLoss(base_loss=base_loss, num_classes=6).to(device)
 
     input_data = torch.tensor(
         [
