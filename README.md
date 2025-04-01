@@ -64,12 +64,12 @@ fgnet_test = FGNet(
 
 ### Training a CNN model using the `skorch` library
 
-This example shows how to train a CNN model using the `NeuralNetClassifier` from the `skorch` library and the `TriangularCrossEntropy` from `dlordinal` as optimisation criterion.
+This example shows how to train a CNN model using the `NeuralNetClassifier` from the `skorch` library and the `TriangularLoss` with ``CrossEntropyLoss`` from `dlordinal` as optimisation criterion.
 
 ```python
 import numpy as np
 from dlordinal.datasets import FGNet
-from dlordinal.losses import TriangularCrossEntropyLoss
+from dlordinal.losses import TriangularLoss
 from dlordinal.metrics import amae, mmae
 from skorch import NeuralNetClassifier
 from torch import nn
@@ -98,7 +98,7 @@ model = models.resnet18(weights="IMAGENET1K_V1")
 model.fc = nn.Linear(model.fc.in_features, num_classes_fgnet)
 
 # Loss function
-loss_fn = TriangularCrossEntropyLoss(num_classes=num_classes_fgnet)
+loss_fn = TriangularLoss(base_loss=nn.CrossEntropyLoss(), num_classes=num_classes_fgnet)
 
 # Skorch estimator
 estimator = NeuralNetClassifier(
