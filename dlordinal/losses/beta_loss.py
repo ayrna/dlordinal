@@ -20,9 +20,18 @@ class BetaLoss(CustomTargetsLoss):
         (e.g., one-hot or soft labels).
     num_classes : int
         Number of classes.
-    params_set : str, default='standard'
-        The set of parameters to use for the beta distribution (chosen from the
-        _beta_params_set dictionary).
+    params_set : str or dict[int, list], default="standard"
+            The set of parameters of the beta distributions employed to generate the
+            soft labels. It can be one of the keys in the ``_beta_params_sets``
+            dictionary. Alternatively, it can be a dictionary with the same structure as
+            the items of the ``_beta_params_sets`` dictionary. The keys of the dictionary
+            must be the number of classes and the values must be a list of lists with
+            the parameters of the beta distributions for each class. The list for each class
+            must have three parameters :math:`[p,q,a]` where :math:`p` and :math:`q` are the
+            shape parameters of the beta distribution and :math:`a` is the scaling
+            parameter. Example: ``{3: [[1, 4, 1], [4, 4, 1], [4, 1, 1]]}`` for three classes
+            with the parameters :math:`[1,4,1]`, :math:`[4,4,1]` and :math:`[4,1,1]` for each
+            class respectively.
     eta : float, default=1.0
         Parameter that controls the influence of the regularisation.
 
@@ -43,7 +52,7 @@ class BetaLoss(CustomTargetsLoss):
         self,
         base_loss: Module,
         num_classes: int,
-        params_set: str = "standard",
+        params_set: str | dict[int, list] = "standard",
         eta: float = 1.0,
     ):
         # Precompute class probabilities for each label

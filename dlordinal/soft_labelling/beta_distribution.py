@@ -4,7 +4,7 @@ from scipy.special import gamma, hyp2f1
 from .utils import get_intervals
 
 
-def beta_func(a, b):
+def _beta_func(a, b):  # pragma: no cover
     """Compute the beta function.
 
     Parameters
@@ -29,7 +29,7 @@ def beta_func(a, b):
     return (gamma(a) * gamma(b)) / gamma(a + b)
 
 
-def beta_dist(x, p, q, a=1.0):
+def _beta_dist(x, p, q, a=1.0):  # pragma: no cover
     """Compute the beta distribution function for value x with parameters p, q and a.
 
     Parameters
@@ -55,10 +55,10 @@ def beta_dist(x, p, q, a=1.0):
     if a <= 0:
         raise ValueError(f"{a=} can not be negative or 0")
 
-    return (x ** (a * p)) / (p * beta_func(p, q)) * hyp2f1(p, 1 - q, p + 1, x**a)
+    return (x ** (a * p)) / (p * _beta_func(p, q)) * hyp2f1(p, 1 - q, p + 1, x**a)
 
 
-def _get_beta_soft_label(J, p, q, a=1.0):
+def _get_beta_soft_label(J, p, q, a=1.0):  # pragma: no cover
     """Get soft labels from a beta distribution :math:`B(p,q,a)` for ``J`` splits.
     The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
     each interval is computed as the difference between the value of the distribution
@@ -116,7 +116,9 @@ def _get_beta_soft_label(J, p, q, a=1.0):
 
     # Compute probability for each interval (class) using the distribution function.
     for interval in intervals:
-        probs.append(beta_dist(interval[1], p, q, a) - beta_dist(interval[0], p, q, a))
+        probs.append(
+            _beta_dist(interval[1], p, q, a) - _beta_dist(interval[0], p, q, a)
+        )
 
     return probs
 
@@ -232,7 +234,7 @@ _beta_params_sets = {
 }
 
 
-def get_beta_soft_labels(J, params_set="standard"):
+def get_beta_soft_labels(J: int, params_set: str | dict[int, list] = "standard"):
     """Get soft labels for each of the ``J`` classes using a beta distributions and
     the parameter defined in the ``params_set`` as described in :footcite:t:`vargas2022unimodal`.
 
@@ -241,11 +243,18 @@ def get_beta_soft_labels(J, params_set="standard"):
     J : int
             Number of classes or splits.
 
-    params_set : str, default='standard'
+    params_set : str or dict[int, list], default="standard"
             The set of parameters of the beta distributions employed to generate the
-            soft labels. It has to be one of the keys in the ``_beta_params_sets``
-            dictionary.
-
+            soft labels. It can be one of the keys in the ``_beta_params_sets``
+            dictionary. Alternatively, it can be a dictionary with the same structure as
+            the items of the ``_beta_params_sets`` dictionary. The keys of the dictionary
+            must be the number of classes and the values must be a list of lists with
+            the parameters of the beta distributions for each class. The list for each class
+            must have three parameters :math:`[p,q,a]` where :math:`p` and :math:`q` are the
+            shape parameters of the beta distribution and :math:`a` is the scaling
+            parameter. Example: ``{3: [[1, 4, 1], [4, 4, 1], [4, 1, 1]]}`` for three classes
+            with the parameters :math:`[1,4,1]`, :math:`[4,4,1]` and :math:`[4,1,1]` for each
+            class respectively.
     Raises
     ------
     ValueError
@@ -282,8 +291,21 @@ def get_beta_soft_labels(J, params_set="standard"):
     if J <= 0:
         raise ValueError(f"{J=} must be a positive integer")
 
-    if params_set not in _beta_params_sets:
-        raise ValueError(f"Invalid params_set: {params_set}")
+    if isinstance(params_set, str):
+        if params_set in _beta_params_sets:
+            params = _beta_params_sets[params_set]
+        else:
+            raise ValueError(f"{params_set=} not in _beta_params_sets keys")
+    elif isinstance(params_set, dict):
+        params = params_set
+    else:
+        raise ValueError(f"{params_set=} must be a string or a dictionary")
 
-    params = _beta_params_sets[params_set]
+    if J not in params:
+        raise ValueError(f"{J=} not in {params_set=} keys")
+    if len(params[J]) != J:
+        raise ValueError(f"{J=} not in {params_set=} keys")
+    if any(len(p) != 3 for p in params[J]):
+        raise ValueError("Each parameter set must have three values [p,q,a]")
+
     return np.array([_get_beta_soft_label(J, p, q, a) for (p, q, a) in params[J]])
