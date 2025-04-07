@@ -57,3 +57,11 @@ repos:
       - id: nbqa-black
         additional_dependencies: [ black==24.10.0 ]
         args: []
+
+  - repo: local
+    hooks:
+      - id: check-version-consistency
+        name: Check version consistency across files
+        entry: python .github/scripts/check_version_consistency.py
+        language: system
+        types: [file]
