@@ -1,3 +1,5 @@
+from typing import Dict, List, Union
+
 import numpy as np
 from scipy.special import gamma, hyp2f1
 
@@ -234,7 +236,7 @@ _beta_params_sets = {
 }
 
 
-def get_beta_soft_labels(J: int, params_set: str | dict[int, list] = "standard"):
+def get_beta_soft_labels(J: int, params_set: Union[str, Dict[int, List]] = "standard"):
     """Get soft labels for each of the ``J`` classes using a beta distributions and
     the parameter defined in the ``params_set`` as described in :footcite:t:`vargas2022unimodal`.
 

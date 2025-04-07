@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, List, Optional, Union
 
 import torch
 from deprecated.sphinx import deprecated
@@ -52,7 +52,7 @@ class BetaLoss(CustomTargetsLoss):
         self,
         base_loss: Module,
         num_classes: int,
-        params_set: str | dict[int, list] = "standard",
+        params_set: Union[str, Dict[int, List]] = "standard",
         eta: float = 1.0,
     ):
         # Precompute class probabilities for each label
