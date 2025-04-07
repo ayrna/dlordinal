@@ -225,3 +225,13 @@ def test_beta_softlabels_custom_params(J):
 
     assert result.ndim == 2
     assert result.shape == (J, J)
+
+
+@pytest.mark.parametrize("J", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+def test_beta_softlabels_custom_params_2(J):
+    from dlordinal.soft_labelling.beta_distribution import _beta_params_sets
+
+    params = _beta_params_sets["standard"]
+    result_standard = get_beta_soft_labels(J, params_set="standard")
+    result_custom = get_beta_soft_labels(J, params_set=params)
+    assert result_standard == pytest.approx(result_custom, rel=1e-6)

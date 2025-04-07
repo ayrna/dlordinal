@@ -145,3 +145,29 @@ def test_beta_loss_weights(device):
     loss3 = loss(input_data, target3)
 
     assert loss1.item() > loss2.item() > loss3.item()
+
+
+@pytest.mark.parametrize("J", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+def test_beta_loss_custom_params_set(device, J):
+    from dlordinal.soft_labelling.beta_distribution import _beta_params_sets
+
+    base_loss = CrossEntropyLoss().to(device)
+
+    loss_standard = BetaLoss(
+        base_loss=base_loss, num_classes=J, params_set="standard"
+    ).to(device)
+
+    params = _beta_params_sets["standard"]
+    loss_custom = BetaLoss(
+        base_loss=base_loss,
+        num_classes=J,
+        params_set=params,
+    ).to(device)
+
+    input_data = torch.rand(20, J).to(device)
+    target = torch.randint(0, J, (20,)).to(device)
+
+    output_standard = loss_standard(input_data, target)
+    output_custom = loss_custom(input_data, target)
+
+    assert output_standard.item() == output_custom.item()
