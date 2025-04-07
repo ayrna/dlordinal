@@ -24,7 +24,7 @@ The latest `dlordinal` release is `v2.4.0`. You can view all the changes made in
 
 ## ⚙️ Installation
 
-`dlordinal v2.4.0` is the last version, supported from Python 3.8 to Python 3.12.
+`dlordinal v2.4.1` is the last version, supported from Python 3.8 to Python 3.12.
 
 The easiest way to install `dlordinal` is via `pip`:
 
