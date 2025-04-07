@@ -66,4 +66,4 @@ jobs:
           create_branch: false
 
       - name: Run version check
-        run: python .github/scripts/check_version.py
+        run: python .github/scripts/check_version_consistency.py
