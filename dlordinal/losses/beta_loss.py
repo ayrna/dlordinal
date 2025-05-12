@@ -11,13 +11,20 @@ from .custom_targets_loss import CustomTargetsLoss
 
 
 class BetaLoss(CustomTargetsLoss):
-    """Beta regularised loss from :footcite:t:`vargas2022unimodal`.
+    """
+    Beta-regularized loss, as proposed in :footcite:t:`vargas2022unimodal`.
+
+    This loss function applies a regularization term based on the Beta distribution
+    to penalize the distance between predicted and true class distributions. It extends
+    the `CustomTargetsLoss` by incorporating a Beta distribution for soft labelling.
 
     Parameters
     ----------
-    base_loss: Module
-        The base loss function. It must accept y_true as a probability distribution
-        (e.g., one-hot or soft labels).
+    base_loss : torch.nn.Module
+        The base loss function. It must accept `y_true` as a probability distribution
+        (e.g., soft labels or one-hot encoded labels). The base loss is applied
+        between the predicted logits (`y_pred`) and the adjusted target labels (`y_true`).
+
     num_classes : int
         Number of classes.
     params_set : str or dict[int, list], default="standard"
@@ -33,7 +40,9 @@ class BetaLoss(CustomTargetsLoss):
             with the parameters :math:`[1,4,1]`, :math:`[4,4,1]` and :math:`[4,1,1]` for each
             class respectively.
     eta : float, default=1.0
-        Parameter that controls the influence of the regularisation.
+        A regularization parameter that controls the balance between the base loss and
+        the regularization term. A value of 0 means no regularization, while a value
+        of 1 means the Beta regularization term fully influences the target labels.
 
     Example
     -------
@@ -62,6 +71,8 @@ class BetaLoss(CustomTargetsLoss):
             cls_probs=cls_probs,
             eta=eta,
         )
+
+    forward = CustomTargetsLoss.forward
 
 
 # TODO: remove in 3.0.0

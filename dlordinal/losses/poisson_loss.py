@@ -10,17 +10,26 @@ from .custom_targets_loss import CustomTargetsLoss
 
 
 class PoissonLoss(CustomTargetsLoss):
-    """Poisson unimodal regularised cross entropy loss from :footcite:t:`liu2020unimodal`.
+    """
+    Poisson unimodal regularised cross-entropy loss from :footcite:t:`liu2020unimodal`.
+
+    This loss combines a base loss function (typically cross-entropy) with a Poisson
+    regularisation term to improve classification performance in certain tasks, as described
+    in the referenced paper. The base loss is applied to the probability distribution of
+    the target labels, and the Poisson regularisation encourages the model to produce more
+    balanced probability distributions.
 
     Parameters
     ----------
-    base_loss : Module
-        The base loss function. It must accept y_true as a probability distribution
-        (e.g., one-hot or soft labels).
+    base_loss : torch.nn.Module
+        The base loss function (e.g., `CrossEntropyLoss`). It must accept `y_true` as a
+        probability distribution (e.g., one-hot encoded or soft labels).
     num_classes : int
-        Number of classes.
+        Number of classes (i.e., the size of the probability distribution over the classes).
     eta : float, default=1.0
-        Parameter that controls the influence of the regularisation.
+        Regularisation parameter that controls the influence of the Poisson term. A value
+        of 1.0 gives equal weight to the base loss and the Poisson regularisation.
+        Smaller values reduce the impact of the regularisation.
 
     Example
     -------
@@ -30,9 +39,10 @@ class PoissonLoss(CustomTargetsLoss):
     >>> num_classes = 5
     >>> base_loss = CrossEntropyLoss()
     >>> loss = PoissonLoss(base_loss, num_classes)
-    >>> input = torch.randn(3, num_classes)
-    >>> target = torch.randint(0, num_classes, (3,))
-    >>> output = loss(input, target)
+    >>> input = torch.randn(3, num_classes)  # Predicted logits for 3 samples
+    >>> target = torch.randint(0, num_classes, (3,))  # Ground truth class indices
+    >>> output = loss(input, target)  # Compute the loss
+    >>> print(output)
     """
 
     def __init__(
@@ -49,6 +59,8 @@ class PoissonLoss(CustomTargetsLoss):
             cls_probs=cls_probs,
             eta=eta,
         )
+
+    forward = CustomTargetsLoss.forward
 
 
 # TODO: remove in 3.0.0

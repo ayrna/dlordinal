@@ -11,17 +11,35 @@ from .custom_targets_loss import CustomTargetsLoss
 
 
 class ExponentialLoss(CustomTargetsLoss):
-    """Exponential regularised loss from :footcite:t:`vargas2023exponential`.
+    """
+    Exponential-regularized loss, as proposed in :footcite:t:`vargas2023exponential`.
+
+    This loss function applies a regularization term based on the Exponential distribution
+    to penalize the distance between predicted and true class distributions. It extends
+    the `CustomTargetsLoss` by incorporating an Exponential distribution for soft labelling.
 
     Parameters
     ----------
-    base_loss: Module
-        The base loss function. It must accept y_true as a probability distribution
-        (e.g., one-hot or soft labels).
+    base_loss : torch.nn.Module
+        The base loss function. It must accept `y_true` as a probability distribution
+        (e.g., soft labels or one-hot encoded labels). The base loss is computed between
+        the predicted logits (`y_pred`) and the adjusted target labels (`y_true`).
+
     num_classes : int
-        Number of classes.
+        The number of classes (J) in the classification task.
+
+    p : float, default=1.0
+        The exponent parameter controlling the shape of the Exponential distribution.
+        This parameter influences the steepness of the regularization.
+
+    tau : float, default=1.0
+        A scaling parameter for the Exponential distribution that affects the
+        regularization term's influence on the target labels.
+
     eta : float, default=1.0
-        Parameter that controls the influence of the regularisation.
+        A regularization parameter that controls the influence of the regularization term.
+        A value of 0 means no regularization, while a value of 1 means the Exponential
+        regularization term fully influences the target labels.
 
     Example
     -------
@@ -51,6 +69,8 @@ class ExponentialLoss(CustomTargetsLoss):
             cls_probs=cls_probs,
             eta=eta,
         )
+
+    forward = CustomTargetsLoss.forward
 
 
 # TODO: remove in 3.0.0

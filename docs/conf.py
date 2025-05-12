@@ -36,3 +36,5 @@ html_theme = "sphinx_rtd_theme"
 html_math_renderer = "imgmath"
 imgmath_image_format = "svg"
 imgmath_latex_preamble = "\\usepackage{fouriernc}"
+
+autodoc_inherit_docstrings = True
