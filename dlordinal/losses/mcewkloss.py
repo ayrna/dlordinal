@@ -15,24 +15,34 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
     Parameters
     ----------
     num_classes : int
-        Number of classes
-    C: float, defaul=0.5
-        Weights the WK loss (C) and the MCE loss (1-C). Must be between 0 and 1.
+        Number of classes.
+    C : float, default=0.5
+        Weighting factor for WK loss (C) and MCE loss (1-C). Must be between 0 and 1.
     wk_penalization_type : str, default='quadratic'
-        The penalization type of WK loss to use (quadratic or linear).
+        The penalization type of WK loss to use ('quadratic' or 'linear').
         See WKLoss for more details.
     weight : Optional[Tensor], default=None
-        A manual rescaling weight given to each class. If given, has to be a Tensor
-        of size `J`, where `J` is the number of classes.
-        Otherwise, it is treated as if having all ones.
+        A manual rescaling weight given to each class. If given, must be a Tensor
+        of size `J`, where `J` is the number of classes. Otherwise, it is treated
+        as if having all ones.
     reduction : str, default='mean'
         Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-        the output will be divided by the number of elements in the output,
+        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum
+        of the output will be divided by the number of elements in the output,
         ``'sum'``: the output will be summed.
     use_logits : bool, default=False
-        If True, the input y_pred will be treated as logits.
-        If False, the input y_pred will be treated as probabilities.
+        If True, the input `y_pred` will be treated as logits. If False, it will be
+        treated as probabilities.
+
+    Example
+    -------
+    >>> import torch
+    >>> from dlordinal.losses import MCEAndWKLoss
+    >>> num_classes = 5
+    >>> loss = MCEAndWKLoss(num_classes, C=0.7, use_logits=True)
+    >>> y_pred = torch.randn(3, num_classes)
+    >>> y_true = torch.randint(0, num_classes, (3,))
+    >>> output = loss(y_true, y_pred)
     """
 
     def __init__(
@@ -82,17 +92,21 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         Parameters
         ----------
         y_true : torch.Tensor
-            Ground truth labels
+            Ground truth labels of shape (N,) where N is the batch size. Values are
+            class indices in the range [0, num_classes-1].
         y_pred : torch.Tensor
-            Predicted labels
+            Predicted labels of shape (N, num_classes). If `use_logits` is True, these
+            are logits. Otherwise, they are probabilities.
 
         Returns
         -------
         loss : torch.Tensor
-            The weighted sum of MCE and QWK loss
+            A scalar tensor representing the weighted sum of MCE and QWK loss. If
+            `reduction` is 'none', returns a tensor of shape (num_classes,) containing
+            the per-class loss for both MCE and WK losses.
         """
 
-        wk_result = self.wk(y_true, y_pred)
-        mce_result = self.mce(y_true, y_pred)
+        wk_result = self.wk(y_pred, y_true)
+        mce_result = self.mce(y_pred, y_true)
 
         return self.C * wk_result + (1 - self.C) * mce_result

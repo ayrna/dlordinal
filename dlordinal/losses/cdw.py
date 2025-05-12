@@ -3,19 +3,40 @@ from torch import nn
 
 
 class CDWCELoss(nn.Module):
-    """Class Distance Weighted Cross-Entropy Loss proposed in :footcite:t:`polat2022class`.
-    It respects the order of the classes and takes the distance of the classes into
-    account in calculation of the cost.
+    """
+    Class Distance Weighted Cross-Entropy Loss, proposed in :footcite:t:`polat2022class`.
+    This loss function takes the order of the classes into account by applying a
+    distance weighting between the target and predicted classes. The weight applied
+    is determined by the distance between the true and predicted classes, controlled
+    by the `alpha` parameter.
+
+    This loss function is particularly useful for ordinal classification tasks where
+    the order of the classes matters, and penalties should increase as the distance between
+    the true and predicted classes grows.
 
     Parameters
     ----------
     num_classes : int
-        Number of classes.
+        The number of classes (J).
+
     alpha : float, default=0.5
-        The exponent of the distance between target and predicted class.
-    weight : Tensor, optional, default=None
-        Weight applied to each class when computing the loss. It is based on the target
-        class. Can be used to mitigate class imbalance.
+        Exponent that controls the influence of the class distance in the loss calculation.
+        A higher `alpha` gives more weight to classes that are farther apart.
+
+    weight : torch.Tensor, optional, default=None
+        A tensor of shape (J,) representing class-specific weights, used to address class
+        imbalance. The weight for each class is applied during loss computation and can
+        be normalised automatically. If `None`, no class weights are applied.
+
+    Example
+    -------
+    >>> import torch
+    >>> from dlordinal.losses import CDWCELoss
+    >>> loss_fn = CDWCELoss(num_classes=5, alpha=1.0)
+    >>> y_pred = torch.randn(3, 5)
+    >>> y_true = torch.tensor([0, 3, 1])
+    >>> loss = loss_fn(y_pred, y_true)
+    >>> print(loss)
     """
 
     def __init__(self, num_classes, alpha=0.5, weight=None):
@@ -28,6 +49,29 @@ class CDWCELoss(nn.Module):
             self.normalised_weight_ = self.weight_ / self.weight_.sum()
 
     def forward(self, y_pred, y_true):
+        """
+        Computes the Class Distance Weighted Cross-Entropy loss between predicted logits
+        and true labels.
+
+        Parameters
+        ----------
+        y_pred : torch.Tensor
+            A tensor of shape (N, J) containing predicted logits, where N is the batch
+            size and J is the number of classes. These logits are typically the raw outputs
+            of a neural network before applying a softmax function.
+
+        y_true : torch.Tensor
+            A tensor containing the ground-truth labels. It can be either:
+            - A tensor of shape (N,) with integer class indices (for categorical targets).
+            - A tensor of shape (N, J) with one-hot encoded labels (for probabilistic targets).
+
+        Returns
+        -------
+        torch.Tensor
+            A scalar tensor representing the mean loss over the batch. The result is the
+            average of the loss values computed for each sample in the batch.
+        """
+
         if y_true.dim() > 1:
             y_true_indices = y_true.argmax(dim=1, keepdim=True)
         else:

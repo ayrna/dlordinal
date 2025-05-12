@@ -6,27 +6,50 @@ from torch import Tensor
 
 class MCELoss(torch.nn.modules.loss._WeightedLoss):
     """
-    Per class mean squared error loss function. Computes the mean squared error for each
-    class and reduces it using the specified `reduction`.
+    Mean Squared Error (MSE) loss computed per class. This loss function calculates the
+    MSE for each class independently and then reduces it based on the specified `reduction`
+    method. It is useful in scenarios where each class needs to be treated independently
+    during the loss computation.
 
     Parameters
     ----------
     num_classes : int
-        Number of classes.
+        The number of classes in the classification problem.
 
     weight : Optional[Tensor], default=None
-        A manual rescaling weight given to each class. If given, has to be a Tensor
-        of size `J`, where `J` is the number of classes.
-        Otherwise, it is treated as if having all ones.
+        A tensor of size `J`, where `J` is the number of classes, representing the weight
+        for each class. If provided, each class's MSE will be scaled by its corresponding
+        weight. If not provided, all classes are treated with equal weight (i.e., all weights
+        are set to 1).
 
     reduction : str, default='mean'
-        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
-        ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum of
-        the output will be divided by the number of elements in the output,
-        ``'sum'``: the output will be summed.
+        The method to reduce the MSE values across all classes:
+        - `'none'`: No reduction is applied. A tensor of MSE values for each class is returned.
+        - `'mean'`: The mean of the MSE values across all classes is returned.
+        - `'sum'`: The sum of the MSE values across all classes is returned.
+
     use_logits : bool, default=False
-        If True, the input y_pred will be treated as logits.
-        If False, the input y_pred will be treated as probabilities.
+        If True, the `input` tensor (predictions) is assumed to be in logits format. If False,
+        the `input` tensor is treated as probabilities.
+
+    Example
+    -------
+    >>> import torch
+    >>> from torch.nn import CrossEntropyLoss
+    >>> from dlordinal.losses import MCELoss
+    >>> num_classes = 5
+    >>> base_loss = CrossEntropyLoss()
+    >>> loss = MCELoss(num_classes=num_classes)
+    >>> input = torch.randn(3, num_classes)
+    >>> target = torch.randint(0, num_classes, (3,))
+    >>> output = loss(input, target)
+
+    Notes
+    -----
+    - The class supports both the use of logits and probabilities in the predictions.
+    - When `use_logits=True`, the input is passed through a softmax function before computing
+      the MSE. If `use_logits=False`, the `input` tensor is expected to already contain
+      probabilities.
     """
 
     def __init__(
@@ -58,19 +81,20 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
 
     def compute_per_class_mse(self, input: torch.Tensor, target: torch.Tensor):
         """
-        Computes the MSE for each class independently.
+        Computes the mean squared error (MSE) for each class independently.
 
         Parameters
         ----------
         input : torch.Tensor
-            Predicted labels
+            Predicted labels (either logits or probabilities, depending on `use_logits`).
+
         target : torch.Tensor
-            Ground truth labels
+            Ground truth labels in one-hot encoding format.
 
         Returns
-        --------
+        -------
         mses : torch.Tensor
-            MSE values
+            A tensor containing the MSE values for each class.
         """
 
         if input.shape != target.shape:
@@ -105,14 +129,16 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
         input : torch.Tensor
             Predicted labels. Should be logits if `use_logits` is True, otherwise
             probabilities.
+
         target : torch.Tensor
-            Ground truth labels
+            Ground truth labels, typically in class indices.
 
         Returns
         -------
         reduced_mse : torch.Tensor
-            MSE per class reduced using the specified `reduction`. If reduction is `none`,
-            then a tensor with the MSE for each class is returned.
+            The MSE per class reduced using the specified `reduction` method. If
+            `reduction='none'`, the MSE values for each class are returned.
+            Otherwise, the MSE is reduced according to the method (`mean`, `sum`).
         """
 
         target_oh = torch.nn.functional.one_hot(target, num_classes=self.num_classes)

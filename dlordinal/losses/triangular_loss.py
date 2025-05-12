@@ -13,17 +13,25 @@ from .custom_targets_loss import CustomTargetsLoss
 class TriangularLoss(CustomTargetsLoss):
     """Triangular regularised loss from :footcite:t:`vargas2023softlabelling`.
 
+    This loss function combines a base loss function (such as cross-entropy) with
+    a triangular regularisation term, which distributes probabilities to adjacent
+    classes. The parameter `alpha2` controls the amount of probability deposited
+    into adjacent classes, and `eta` controls the strength of the regularisation.
+
     Parameters
     ----------
-    base_loss: Module
-        The base loss function. It must accept y_true as a probability distribution
-        (e.g., one-hot or soft labels).
+    base_loss : torch.nn.Module
+        The base loss function (e.g., `CrossEntropyLoss`). It must accept `y_true`
+        as a probability distribution (e.g., one-hot or soft labels).
     num_classes : int
-        Number of classes.
+        Number of classes. This defines the size of the probability distribution.
     alpha2 : float, default=0.05
-        Parameter that controls the probability deposited in adjacent classes.
+        Parameter that controls the amount of probability deposited in adjacent classes.
+        Higher values increase the contribution of adjacent classes.
     eta : float, default=1.0
-        Parameter that controls the influence of the regularisation.
+        Regularisation parameter that controls the influence of the triangular regularisation
+        term. A value of 1.0 gives equal weight to the base loss and the triangular term,
+        while smaller values reduce the regularisation strength.
 
     Example
     -------
@@ -33,9 +41,10 @@ class TriangularLoss(CustomTargetsLoss):
     >>> num_classes = 5
     >>> base_loss = CrossEntropyLoss()
     >>> loss = TriangularLoss(base_loss, num_classes)
-    >>> input = torch.randn(3, num_classes)
-    >>> target = torch.randint(0, num_classes, (3,))
-    >>> output = loss(input, target
+    >>> input = torch.randn(3, num_classes)  # Predicted logits for 3 samples
+    >>> target = torch.randint(0, num_classes, (3,))  # Ground truth class indices
+    >>> output = loss(input, target)  # Compute the loss
+    >>> print(output)
     """
 
     def __init__(
@@ -52,6 +61,8 @@ class TriangularLoss(CustomTargetsLoss):
             cls_probs=cls_probs,
             eta=eta,
         )
+
+    forward = CustomTargetsLoss.forward
 
 
 # TODO: remove in 3.0.0

@@ -11,17 +11,27 @@ from .custom_targets_loss import CustomTargetsLoss
 
 
 class BinomialLoss(CustomTargetsLoss):
-    """Binomial regularised loss from :footcite:t:`liu2020unimodal`.
+    """
+    Binomial-regularized loss, as proposed in :footcite:t:`liu2020unimodal`.
+
+    This loss function applies a regularization term based on the Binomial distribution
+    to penalize the distance between predicted and true class distributions. It extends
+    the `CustomTargetsLoss` by incorporating a Binomial distribution for soft labelling.
 
     Parameters
     ----------
-    base_loss: Module
-        The base loss function. It must accept y_true as a probability distribution
-        (e.g., one-hot or soft labels).
+    base_loss : torch.nn.Module
+        The base loss function. It must accept `y_true` as a probability distribution
+        (e.g., soft labels or one-hot encoded labels). This function is used to compute
+        the loss between the predicted logits (`y_pred`) and the adjusted target labels (`y_true`).
+
     num_classes : int
-        Number of classes.
+        The number of classes (J) in the classification task.
+
     eta : float, default=1.0
-        Parameter that controls the influence of the regularisation.
+        A regularization parameter that controls the influence of the regularization term.
+        A value of 0 means no regularization, while a value of 1 means the Binomial
+        regularization term fully influences the target labels.
 
     Example
     -------
@@ -49,6 +59,8 @@ class BinomialLoss(CustomTargetsLoss):
             cls_probs=cls_probs,
             eta=eta,
         )
+
+    forward = CustomTargetsLoss.forward
 
 
 # TODO: remove in 3.0.0

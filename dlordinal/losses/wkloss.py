@@ -6,25 +6,37 @@ import torch.nn as nn
 
 class WKLoss(nn.Module):
     """
-    Implements Weighted Kappa Loss. Weighted Kappa Loss was introduced by :footcite:t:`deLaTorre2018kappa`.
-    Weighted Kappa is widely used in Ordinal Classification Problems. Its
-    value lies in :math:`[-\\infty, \\log 2]`, where :math:`\\log 2` means the random prediction
+    Implements Weighted Kappa Loss, introduced by :footcite:t:`deLaTorre2018kappa`.
+    Weighted Kappa is widely used in ordinal classification problems. Its value lies in
+    :math:`[0, 2]`, where :math:`2` means the random prediction.
 
     Parameters
     ----------
     num_classes : int
-        Number of unique classes in your dataset.
+        The number of unique classes in your dataset.
     penalization_type : str, default='quadratic'
-        Weighting to be considered for calculating kappa
-        statistics. A valid value is one of ``['linear', 'quadratic']``.
-        Defaults to 'quadratic'.
+        The penalization method for calculating the Kappa statistics. Valid options are
+        ``['linear', 'quadratic']``. Defaults to 'quadratic'.
     epsilon : float, default=1e-10
-        Increment to avoid log zero,
-        so the loss will be :math:`\\log(1 - k + \\epsilon)`, where :math:`k` lies
-        in :math:`[-1, 1]`. Defaults to ``1e-10``.
+        Small value added to the denominator division by zero.
+    weight : Optional[torch.Tensor], default=None
+        Class weights to apply during loss computation. Should be a tensor of size
+        `(num_classes,)`. If `None`, equal weight is given to all classes.
     use_logits : bool, default=False
-        If True, the input y_pred will be treated as logits.
-        If False, the input y_pred will be treated as probabilities.
+        If `True`, the input `y_pred` is treated as logits. If `False`, `y_pred` is treated
+        as probabilities. The behavior of the input `y_pred` affects its expected format
+        (logits vs. probabilities).
+
+    Example
+    -------
+    >>> import torch
+    >>> from dlordinal.losses import WKLoss
+    >>> num_classes = 5
+    >>> y_pred = torch.randn(3, num_classes)  # Predicted logits for 3 samples
+    >>> y_true = torch.randint(0, num_classes, (3,))  # Ground truth class indices
+    >>> loss_fn = WKLoss(num_classes)
+    >>> loss = loss_fn(y_pred, y_true)
+    >>> print(loss)
     """
 
     def __init__(
@@ -48,6 +60,27 @@ class WKLoss(nn.Module):
         self.first_forward = True
 
     def forward(self, y_pred, y_true):
+        """
+        Parameters
+        ----------
+        y_pred : torch.Tensor
+            The model predictions. Shape: `(batch_size, num_classes)`.
+            If `use_logits=True`, these should be raw logits (unnormalised scores).
+            If `use_logits=False`, these should be probabilities (each row summing to 1).
+
+        y_true : torch.Tensor
+            Ground truth labels. Shape:
+            - `(batch_size,)` if labels are class indices.
+            - `(batch_size, num_classes)` if labels are already one-hot encoded.
+            In either case, the tensor will be converted to float internally.
+
+        Returns
+        -------
+        loss : torch.Tensor
+            The Weighted Kappa loss. A scalar tensor representing the weighted disagreement
+            between predictions and true labels, normalised by expected disagreement.
+        """
+
         num_classes = self.num_classes
 
         # Convert to onehot if integer labels are provided

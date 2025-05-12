@@ -10,7 +10,9 @@ from .custom_targets_loss import CustomTargetsLoss
 
 
 class GeometricLoss(CustomTargetsLoss):
-    """Unimodal label smoothing based on the discrete geometric distribution according to :footcite:t:`haas2023geometric`.
+    """
+    Unimodal label smoothing based on the discrete geometric distribution according
+    to :footcite:t:`haas2023geometric`.
 
     Parameters
     ----------
@@ -72,6 +74,8 @@ class GeometricLoss(CustomTargetsLoss):
             cls_probs=cls_probs,
             eta=eta,
         )
+
+    forward = CustomTargetsLoss.forward
 
 
 # TODO: remove in 3.0.0

@@ -11,20 +11,33 @@ from .custom_targets_loss import CustomTargetsLoss
 
 
 class BetaLoss(CustomTargetsLoss):
-    """Beta regularised loss from :footcite:t:`vargas2022unimodal`.
+    """
+    Beta-regularized loss, as proposed in :footcite:t:`vargas2022unimodal`.
+
+    This loss function applies a regularization term based on the Beta distribution
+    to penalize the distance between predicted and true class distributions. It extends
+    the `CustomTargetsLoss` by incorporating a Beta distribution for soft labelling.
 
     Parameters
     ----------
-    base_loss: Module
-        The base loss function. It must accept y_true as a probability distribution
-        (e.g., one-hot or soft labels).
+    base_loss : torch.nn.Module
+        The base loss function. It must accept `y_true` as a probability distribution
+        (e.g., soft labels or one-hot encoded labels). The base loss is applied
+        between the predicted logits (`y_pred`) and the adjusted target labels (`y_true`).
+
     num_classes : int
-        Number of classes.
+        The number of classes (J) in the classification task.
+
     params_set : str, default='standard'
-        The set of parameters to use for the beta distribution (chosen from the
-        _beta_params_set dictionary).
+        The set of parameters used for the Beta distribution. The parameters are chosen
+        from the `_beta_params_set` dictionary, which defines how the Beta distribution
+        should behave for each class. The "standard" set corresponds to the default Beta
+        distribution parameters.
+
     eta : float, default=1.0
-        Parameter that controls the influence of the regularisation.
+        A regularization parameter that controls the balance between the base loss and
+        the regularization term. A value of 0 means no regularization, while a value
+        of 1 means the Beta regularization term fully influences the target labels.
 
     Example
     -------
@@ -53,6 +66,8 @@ class BetaLoss(CustomTargetsLoss):
             cls_probs=cls_probs,
             eta=eta,
         )
+
+    forward = CustomTargetsLoss.forward
 
 
 # TODO: remove in 3.0.0
