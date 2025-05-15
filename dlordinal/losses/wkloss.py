@@ -101,10 +101,10 @@ class WKLoss(nn.Module):
     def _initialize(self, y_pred, y_true):
         # Define error weights matrix
         repeat_op = (
-            torch.Tensor(list(range(self.num_classes)))
+            torch.arange(self.num_classes, device=y_pred.device)
             .unsqueeze(1)
-            .repeat((1, self.num_classes))
-        ).to(y_pred.device)
+            .expand(self.num_classes, self.num_classes)
+        )
         if self.penalization_type == "linear":
             self.weights_ = torch.abs(repeat_op - repeat_op.T) / (self.num_classes - 1)
         elif self.penalization_type == "quadratic":
