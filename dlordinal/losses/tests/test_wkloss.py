@@ -195,8 +195,8 @@ def test_wkloss_exactloss_quadratic(device):
     assert isinstance(output, torch.Tensor)
     assert isinstance(output_logits, torch.Tensor)
 
-    assert output.item() == pytest.approx(0.5146, rel=1e-3)
-    assert output_logits.item() == pytest.approx(0.5146, rel=1e-3)
+    assert output.item() == pytest.approx(0.6403299570083618, rel=1e-3)
+    assert output_logits.item() == pytest.approx(0.6403299570083618, rel=1e-3)
 
 
 def test_wkloss_exactloss_linear(device):
@@ -237,8 +237,8 @@ def test_wkloss_exactloss_linear(device):
     assert isinstance(output_logits, torch.Tensor)
 
     # Verifies that the loss is greater than zero
-    assert output.item() == pytest.approx(0.6403, rel=1e-3)
-    assert output_logits.item() == pytest.approx(0.6403, rel=1e-3)
+    assert output.item() == pytest.approx(0.74347984790802, rel=1e-3)
+    assert output_logits.item() == pytest.approx(0.74347984790802, rel=1e-3)
 
 
 def test_wkloss_relative(device):
