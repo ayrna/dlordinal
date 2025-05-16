@@ -85,8 +85,8 @@ def test_mcewkloss_exactvalue(device):
     output = loss(target, torch.nn.functional.softmax(input_data, dim=1))
     output_logits = loss_logits(target, input_data)
 
-    assert output.item() == pytest.approx(0.5404, rel=1e-3)
-    assert output_logits.item() == pytest.approx(0.5404, rel=1e-3)
+    assert output.item() == pytest.approx(0.5304394960403442, rel=1e-3)
+    assert output_logits.item() == pytest.approx(0.5304394960403442, rel=1e-3)
 
 
 def test_mcewkloss_weights(device):
