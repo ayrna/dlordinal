@@ -35,20 +35,6 @@ class WKLoss(nn.Module):
 
     Parameters
     ----------
-    y_pred : torch.Tensor
-        The model predictions. Shape: ``(batch_size, num_classes)``.
-        If ``use_logits=True``, these should be raw logits (unnormalised scores).
-        If ``use_logits=False``, these should be probabilities (rows summing to 1).
-
-    y_true : torch.Tensor
-        Ground truth labels.
-        Shape:
-        - ``(batch_size,)`` if labels are class indices.
-        - ``(batch_size, num_classes)`` if already one-hot encoded.
-        The tensor will be converted to float internally.
-
-    Parameters
-    ----------
     num_classes : int
         The number of unique classes in your dataset.
     penalization_type : str, default='quadratic'
@@ -126,6 +112,20 @@ class WKLoss(nn.Module):
         The loss is based on the weighted disagreement between predictions and true labels,
         normalised by the expected disagreement under independence.
 
+        Parameters
+        ----------
+        y_pred : torch.Tensor
+            The model predictions. Shape: ``(batch_size, num_classes)``.
+            If ``use_logits=True``, these should be raw logits (unnormalised scores).
+            If ``use_logits=False``, these should be probabilities (rows summing to 1).
+
+        y_true : torch.Tensor
+            Ground truth labels.
+            Shape:
+            - ``(batch_size,)`` if labels are class indices.
+            - ``(batch_size, num_classes)`` if already one-hot encoded.
+            The tensor will be converted to float internally.
+
         Returns
         -------
         loss : torch.Tensor
@@ -164,8 +164,9 @@ class WKLoss(nn.Module):
         if self.use_logits:
             y_pred = torch.nn.functional.softmax(y_pred, dim=1)
 
-        pred_ = y_pred
-        pred_norm = pred_ / (self.epsilon + torch.reshape(torch.sum(pred_, 1), [-1, 1]))
+        pred_norm = y_pred / (
+            self.epsilon + torch.reshape(torch.sum(y_pred, 1), [-1, 1])
+        )
 
         hist_rater_a = torch.sum(pred_norm, 0)
         hist_rater_b = torch.sum(y_true, 0)
