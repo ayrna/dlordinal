@@ -1,8 +1,9 @@
-import warnings
 from typing import Literal
 
 import torch
 from torch.nn import Module
+
+from dlordinal.output_layers.utils import stable_sigmoid
 
 
 class CLM(Module):
@@ -19,8 +20,6 @@ class CLM(Module):
         The link function to use. Can be ``'logit'``, ``'probit'`` or ``'cloglog'``.
     min_distance : float, default=0.0
         The minimum distance between thresholds
-    clip_warning : bool, default=True
-        Whether to print the clipping value warning or not.
 
     Attributes
     ----------
@@ -30,16 +29,12 @@ class CLM(Module):
         The link function to use. Can be ``'logit'``, ``'probit'`` or ``'cloglog'``.
     min_distance : float
         The minimum distance between thresholds
-    clip_warning : bool
-        Whether to print the clipping value warning or not.
     dist_ : torch.distributions.Normal
         The normal (0,1) distribution used to compute the probit link function.
     thresholds_b_ : torch.nn.Parameter
         The torch parameter for the first threshold.
     thresholds_a_ : torch.nn.Parameter
         The torch parameter for the alphas of the thresholds.
-    clip_warning_shown_ : bool
-        Whether the clipping warning has been shown or not.
 
 
     Example
@@ -69,14 +64,12 @@ class CLM(Module):
         num_classes: int,
         link_function: Literal["logit", "probit", "cloglog"],
         min_distance: int = 0.0,
-        clip_warning: bool = True,
         **kwargs,
     ):
         super().__init__()
         self.num_classes = num_classes
         self.link_function = link_function
         self.min_distance = min_distance
-        self.clip_warning = clip_warning
         self.dist_ = torch.distributions.Normal(0, 1)
 
         self.thresholds_b_ = torch.nn.Parameter(
@@ -86,8 +79,6 @@ class CLM(Module):
             data=torch.Tensor([1.0 for _ in range(self.num_classes - 2)]),
             requires_grad=True,
         )
-
-        self.clip_warning_shown_ = False
 
     def _convert_thresholds(self, b, a, min_distance):
         a = a**2
@@ -120,16 +111,6 @@ class CLM(Module):
         )
 
         z3 = a - b
-        if torch.any(z3 > 10) or torch.any(z3 < -10):
-            if self.clip_warning and not self.clip_warning_shown_:
-                warnings.warn(
-                    f"The output value of the CLM layer (max: {z3.abs().max()}) is out "
-                    "of the range [-10, 10]. Clipping value prior to applying the "
-                    "link function for numerical stability."
-                )
-            z3 = torch.clip(a - b, -10, 10)
-            self.clip_warning_shown_ = True
-
         return z3
 
     def _apply_link_function(self, z3):
@@ -137,8 +118,8 @@ class CLM(Module):
             a3T = self.dist_.cdf(z3)
         elif self.link_function == "cloglog":
             a3T = 1 - torch.exp(-torch.exp(z3))
-        else:
-            a3T = 1.0 / (1.0 + torch.exp(-z3))
+        else:  # 'logit'
+            a3T = stable_sigmoid(z3)
 
         return a3T
 
