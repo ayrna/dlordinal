@@ -164,14 +164,10 @@ class WKLoss(nn.Module):
         if self.use_logits:
             y_pred = torch.nn.functional.softmax(y_pred, dim=1)
 
-        pred_norm = y_pred / (
-            self.epsilon + torch.reshape(torch.sum(y_pred, 1), [-1, 1])
-        )
-
-        hist_rater_a = torch.sum(pred_norm, 0)
+        hist_rater_a = torch.sum(y_pred, 0)
         hist_rater_b = torch.sum(y_true, 0)
 
-        conf_mat = torch.matmul(pred_norm.T, y_true)
+        conf_mat = torch.matmul(y_pred.T, y_true)
 
         bsize = y_pred.size(0)
         nom = torch.sum(self.weights_ * conf_mat)
