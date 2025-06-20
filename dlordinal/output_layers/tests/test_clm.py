@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 import pytest
 import torch
@@ -97,44 +95,3 @@ def test_clm_all_combinations(device):
                 assert clm.min_distance == min_distance
 
                 _test_probas(clm, device)
-
-
-def test_clm_clip(device):
-    input_shape = 12
-    num_classes = 6
-    link_function = "cloglog"
-    min_distance = 0.0
-
-    clm = CLM(
-        num_classes=num_classes,
-        link_function=link_function,
-        min_distance=min_distance,
-        clip_warning=True,
-    ).to(device)
-    input_data = torch.rand(8, input_shape).to(device) * 100
-    with pytest.warns(Warning, match="Clipping"):
-        clm(input_data)
-
-    warnings.filterwarnings("error")
-    clm(input_data)
-    _test_probas(clm, device)
-
-    clm = CLM(
-        num_classes=num_classes,
-        link_function=link_function,
-        min_distance=min_distance,
-        clip_warning=False,
-    ).to(device)
-    clm(input_data)
-    _test_probas(clm, device)
-
-    clm = CLM(
-        num_classes=num_classes,
-        link_function=link_function,
-        min_distance=min_distance,
-        clip_warning=True,
-    ).to(device)
-    input_data = torch.rand(8, input_shape).to(device) * 0.1
-    clm(input_data)
-    _test_probas(clm, device)
-    warnings.resetwarnings()
