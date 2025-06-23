@@ -31,7 +31,7 @@ class GeneralTriangularLoss(CustomTargetsLoss):
 
     alphas : np.ndarray
         A NumPy array containing the alpha parameters for the triangular distribution.
-        The length of this array should be equal to `num_classes`. The alpha parameters control
+        The length of this array should be equal to `2 * num_classes`. The alpha parameters control
         the shape of the triangular distribution, influencing the weight given to each class
         in the regularization.
 
