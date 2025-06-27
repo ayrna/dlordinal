@@ -39,8 +39,8 @@ def test_mcewkloss_basic(device):
     target = torch.tensor([2, 2, 1]).to(device)
 
     # Compute the loss
-    output = loss(target, torch.nn.functional.softmax(input_data, dim=1))
-    output_logits = loss_logits(target, input_data)
+    output = loss(torch.nn.functional.softmax(input_data, dim=1), target)
+    output_logits = loss_logits(input_data, target)
 
     # Verifies that the output is a tensor
     assert isinstance(output, torch.Tensor)
@@ -82,8 +82,8 @@ def test_mcewkloss_exactvalue(device):
     target = torch.tensor([0, 1, 2, 3, 4, 5, 4, 3, 2, 1]).to(device)
 
     # Compute the loss
-    output = loss(target, torch.nn.functional.softmax(input_data, dim=1))
-    output_logits = loss_logits(target, input_data)
+    output = loss(torch.nn.functional.softmax(input_data, dim=1), target)
+    output_logits = loss_logits(input_data, target)
 
     assert output.item() == pytest.approx(0.5304394960403442, rel=1e-3)
     assert output_logits.item() == pytest.approx(0.5304394960403442, rel=1e-3)
@@ -130,12 +130,12 @@ def test_mcewkloss_weights(device):
     target = torch.tensor([3, 3, 1]).to(device)
 
     # Compute the loss
-    output = loss(target, torch.nn.functional.softmax(input_data, dim=1))
+    output = loss(torch.nn.functional.softmax(input_data, dim=1), target)
     output_weighted = loss_weighted(
-        target, torch.nn.functional.softmax(input_data, dim=1)
+        torch.nn.functional.softmax(input_data, dim=1), target
     )
-    output_logits = loss_logits(target, input_data)
-    output_logits_weighted = loss_logits_weighted(target, input_data)
+    output_logits = loss_logits(input_data, target)
+    output_logits_weighted = loss_logits_weighted(input_data, target)
 
     # The error should be lower when using the weighted version as the weight
     # of classes 1 and 3 is less than 1
@@ -146,12 +146,12 @@ def test_mcewkloss_weights(device):
     target = torch.tensor([5, 3, 1]).to(device)
 
     # Compute the loss
-    output = loss(target, torch.nn.functional.softmax(input_data, dim=1))
+    output = loss(torch.nn.functional.softmax(input_data, dim=1), target)
     output_weighted = loss_weighted(
-        target, torch.nn.functional.softmax(input_data, dim=1)
+        torch.nn.functional.softmax(input_data, dim=1), target
     )
-    output_logits = loss_logits(target, input_data)
-    output_logits_weighted = loss_logits_weighted(target, input_data)
+    output_logits = loss_logits(input_data, target)
+    output_logits_weighted = loss_logits_weighted(input_data, target)
 
     # The error should be higher when using the weighted version as the weight
     # of class 5 is way higher than 1
@@ -190,12 +190,12 @@ def test_mcewkloss_combination(device):
     target = torch.tensor([3, 3, 1]).to(device)
 
     # Compute the loss
-    output = loss(target, torch.nn.functional.softmax(input_data, dim=1))
+    output = loss(torch.nn.functional.softmax(input_data, dim=1), target)
     output_mce = mce_loss(torch.nn.functional.softmax(input_data, dim=1), target)
     output_wk = wk_loss(torch.nn.functional.softmax(input_data, dim=1), target)
     output_combined = C * output_mce + (1 - C) * output_wk
 
-    output_logits = loss_logits(target, input_data)
+    output_logits = loss_logits(input_data, target)
     output_mce_logits = mce_loss_logits(input_data, target)
     output_wk_logits = wk_loss_logits(input_data, target)
     output_combined_logits = C * output_mce_logits + (1 - C) * output_wk_logits

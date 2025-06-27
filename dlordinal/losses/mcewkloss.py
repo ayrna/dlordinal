@@ -26,12 +26,12 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         of size `J`, where `J` is the number of classes. Otherwise, it is treated
         as if having all ones.
     reduction : str, default='mean'
-        Specifies the reduction to apply to the output: ``'none'`` | ``'mean'`` |
+        Specifies the reduction to apply to the target: ``'none'`` | ``'mean'`` |
         ``'sum'``. ``'none'``: no reduction will be applied, ``'mean'``: the sum
-        of the output will be divided by the number of elements in the output,
-        ``'sum'``: the output will be summed.
+        of the target will be divided by the number of elements in the target,
+        ``'sum'``: the target will be summed.
     use_logits : bool, default=False
-        If True, the input `y_pred` will be treated as logits. If False, it will be
+        If True, the `input` will be treated as logits. If False, it will be
         treated as probabilities.
 
     Example
@@ -40,9 +40,9 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
     >>> from dlordinal.losses import MCEAndWKLoss
     >>> num_classes = 5
     >>> loss = MCEAndWKLoss(num_classes, C=0.7, use_logits=True)
-    >>> y_pred = torch.randn(3, num_classes)
-    >>> y_true = torch.randint(0, num_classes, (3,))
-    >>> output = loss(y_true, y_pred)
+    >>> input = torch.randn(3, num_classes)
+    >>> target = torch.randint(0, num_classes, (3,))
+    >>> target = loss(input, target)
     """
 
     def __init__(
@@ -87,14 +87,14 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         )
         self.mce = MCELoss(self.num_classes, weight=weight, use_logits=self.use_logits)
 
-    def forward(self, y_true: torch.Tensor, y_pred: torch.Tensor):
+    def forward(self, input: torch.Tensor, target: torch.Tensor):
         """
         Parameters
         ----------
-        y_true : torch.Tensor
+        input : torch.Tensor
             Ground truth labels of shape (N,) where N is the batch size. Values are
             class indices in the range [0, num_classes-1].
-        y_pred : torch.Tensor
+        target : torch.Tensor
             Predicted labels of shape (N, num_classes). If `use_logits` is True, these
             are logits. Otherwise, they are probabilities.
 
@@ -106,7 +106,7 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
             the per-class loss for both MCE and WK losses.
         """
 
-        wk_result = self.wk(y_pred, y_true)
-        mce_result = self.mce(y_pred, y_true)
+        wk_result = self.wk(input, target)
+        mce_result = self.mce(input, target)
 
         return self.C * wk_result + (1 - self.C) * mce_result

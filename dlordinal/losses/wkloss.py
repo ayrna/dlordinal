@@ -46,8 +46,8 @@ class WKLoss(nn.Module):
         Class weights to apply during loss computation. Should be a tensor of size
         `(num_classes,)`. If `None`, equal weight is given to all classes.
     use_logits : bool, default=False
-        If `True`, the input `y_pred` is treated as logits. If `False`, `y_pred` is treated
-        as probabilities. The behavior of the input `y_pred` affects its expected format
+        If `True`, the `input` is treated as logits. If `False`, `input` is treated
+        as probabilities. The behavior of the `input` affects its expected format
         (logits vs. probabilities).
 
     Example
@@ -55,10 +55,10 @@ class WKLoss(nn.Module):
     >>> import torch
     >>> from dlordinal.losses import WKLoss
     >>> num_classes = 5
-    >>> y_pred = torch.randn(3, num_classes)  # Predicted logits for 3 samples
-    >>> y_true = torch.randint(0, num_classes, (3,))  # Ground truth class indices
+    >>> input = torch.randn(3, num_classes)  # Predicted logits for 3 samples
+    >>> target = torch.randint(0, num_classes, (3,))  # Ground truth class indices
     >>> loss_fn = WKLoss(num_classes)
-    >>> loss = loss_fn(y_pred, y_true)
+    >>> loss = loss_fn(input, target)
     >>> print(loss)
     """
 
@@ -84,10 +84,10 @@ class WKLoss(nn.Module):
         self.use_logits = use_logits
         self.first_forward_ = True
 
-    def _initialize(self, y_pred, y_true):
+    def _initialize(self, input, target):
         # Define error weights matrix
         repeat_op = (
-            torch.arange(self.num_classes, device=y_pred.device)
+            torch.arange(self.num_classes, device=input.device)
             .unsqueeze(1)
             .expand(self.num_classes, self.num_classes)
         )
@@ -101,10 +101,10 @@ class WKLoss(nn.Module):
         # Apply class weight
         if self.weight is not None:
             # Repeat weight num_classes times in columns
-            tiled_weight = self.weight.repeat((self.num_classes, 1)).to(y_pred.device)
+            tiled_weight = self.weight.repeat((self.num_classes, 1)).to(input.device)
             self.weights_ *= tiled_weight
 
-    def forward(self, y_pred, y_true):
+    def forward(self, input, target):
         """
         Forward pass for the Weighted Kappa loss.
 
@@ -114,12 +114,12 @@ class WKLoss(nn.Module):
 
         Parameters
         ----------
-        y_pred : torch.Tensor
+        input : torch.Tensor
             The model predictions. Shape: ``(batch_size, num_classes)``.
             If ``use_logits=True``, these should be raw logits (unnormalised scores).
             If ``use_logits=False``, these should be probabilities (rows summing to 1).
 
-        y_true : torch.Tensor
+        target : torch.Tensor
             Ground truth labels.
             Shape:
             - ``(batch_size,)`` if labels are class indices.
@@ -136,40 +136,40 @@ class WKLoss(nn.Module):
         num_classes = self.num_classes
 
         # Convert to onehot if integer labels are provided
-        if y_true.dim() == 1:
-            y = torch.eye(num_classes).to(y_true.device)
-            y_true = y[y_true]
+        if target.dim() == 1:
+            y = torch.eye(num_classes).to(target.device)
+            target = y[target]
 
-        y_true = y_true.float()
+        target = target.float()
 
         if self.first_forward_:
             if not self.use_logits and not torch.allclose(
-                y_pred.sum(dim=1), torch.tensor(1.0, device=y_pred.device)
+                input.sum(dim=1), torch.tensor(1.0, device=input.device)
             ):
                 raise ValueError(
-                    "When passing use_logits=False, the input y_pred"
+                    "When passing use_logits=False, the input"
                     " should be probabilities, not logits."
                 )
             elif self.use_logits and torch.allclose(
-                y_pred.sum(dim=1), torch.tensor(1.0, device=y_pred.device)
+                input.sum(dim=1), torch.tensor(1.0, device=input.device)
             ):
                 raise ValueError(
-                    "When passing use_logits=True, the input y_pred"
+                    "When passing use_logits=True, the input"
                     " should be logits, not probabilities."
                 )
 
-            self._initialize(y_pred, y_true)
+            self._initialize(input, target)
             self.first_forward_ = False
 
         if self.use_logits:
-            y_pred = torch.nn.functional.softmax(y_pred, dim=1)
+            input = torch.nn.functional.softmax(input, dim=1)
 
-        hist_rater_a = torch.sum(y_pred, 0)
-        hist_rater_b = torch.sum(y_true, 0)
+        hist_rater_a = torch.sum(input, 0)
+        hist_rater_b = torch.sum(target, 0)
 
-        conf_mat = torch.matmul(y_pred.T, y_true)
+        conf_mat = torch.matmul(input.T, target)
 
-        bsize = y_pred.size(0)
+        bsize = input.size(0)
         nom = torch.sum(self.weights_ * conf_mat)
         expected_probs = torch.matmul(
             torch.reshape(hist_rater_a, [num_classes, 1]),
