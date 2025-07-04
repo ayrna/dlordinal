@@ -224,7 +224,7 @@ pre-commit install
 
 ## Citation
 
-If you use dlordinal we would appreciate a citation of the following [paper](https://arxiv.org/abs/2407.17163)
+If you use dlordinal we would appreciate a citation of the following [paper](https://doi.org/10.1016/j.neucom.2024.129305)
 
 ```bibtex
 @article{berchez2025dlordinal,
@@ -234,6 +234,6 @@ If you use dlordinal we would appreciate a citation of the following [paper](htt
   pages={129305},
   year={2025},
   publisher={Elsevier},
-  doi={doi.org/10.1016/j.neucom.2024.129305}
+  doi={10.1016/j.neucom.2024.129305}
 }
 ```
