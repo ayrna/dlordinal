@@ -43,7 +43,7 @@ jobs:
         pip install .[dev]
 
     - name: Run tests
-      run: python -m pytest -n logical
+      run: python -m pytest -n auto
 
   pytest-gpu:
     runs-on: [gpu]
