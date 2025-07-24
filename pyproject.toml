@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
     "scikit-learn==1.*",
-    "numpy>=1.21,==1.*",
+    "numpy>=1.21",
     "torch==2.*",
     "torchvision>=0.13",
     "pandas>=1",
