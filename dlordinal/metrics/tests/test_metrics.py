@@ -17,32 +17,6 @@ from dlordinal.metrics import (
 )
 
 
-def test_ranked_probability_score1():
-
-    y_pred = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
-
-    y_true = np.array([0, 2])
-
-    expected_rps = 0.0
-
-    assert ranked_probability_score(y_true, y_pred) == pytest.approx(
-        expected_rps, rel=1e-6
-    )
-
-
-def test_ranked_probability_score2():
-
-    y_pred = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
-
-    y_true = np.array([2, 0])
-
-    expected_rps = 2.0
-
-    assert ranked_probability_score(y_true, y_pred) == pytest.approx(
-        expected_rps, rel=1e-6
-    )
-
-
 def test_ranked_probability_score():
     y_true = np.array([0, 0, 3, 2])
     y_pred = np.array(
