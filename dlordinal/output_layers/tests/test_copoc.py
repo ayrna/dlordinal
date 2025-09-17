@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 import torch
 
@@ -10,21 +9,44 @@ def device():
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def _is_unimodal(probs):
-    """Check if a 1D array is unimodal (increases to a peak, then decreases)."""
-    peak_idx = np.argmax(probs)
-    # Increasing up to peak
-    inc = np.all(np.diff(probs[: peak_idx + 1]) >= 0)
-    # Decreasing after peak
-    dec = np.all(np.diff(probs[peak_idx:]) <= 0)
-    return inc and dec
+def _is_unimodal(probs: torch.Tensor) -> bool:
+    """
+    Check if a 1D tensor is unimodal (increases to a peak, then decreases).
+    """
+    if probs.dim() != 1:
+        raise ValueError("probs must be a 1D tensor")
+
+    # Find the index of the peak
+    peak_idx = torch.argmax(probs)
+
+    if peak_idx.item() == 0:
+        inc = True
+    else:
+        inc = torch.all(torch.diff(probs[: peak_idx + 1]) >= 0).item()
+
+    if peak_idx.item() == (probs.numel() - 1):
+        dec = True
+    else:
+        dec = torch.all(torch.diff(probs[peak_idx:]) <= 0).item()
+    return bool(inc and dec)
 
 
-def _check_unimodality(y_pred):
-    """Check unimodality for each row in y_pred and return the proportion."""
-    unimodal_flags = np.array([_is_unimodal(row) for row in y_pred])
-    # Proportion of rows that are unimodal
-    proportion = np.mean(unimodal_flags)
+def _check_unimodality(y_pred: torch.Tensor) -> float:
+    """
+    Check unimodality for each row in y_pred and return the proportion.
+
+    y_pred: 2D tensor of shape (n_rows, n_cols)
+    Returns: scalar float proportion of unimodal rows.
+    """
+    if y_pred.dim() != 2:
+        raise ValueError("y_pred must be a 2D tensor")
+
+    # Apply per-row unimodality check
+    unimodal_flags = torch.tensor(
+        [_is_unimodal(row) for row in y_pred], dtype=torch.bool, device=y_pred.device
+    )
+
+    proportion = unimodal_flags.float().mean().item()
     return proportion
 
 
