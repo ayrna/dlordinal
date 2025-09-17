@@ -43,12 +43,13 @@ class EMDLoss(nn.Module):
         Parameters
         ----------
         y_pred : torch.Tensor
-            A tensor of shape (N, J) containing predicted logits, where N is the batch size
-            and J is the number of classes.
+           The model predictions. Shape: ``(batch_size, num_classes)``.
 
         y_true : torch.Tensor
-            A tensor of shape (N,) containing the true class indices as integers in the
-            range [0, J - 1].
+            Ground truth labels.
+            Shape:
+            - ``(batch_size,)`` if labels are class indices.
+            - ``(batch_size, num_classes)`` if already one-hot encoded.
 
         Returns
         -------
@@ -56,15 +57,16 @@ class EMDLoss(nn.Module):
             A scalar tensor representing the mean squared EMD loss over the batch.
         """
 
-        # One-hot encode true labels
-        y_true_one_hot = F.one_hot(y_true, num_classes=self.num_classes)
+        # One-hot encode true labels if integer labels are provided
+        if y_true.dim() == 1:
+            y_true = F.one_hot(y_true, num_classes=self.num_classes)
 
         # Convert logits to probabilities
         y_pred_proba = torch.nn.functional.softmax(y_pred, dim=1)
 
         # Compute the CDFs
         pred_cdf = torch.cumsum(y_pred_proba, dim=1)
-        true_cdf = torch.cumsum(y_true_one_hot, dim=1)
+        true_cdf = torch.cumsum(y_true, dim=1)
 
         # Compute the squared EMD
         emd = torch.sum((pred_cdf - true_cdf) ** 2, dim=1)
