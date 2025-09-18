@@ -12,9 +12,9 @@ class COPOC(Module):
     Parameters
     ----------
     phi: Callable[[Tensor], Tensor]
-        Non-negative transformation function. Default is absolute value function.
+        Non-negative transformation function. Default is absolute value function :math:`\\phi(x)=|x|`.
     psi: Callable[[Tensor], Tensor]
-        Strictly monotonic decreasing bijective function. Default is negative absolute value function.
+        Strictly monotonic decreasing bijective function. Default is negative absolute value function :math:`\\psi(x)=-|x|`.
 
     Example
     -------
