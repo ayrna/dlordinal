@@ -76,7 +76,8 @@ class CORNLoss(nn.Module):
 
             loss = -torch.sum(
                 self.log_sigmoid(pred) * train_labels
-                + (self.log_sigmoid(pred) - pred) * (1 - train_labels))
+                + (self.log_sigmoid(pred) - pred) * (1 - train_labels)
+            )
             losses += loss
 
-        return losses  /num_examples
+        return losses / num_examples
