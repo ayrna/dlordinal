@@ -8,6 +8,7 @@ from dlordinal.losses import CORNLoss
 def device():
     return "cuda" if torch.cuda.is_available() else "cpu"
 
+
 def test_cornloss_creation(device):
     loss = CORNLoss(num_classes=6).to(device)
     assert isinstance(loss, CORNLoss)
