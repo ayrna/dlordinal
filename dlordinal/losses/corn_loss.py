@@ -57,8 +57,8 @@ class CORNLoss(nn.Module):
             average of the loss values computed for each sample in the batch.
         """
         sets = []
-        for i in range(self.num_classes-1):
-            label_mask = y_true > i-1
+        for i in range(self.num_classes - 1):
+            label_mask = y_true > i - 1
             label_tensor = (y_true[label_mask] > i).to(torch.int64)
             sets.append((label_mask, label_tensor))
 
@@ -75,8 +75,8 @@ class CORNLoss(nn.Module):
             pred = y_pred[train_examples, task_index]
 
             loss = -torch.sum(
-                self.log_sigmoid(pred)*train_labels + 
-                (self.log_sigmoid(pred) - pred)*(1-train_labels))
+                self.log_sigmoid(pred) * train_labels
+                + (self.log_sigmoid(pred) - pred) * (1 - train_labels))
             losses += loss
 
-        return losses/num_examples
+        return losses  /num_examples
