@@ -23,19 +23,18 @@ class COPOC(Module):
     >>> inp = torch.randn(10, 5)
     >>> fc = torch.nn.Linear(5, 5)
     >>> copoc = COPOC()
-    >>> output = copoc(fc(inp))
+    >>> output = torch.nn.functional.softmax(copoc(fc(inp)),dim=1)
     >>> print(output)
-    tensor([[0.2934, 0.2731, 0.1645, 0.1378, 0.1312],
-        [0.4051, 0.2438, 0.1590, 0.1261, 0.0660],
-        [0.1680, 0.2122, 0.2945, 0.2091, 0.1162],
-        [0.1649, 0.2187, 0.2344, 0.1990, 0.1830],
-        [0.1225, 0.2699, 0.2895, 0.2231, 0.0951],
-        [0.1536, 0.2260, 0.2618, 0.2019, 0.1568],
-        [0.3009, 0.2270, 0.1957, 0.1557, 0.1208],
-        [0.3659, 0.2500, 0.1863, 0.1504, 0.0474],
-        [0.1658, 0.2247, 0.2431, 0.2056, 0.1609],
-        [0.5315, 0.2423, 0.1242, 0.0854, 0.0167]], grad_fn=<SoftmaxBackward0>)
-
+    tensor([[0.1898, 0.1901, 0.2568, 0.2196, 0.1436],
+            [0.4538, 0.3191, 0.1412, 0.0529, 0.0330],
+            [0.3371, 0.2554, 0.2151, 0.1047, 0.0876],
+            [0.1859, 0.2073, 0.2658, 0.1889, 0.1520],
+            [0.3306, 0.2195, 0.1982, 0.1303, 0.1214],
+            [0.2132, 0.3768, 0.1590, 0.1278, 0.1232],
+            [0.1531, 0.1544, 0.2094, 0.2451, 0.2381],
+            [0.4986, 0.2240, 0.1689, 0.0590, 0.0495],
+            [0.5838, 0.2201, 0.1289, 0.0507, 0.0166],
+            [0.1639, 0.1969, 0.2100, 0.2347, 0.1946]], grad_fn=<SoftmaxBackward0>)
     """
 
     def __init__(
@@ -58,15 +57,21 @@ class COPOC(Module):
         Returns
         -------
         probs : torch.Tensor
-            Unimodal output probabilities of shape (batch_size, num_classes).
+            Logits of the unimodal output layer (batch_size, num_classes).
         """
-        v = x.clone()
-        v_rest = self.phi(v[:, 1:])
-        v = torch.cat([v[:, :1], v_rest], dim=1)
+        # Step 1: Compute η(x) = f(x; θ), which is given by the input tensor.
+        n = x.clone()  # η ∈ ℝ^K — raw logits for each class
 
+        # Step 2: Ensure all values are non-negative: v_k = φ(η_k), φ = softplus ensures v_k ≥ 0
+        v_rest = self.phi(n[:, 1:])
+        v = torch.cat([n[:, :1], v_rest], dim=1)
+
+        # Step 3: Generate cumulative sum: r_k = r_{k-1} + v_k (with r₁ = v₁)
         r = torch.cumsum(v, dim=1)
 
-        z = self.psi(r)
+        # Step 4: Apply symmetric decreasing function: z_k = ψ_E(r_k) = -|r_k|
+        z = self.psi(r)  # z ∈ ℝ^K, unimodal due to symmetric log-probability decay
 
-        probs = torch.nn.functional.softmax(z, dim=1)
-        return probs
+        # Step 5: To turn logits into unimodal probabilities compute class probabilities: p̂_k = softmax(z_k)
+        # Here, we only return the logits
+        return z
