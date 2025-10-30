@@ -48,11 +48,9 @@ def _to_numpy(x: ArrayLike) -> np.ndarray:
         is_torch = False
 
     if is_torch:
-        # /!\ the order of operations is important here
         # detach(): removes tensor from the computation graph (no gradients tracked)
         #           if the tensor doesn’t require grad, this does nothing
         # cpu(): moves the tensor to CPU memory if it’s on GPU
-        # numpy(): converts the tensor to a NumPy array
         x = x.detach().cpu()
 
     return np.array(x)
