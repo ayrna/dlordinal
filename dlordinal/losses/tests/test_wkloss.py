@@ -566,6 +566,6 @@ def test_wk_loss_logarithm(device):
     assert isinstance(output_log, torch.Tensor)
 
     # Verifies that the loss is greater than zero
-    assert torch.log(output + loss_log.epsilon) == pytest.approx(
+    assert torch.log(output.cpu() + loss_log.epsilon).item() == pytest.approx(
         output_log.item(), rel=1e-6
     )
