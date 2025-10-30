@@ -7,9 +7,10 @@ import numpy as np
 from numpy.typing import ArrayLike
 from sklearn.metrics import confusion_matrix, recall_score
 
+
 def _to_numpy(x: ArrayLike) -> np.ndarray:
-    """Helper function to safely convert input to NumPy array (supports torch tensors on CPU/CUDA).    
-    Parameters: 
+    """Helper function to safely convert input to NumPy array (supports torch tensors on CPU/CUDA).
+    Parameters:
     ----------
     x : numpy array-like
         Input data to be converted to a NumPy array.
@@ -17,7 +18,7 @@ def _to_numpy(x: ArrayLike) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        The input converted to a NumPy array.   
+        The input converted to a NumPy array.
 
     Notes
     -----
@@ -40,7 +41,8 @@ def _to_numpy(x: ArrayLike) -> np.ndarray:
 
     """
     try:
-        import torch #type: ignore
+        import torch  # type: ignore
+
         is_torch = isinstance(x, torch.Tensor)
     except ImportError:
         is_torch = False
@@ -51,7 +53,7 @@ def _to_numpy(x: ArrayLike) -> np.ndarray:
         #           if the tensor doesn’t require grad, this does nothing
         # cpu(): moves the tensor to CPU memory if it’s on GPU
         # numpy(): converts the tensor to a NumPy array
-        x = x.detach().cpu().numpy()
+        x = x.detach().cpu()
 
     return np.array(x)
 
