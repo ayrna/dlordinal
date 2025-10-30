@@ -4,7 +4,56 @@ from pathlib import Path
 from typing import Callable, Dict, Optional
 
 import numpy as np
+from numpy.typing import ArrayLike
 from sklearn.metrics import confusion_matrix, recall_score
+
+def _to_numpy(x: ArrayLike) -> np.ndarray:
+    """Helper function to safely convert input to NumPy array (supports torch tensors on CPU/CUDA).    
+    Parameters: 
+    ----------
+    x : numpy array-like
+        Input data to be converted to a NumPy array.
+
+    Returns
+    -------
+    np.ndarray
+        The input converted to a NumPy array.   
+
+    Notes
+    -----
+    This function can be extended to support other types as needed.
+
+    Examples
+    --------
+    >>> import torch
+    >>> from dlordinal.metrics.metrics import _to_numpy
+    >>> import numpy as np
+    >>> # tensor on GPU that requires gradients
+    >>> tensor_gpu = torch.tensor([1., 2., 3.], device='cuda', requires_grad=True)
+    >>> try:
+    ...     np.array(tensor_gpu)
+    ... except Exception as e:
+    ...     print(f"Error converting tensor on GPU to NumPy directly: {e}")
+    >>> # using the _to_numpy function
+    >>> _to_numpy(tensor_gpu)
+    array([1., 2., 3.], dtype=float32)
+
+    """
+    try:
+        import torch #type: ignore
+        is_torch = isinstance(x, torch.Tensor)
+    except ImportError:
+        is_torch = False
+
+    if is_torch:
+        # /!\ the order of operations is important here
+        # detach(): removes tensor from the computation graph (no gradients tracked)
+        #           if the tensor doesn’t require grad, this does nothing
+        # cpu(): moves the tensor to CPU memory if it’s on GPU
+        # numpy(): converts the tensor to a NumPy array
+        x = x.detach().cpu().numpy()
+
+    return np.array(x)
 
 
 def ranked_probability_score(y_true, y_proba):
@@ -193,8 +242,8 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
     >>> amae(y_true, y_pred)
     0.125
     """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    y_true = _to_numpy(y_true)
+    y_pred = _to_numpy(y_pred)
 
     if len(y_true.shape) > 1:
         y_true = np.argmax(y_true, axis=1)
