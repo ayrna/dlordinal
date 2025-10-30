@@ -80,8 +80,8 @@ def ranked_probability_score(y_true, y_proba):
     >>> ranked_probability_score(y_true, y_pred)
     0.5068750000000001
     """
-    y_true = np.array(y_true)
-    y_proba = np.array(y_proba)
+    y_true = _to_numpy(y_true)
+    y_proba = _to_numpy(y_proba)
 
     y_oh = np.zeros(y_proba.shape)
     y_oh[np.arange(len(y_true)), y_true] = 1
@@ -122,8 +122,8 @@ def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> minimum_sensitivity(y_true, y_pred)
     0.5
     """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    y_true = _to_numpy(y_true)
+    y_pred = _to_numpy(y_pred)
 
     if len(y_true.shape) > 1:
         y_true = np.argmax(y_true, axis=1)
@@ -161,8 +161,8 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
     >>> accuracy_off1(y_true, y_pred)
     0.8571428571428571
     """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    y_true = _to_numpy(y_true)
+    y_pred = _to_numpy(y_pred)
 
     if len(y_true.shape) > 1:
         y_true = np.argmax(y_true, axis=1)
@@ -205,8 +205,8 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> gmsec(y_true, y_pred)
     0.7071067811865476
     """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    y_true = _to_numpy(y_true)
+    y_pred = _to_numpy(y_pred)
 
     if len(y_true.shape) > 1:
         y_true = np.argmax(y_true, axis=1)
@@ -290,8 +290,8 @@ def mmae(y_true: np.ndarray, y_pred: np.ndarray):
     >>> mmae(y_true, y_pred)
     0.5
     """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    y_true = _to_numpy(y_true)
+    y_pred = _to_numpy(y_pred)
 
     if len(y_true.shape) > 1:
         y_true = np.argmax(y_true, axis=1)
