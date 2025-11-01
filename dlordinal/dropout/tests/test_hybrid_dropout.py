@@ -62,6 +62,17 @@ def test_forward_with_targets(device):
     assert outputs.shape == (32, 5)
 
 
+def test_wrong_target_shape(hybrid_dropout_container, device):
+    inputs = torch.randn(32, 10).to(device)
+    targets = torch.randn(32, 5).to(device)  # Wrong shape
+
+    hybrid_dropout_container.set_targets(targets)
+
+    with pytest.raises(ValueError):
+        hybrid_dropout_container = hybrid_dropout_container.to(device)
+        hybrid_dropout_container(inputs)
+
+
 def test_forward_without_targets(hybrid_dropout_container, device):
     inputs = torch.randn(32, 10).to(device)
 
