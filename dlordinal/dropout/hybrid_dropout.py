@@ -157,8 +157,6 @@ class HybridDropout(nn.Module):
             correlations = correlations / 2
             correlations = torch.nan_to_num(correlations)
 
-            # correlations = correlations.to(x.device)
-
             # Get ordinal probabilities
             ordinal_prob = 1 - correlations
 
@@ -171,12 +169,16 @@ class HybridDropout(nn.Module):
             # Normalisation
             no_zeros = int(torch.count_nonzero(mask))
             total_neurons = mask.shape[0]
-            zeros = total_neurons - no_zeros
-            probability = zeros / total_neurons
+
+            # Proportion of maintained neurons (keep_prob)
+            keep_prob = no_zeros / total_neurons
+
+            # Scaling factor
+            scaling_factor = 1.0 / (keep_prob + 1e-9)
 
             mask = torch.reshape(mask, (1, mask.shape[0]))
             mask = mask.repeat(x.shape[0], 1)
 
-            return x.mul(mask) * probability
+            return x.mul(mask) * scaling_factor
         else:
             return x
