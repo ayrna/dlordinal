@@ -2,11 +2,11 @@
 
 `dlordinal` is a Python library that unifies many recent deep ordinal classification methodologies available in the literature. Developed using PyTorch as underlying framework, it implements the top performing state-of-the-art deep learning techniques for ordinal classification problems. Ordinal approaches are designed to leverage the ordering information present in the target variable. Specifically, it includes loss functions, various output layers, dropout techniques, soft labelling methodologies, and other classification strategies, all of which are appropriately designed to incorporate the ordinal information. Furthermore, as the performance metrics to assess novel proposals in ordinal classification depend on the distance between target and predicted classes in the ordinal scale, suitable ordinal evaluation metrics are also included.
 
-The latest `dlordinal` release is `v2.4.2`. You can view all the changes made in the current and previous versions in the [CHANGELOG](./CHANGELOG.md).
+The latest `dlordinal` release is `v2.4.4`. You can view all the changes made in the current and previous versions in the [CHANGELOG](./CHANGELOG.md).
 
 | Overview  |                                                                                                                                          |
 |-----------|------------------------------------------------------------------------------------------------------------------------------------------|
-| **CI/CD** | [![Run Tests](https://github.com/ayrna/dlordinal/actions/workflows/run_tests.yml/badge.svg?branch=main)](https://github.com/ayrna/dlordinal/actions/workflows/run_tests.yml) [![!codecov](https://img.shields.io/codecov/c/github/ayrna/dlordinal?label=codecov&logo=codecov)](https://codecov.io/gh/ayrna/dlordinal) [![!docs](https://readthedocs.org/projects/dlordinal/badge/?version=latest&style=flat)](https://dlordinal.readthedocs.io/en/latest/)  [![!python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/) |
+| **CI/CD** | [![Run Tests](https://github.com/ayrna/dlordinal/actions/workflows/run_tests.yml/badge.svg?branch=main)](https://github.com/ayrna/dlordinal/actions/workflows/run_tests.yml) [![!codecov](https://img.shields.io/codecov/c/github/ayrna/dlordinal?label=codecov&logo=codecov)](https://codecov.io/gh/ayrna/dlordinal) [![!docs](https://readthedocs.org/projects/dlordinal/badge/?version=latest&style=flat)](https://dlordinal.readthedocs.io/en/latest/)  [![!python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/) |
 | **Code**  | [![![pypi]](https://img.shields.io/pypi/v/dlordinal)](https://pypi.org/project/dlordinal/) [![![binder]](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ayrna/dlordinal/main?filepath=tutorials) [![!black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Linter: Ruff](https://img.shields.io/badge/Linter-Ruff-brightgreen?style=flat-square)](https://github.com/charliermarsh/ruff)                     |
 
 
@@ -24,7 +24,7 @@ The latest `dlordinal` release is `v2.4.2`. You can view all the changes made in
 
 ## ⚙️ Installation
 
-`dlordinal v2.4.2` is the last version, supported from Python 3.8 to Python 3.12.
+`dlordinal v2.4.4` is the last version, supported from Python 3.8 to Python 3.12.
 
 The easiest way to install `dlordinal` is via `pip`:
 
@@ -224,7 +224,7 @@ pre-commit install
 
 ## Citation
 
-If you use dlordinal we would appreciate a citation of the following [paper](https://arxiv.org/abs/2407.17163)
+If you use dlordinal we would appreciate a citation of the following [paper](https://doi.org/10.1016/j.neucom.2024.129305)
 
 ```bibtex
 @article{berchez2025dlordinal,
@@ -234,6 +234,6 @@ If you use dlordinal we would appreciate a citation of the following [paper](htt
   pages={129305},
   year={2025},
   publisher={Elsevier},
-  doi={doi.org/10.1016/j.neucom.2024.129305}
+  doi={10.1016/j.neucom.2024.129305}
 }
 ```

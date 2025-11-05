@@ -39,7 +39,10 @@ class HybridDropoutContainer(nn.Module):
         Parameters
         ----------
         targets : torch.Tensor
-            Targets of the batch
+            Targets of the batch. Must be a 1D tensor of shape (``batch_size``,)
+            containing integer class indices for each sample in the batch.
+            One-hot or soft label tensors of shape (``batch_size``, ``num_classes``) are
+            not supported.
 
         Example
         -------
@@ -125,6 +128,14 @@ class HybridDropout(nn.Module):
                 raise ValueError(
                     "Batch targets have not been set. Use"
                     " HybridDropoutContainer.set_targets() to set the targets."
+                )
+
+            if targets.ndim != 1:
+                raise ValueError(
+                    "Targets must be a 1D tensor"
+                    f" but got {targets.ndim}D tensor"
+                    "If you are using one-hot encoding or soft labels, (shape [batch_size, num_classes]),"
+                    " please convert them to class indices (shape [batch_size])"
                 )
 
             targets = torch.reshape(targets, (1, targets.shape[0]))

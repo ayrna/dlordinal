@@ -49,6 +49,23 @@ def test_emd_min(device):
     )
 
 
+def test_emd_soft_label(device):
+    loss = EMDLoss(num_classes=3).to(device)
+
+    y_pred = torch.tensor([[0.7, 0.2, 0.1], [0.1, 0.2, 0.7]]).to(device)
+
+    # Calculate logits from softmax probabilities
+    y_pred_logits = torch.log(y_pred)
+
+    y_true = torch.tensor([[0.7, 0.2, 0.1], [0.1, 0.2, 0.7]]).to(device)
+
+    expected_rps = 0.0
+
+    assert loss.forward(y_pred_logits, y_true).cpu().item() == pytest.approx(
+        expected_rps, rel=1e-6
+    )
+
+
 def test_emd_rps_loss(device):
     loss = EMDLoss(num_classes=4).to(device)
 
