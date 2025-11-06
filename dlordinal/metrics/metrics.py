@@ -1,5 +1,6 @@
 import json
 import os
+from math import sqrt
 from pathlib import Path
 from typing import Callable, Dict, Optional
 
@@ -262,6 +263,84 @@ def mmae(y_true: np.ndarray, y_pred: np.ndarray):
 
     per_class_maes = np.sum(errors, axis=1) / np.sum(cm, axis=1).astype("double")
     return per_class_maes.max()
+
+
+def mes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Computes the Mean of the Sensitivities of the first and last class (MES).
+    This metric is useful for assessing the balanced performance between the extreme classes
+    using arithmetic mean.
+
+    Parameters
+    ----------
+    y_true : array-like
+            Target labels.
+    y_pred : array-like
+            Predicted probabilities or labels.
+
+    Returns
+    -------
+    mes : float
+            Mean of the sensitivities of the extreme classes.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from dlordinal.metrics import mes
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 3, 0, 1])
+    >>> mes(y_true, y_pred)
+    0.75
+    """
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+
+    if len(y_true.shape) > 1:
+        y_true = np.argmax(y_true, axis=1)
+    if len(y_pred.shape) > 1:
+        y_pred = np.argmax(y_pred, axis=1)
+
+    sensitivities = np.array(recall_score(y_true, y_pred, average=None))
+    mes = (sensitivities[0] + sensitivities[-1]) / 2.0
+    return mes
+
+
+def gmes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Computes the Geometric Mean of the Sensitivities of the first and last class (GMES).
+    This metric is useful for assessing the balanced performance between the extreme classes
+    using geometric mean.
+
+    Parameters
+    ----------
+    y_true : array-like
+            Target labels.
+    y_pred : array-like
+            Predicted probabilities or labels.
+
+    Returns
+    -------
+    gmes : float
+            Geometric mean of the sensitivities of the extreme classes.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from dlordinal.metrics import gmes
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 3, 0, 1])
+    >>> gmes(y_true, y_pred)
+    0.7071067811865476
+    """
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+
+    if len(y_true.shape) > 1:
+        y_true = np.argmax(y_true, axis=1)
+    if len(y_pred.shape) > 1:
+        y_pred = np.argmax(y_pred, axis=1)
+
+    sensitivities = np.array(recall_score(y_true, y_pred, average=None))
+    gmes = sqrt(sensitivities[0] * sensitivities[-1])
+    return gmes
 
 
 def write_metrics_dict_to_file(

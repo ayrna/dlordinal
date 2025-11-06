@@ -1,5 +1,6 @@
 import json
 import os
+from math import sqrt
 
 import numpy as np
 import pytest
@@ -8,7 +9,9 @@ from sklearn.metrics import recall_score
 from dlordinal.metrics import (
     accuracy_off1,
     amae,
+    gmes,
     gmsec,
+    mes,
     minimum_sensitivity,
     mmae,
     ranked_probability_score,
@@ -144,6 +147,40 @@ def test_mmae():
     assert result == pytest.approx(expected_result, rel=1e-6)
 
 
+def test_mes():
+    # arithmetic mean of extreme class sensitivities
+    y_true = np.array([0, 0, 1, 1])
+    y_pred = np.array([0, 1, 0, 1])
+    result = mes(y_true, y_pred)
+    sensitivities = recall_score(y_true, y_pred, average=None)
+    expected_result = (sensitivities[0] + sensitivities[-1]) / 2.0
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 0, 1, 1, 2, 2])
+    y_pred = np.array([0, 0, 1, 1, 2, 2])
+    result = mes(y_true, y_pred)
+    sensitivities = recall_score(y_true, y_pred, average=None)
+    expected_result = (sensitivities[0] + sensitivities[-1]) / 2.0
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+
+def test_gmes():
+    # geometric mean of extreme class sensitivities
+    y_true = np.array([0, 0, 1, 1])
+    y_pred = np.array([0, 1, 0, 1])
+    result = gmes(y_true, y_pred)
+    sensitivities = recall_score(y_true, y_pred, average=None)
+    expected_result = sqrt(sensitivities[0] * sensitivities[-1])
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+    y_true = np.array([0, 0, 1, 1, 2, 2])
+    y_pred = np.array([0, 0, 1, 1, 2, 2])
+    result = gmes(y_true, y_pred)
+    sensitivities = recall_score(y_true, y_pred, average=None)
+    expected_result = sqrt(sensitivities[0] * sensitivities[-1])
+    assert result == pytest.approx(expected_result, rel=1e-6)
+
+
 def test_write_metrics_dict_to_file():
     metrics = {"acc": 0.5, "gmsec": 0.25}
     path_str = "test_results.txt"
@@ -164,11 +201,3 @@ def test_write_array_to_file():
         data = json.load(f)
         assert data[id_str] == array.tolist()
     os.remove(path_str)
-
-
-if __name__ == "__main__":
-    test_minimum_sensitivity()
-    test_accuracy_off1()
-    test_gmsec()
-    test_write_metrics_dict_to_file()
-    test_write_array_to_file()
