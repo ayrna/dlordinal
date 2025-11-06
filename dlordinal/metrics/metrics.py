@@ -10,7 +10,7 @@ from sklearn.metrics import confusion_matrix, recall_score
 
 def _to_numpy(x: ArrayLike) -> np.ndarray:
     """Helper function to safely convert input to NumPy array (supports torch tensors on CPU/CUDA).
-    Parameters:
+    Parameters
     ----------
     x : numpy array-like
         Input data to be converted to a NumPy array.
