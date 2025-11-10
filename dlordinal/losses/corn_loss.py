@@ -14,13 +14,13 @@ class CORNLoss(nn.Module):
 
     Note
     ----
-        CORN loss expects the output your network to be of dimension J-1 because class 0
+        CORN loss expects the output of your network to be of dimension J-1 because class 0
         is predicted implicitly based on the probabilities of subsequent classes.
 
         CORN loss does not support probabilistic targets.
 
     Example
-    ----------
+    ---
     >>> import torch
     >>> from dlordinal.losses import CORNLoss
     >>> NUM_CLASSES = 5
