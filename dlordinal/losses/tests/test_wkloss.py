@@ -326,6 +326,7 @@ def test_wkloss_penalization_types(device):
     loss_linear_logits = WKLoss(num_classes, "linear", weight, use_logits=True).to(
         device
     )
+    loss_invalid = WKLoss(num_classes, "invalid_type", weight).to(device)
 
     input_data = torch.tensor(
         [
@@ -350,6 +351,9 @@ def test_wkloss_penalization_types(device):
     output_linear = loss_linear(torch.nn.functional.softmax(input_data, dim=1), target)
     output_quadratic_logits = loss_quadratic_logits(input_data, target)
     output_linear_logits = loss_linear_logits(input_data, target)
+
+    with pytest.raises(ValueError):
+        loss_invalid(torch.nn.functional.softmax(input_data, dim=1), target)
 
     assert isinstance(output_quadratic, torch.Tensor)
     assert isinstance(output_linear, torch.Tensor)
@@ -522,3 +526,46 @@ def test_wkloss_softmax_simplification(device):
                     assert output.item() == pytest.approx(
                         output_logits.item(), rel=1e-6
                     )
+
+
+def test_wk_loss_logarithm(device):
+    num_classes = 6
+    penalization_type = "linear"
+    weight = torch.tensor(
+        [1.60843373, 0.55394191, 1.02692308, 0.78070175, 1.12184874, 2.34210526],
+        dtype=torch.float,
+    ).to(device)
+
+    loss = WKLoss(num_classes, penalization_type, weight).to(device)
+    loss_log = WKLoss(num_classes, penalization_type, weight, use_logarithm=True).to(
+        device
+    )
+
+    input_data = torch.tensor(
+        [
+            [1.1182, -1.4991, -1.6639, -2.6338, 1.0638, -1.7242],
+            [0.0584, 0.8491, 0.4281, -0.1311, 0.3988, 0.9868],
+            [0.1456, -0.6615, -0.7971, -0.6217, 1.5191, 1.2822],
+            [-1.1213, -0.1885, 0.4632, -1.0184, -0.4659, -0.0324],
+            [-1.9973, -1.9622, -0.7560, -0.1352, 0.3598, 0.9245],
+            [-0.4714, 0.9953, 0.3056, 1.4104, -0.3741, -1.4388],
+            [-0.0293, -1.6450, -1.4326, -0.3240, 1.1304, 2.6315],
+            [1.2635, 0.4663, -0.2953, 1.1983, -1.0992, -1.1091],
+            [2.0113, 0.1522, 0.8675, -0.5035, -0.6438, 0.1304],
+            [-0.4665, 1.9245, 1.6211, 0.7804, -0.9119, 0.8178],
+        ]
+    ).to(device)
+
+    target = torch.tensor([0, 4, 1, 3, 5, 4, 4, 3, 1, 2]).to(device)
+
+    output = loss(torch.nn.functional.softmax(input_data, dim=1), target)
+    output_log = loss_log(torch.nn.functional.softmax(input_data, dim=1), target)
+
+    # Verifies that the output is a tensor
+    assert isinstance(output, torch.Tensor)
+    assert isinstance(output_log, torch.Tensor)
+
+    # Verifies that the loss is greater than zero
+    assert torch.log(output.cpu() + loss_log.epsilon).item() == pytest.approx(
+        output_log.item(), rel=1e-6
+    )

@@ -1,4 +1,5 @@
 from .clm import CLM
+from .copoc import COPOC
 from .ordinal_fully_connected import (
     ResNetOrdinalFullyConnected,
     VGGOrdinalFullyConnected,
@@ -10,4 +11,5 @@ __all__ = [
     "ResNetOrdinalFullyConnected",
     "VGGOrdinalFullyConnected",
     "StickBreakingLayer",
+    "COPOC",
 ]
