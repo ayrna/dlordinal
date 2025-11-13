@@ -39,7 +39,7 @@ def get_type_convert_lambdas():
 
     Examples
     --------
-    >>> lambdas = get_convert_types_lambdas()
+    >>> lambdas = get_type_convert_lambdas()
     >>> data = [1, 2, 3]
     >>> numpy_result = lambdas[0](data)  # Returns numpy array
     >>> torch_result = lambdas[1](data)  # Returns torch tensor on CPU
