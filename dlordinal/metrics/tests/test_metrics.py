@@ -1,9 +1,9 @@
 import json
 import os
-import torch
 
 import numpy as np
 import pytest
+import torch
 from sklearn.metrics import recall_score
 
 from dlordinal.metrics import (
