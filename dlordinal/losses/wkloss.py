@@ -6,11 +6,14 @@ import torch.nn as nn
 
 class WKLoss(nn.Module):
     """
-    Implements Weighted Kappa Loss, introduced by :footcite:t:`deLaTorre2018kappa`.
-    Weighted Kappa is widely used in ordinal classification problems. Its value lies in
-    :math:`[0, 2]`, where :math:`2` means the random prediction.
+    Implements Weighted Kappa Loss, introduced by :footcite:t:`deLaTorre2018kappa` and
+    modified by :footcite:t:`vargas2020clm`. Weighted Kappa is widely used in ordinal
+    classification problems. In its original proposal, the loss values lie in
+    :math:`[-\\infty, \\log 2]`, whereas in the version proposed by
+    :footcite:t:`vargas2020clm` the range is :math:`[0, 2]`.
 
-    The loss is computed as follows:
+    Following the definition of :footcite:t:`vargas2020clm`, the loss is computed as
+    follows:
 
     .. math::
         \\mathcal{L}(X, \\mathbf{y}) =
@@ -33,6 +36,21 @@ class WKLoss(nn.Module):
     - Linear: :math:`\\omega_{i,j} = \\frac{|i - j|}{J - 1}`
     - Quadratic: :math:`\\omega_{i,j} = \\frac{(i - j)^2}{(J - 1)^2}`
 
+    When considering the original definition of Weighted Kappa, the loss can be defined
+    as follows:
+
+    .. math::
+        \\mathcal{L}(X, \\mathbf{y}) = \\log\\left(
+        \\frac{\\sum\\limits_{i=1}^J \\sum\\limits_{j=1}^J \\omega_{i,j}
+        \\sum\\limits_{k=1}^N q_{k,i} ~ p_{y_k,j}}
+        {\\frac{1}{N}\\sum\\limits_{i=1}^J \\sum\\limits_{j=1}^J \\omega_{i,j}
+        \\left( \\sum\\limits_{k=1}^N q_{k,i} \\right)
+        \\left( \\sum\\limits_{k=1}^N p_{y_k, j} \\right)} \\right)
+
+    The parameter `use_logarithm` can be set to `True` to use this version of the loss.
+    The numerical instability caused by the logarithm is mitigated by adding a small
+    value `epsilon` to the denominator.
+
     Parameters
     ----------
     num_classes : int
@@ -49,6 +67,9 @@ class WKLoss(nn.Module):
         If `True`, the `input` is treated as logits. If `False`, `input` is treated
         as probabilities. The behavior of the `input` affects its expected format
         (logits vs. probabilities).
+    use_logarithm : bool, default=False
+        If `True`, the logarithm of the Weighted Kappa is computed, following the
+        original definition by :footcite:t:`deLaTorre2018kappa`.
 
     Example
     -------
@@ -75,6 +96,7 @@ class WKLoss(nn.Module):
         weight: Optional[torch.Tensor] = None,
         epsilon: Optional[float] = 1e-10,
         use_logits=False,
+        use_logarithm=False,
     ):
         super(WKLoss, self).__init__()
         self.num_classes = num_classes
@@ -82,6 +104,7 @@ class WKLoss(nn.Module):
         self.epsilon = epsilon
         self.weight = weight
         self.use_logits = use_logits
+        self.use_logarithm = use_logarithm
         self.first_forward_ = True
 
     def _initialize(self, input, target):
@@ -96,6 +119,11 @@ class WKLoss(nn.Module):
         elif self.penalization_type == "quadratic":
             self.weights_ = torch.square((repeat_op - repeat_op.T)) / (
                 (self.num_classes - 1) ** 2
+            )
+        else:
+            raise ValueError(
+                f"Invalid penalization_type '{self.penalization_type}'."
+                " Expected one of ['linear', 'quadratic']."
             )
 
         # Apply class weight
@@ -177,4 +205,9 @@ class WKLoss(nn.Module):
         )
         denom = torch.sum(self.weights_ * expected_probs / bsize)
 
-        return nom / (denom + self.epsilon)
+        ret = nom / (denom + self.epsilon)
+
+        if self.use_logarithm:
+            return torch.log(ret + self.epsilon)
+
+        return ret
