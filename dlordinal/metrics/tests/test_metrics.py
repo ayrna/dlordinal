@@ -115,7 +115,7 @@ def test_minimum_sensitivity():
 def test_accuracy_off1():
     y_true = np.array([0, 1, 2, 3, 4, 5])
     y_pred = np.array([1, 2, 3, 4, 5, 0])
-    expected_result = 8333333333333334
+    expected_result = 0.8333333333333334
     run_metric_test(accuracy_off1, y_true, y_pred, expected_result)
 
     y_true = np.array([0, 1, 2, 3, 4])
