@@ -50,12 +50,14 @@ def get_type_convert_lambdas():
     # torch tensor
     lambdas.append(lambda x: torch.tensor(x))
     # torch tensor with grad
-    lambdas.append(lambda x: torch.tensor(x, requires_grad=True))
+    lambdas.append(lambda x: torch.tensor(x, dtype=torch.float32, requires_grad=True))
     if torch.cuda.is_available():
         # torch tensor on cuda
         lambdas.append(lambda x: torch.tensor(x).cuda())
         # torch tensor with grad on cuda
-        lambdas.append(lambda x: torch.tensor(x, requires_grad=True).cuda())
+        lambdas.append(
+            lambda x: torch.tensor(x, dtype=torch.float32, requires_grad=True).cuda()
+        )
     return lambdas
 
 
