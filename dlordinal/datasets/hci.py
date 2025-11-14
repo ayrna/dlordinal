@@ -61,7 +61,7 @@ class HCI(ImageFolder):
                     if img_path.suffix.lower() in IMG_EXTENSIONS:
                         try:
                             with Image.open(img_path) as img:
-                                img = img.resize((224, 224), Image.LANCZOS)
+                                img = img.resize((224, 224), Image.Resampling.LANCZOS)
                                 img.save(img_path)
                         except UnidentifiedImageError as e:
                             print(f"Removing corrupted image: {img_path} ({e})")
