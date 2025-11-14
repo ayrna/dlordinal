@@ -5,3 +5,5 @@ Dataset loading utilities
 
 .. automodule:: dlordinal.datasets
     :members:
+
+.. footbibliography::

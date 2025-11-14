@@ -12,7 +12,7 @@ from torchvision.datasets.utils import download_and_extract_archive
 
 class HCI(ImageFolder):
     """
-    Historical Color Images (HCI) Decade Database dataset.
+    Historical Color Images (HCI) Decade Database dataset :footcite:t:`palermo2012dating`.
 
     This dataset contains colour photographs from five decades (1930s-1970s),
     organised for decade classification. Upon first use, the dataset is
@@ -49,27 +49,7 @@ class HCI(ImageFolder):
     CATEGORIES : dict
         Mapping from decade names to numeric class labels (as strings).
 
-    Directory Structure
-    -------------------
-    After processing, the dataset directory has the form::
-
-        root/
-            HCI/
-                train/
-                    0/  # 1930s images
-                    1/  # 1940s images
-                    2/  # 1950s images
-                    3/  # 1960s images
-                    4/  # 1970s images
-                test/
-                    0/
-                    1/
-                    2/
-                    3/
-                    4/
-                md5sums.txt
-
-    Usage
+    Example
     -----
     >>> from dlordinal.datasets.hci import HCI
     >>> dataset = HCI(root="data", train=True)
@@ -80,6 +60,7 @@ class HCI(ImageFolder):
     The train/test split is stratified by decade, with 70% of the images in the
     training set and 30% in the test set. Preprocessing is only performed the
     first time the dataset is initialised.
+
     """
 
     URL = "http://graphics.cs.cmu.edu/projects/historicalColor/HistoricalColor-ECCV2012-DecadeDatabase.tar"
