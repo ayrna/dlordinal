@@ -11,6 +11,77 @@ from torchvision.datasets.utils import download_and_extract_archive
 
 
 class HCI(ImageFolder):
+    """
+    Historical Color Images (HCI) Decade Database dataset.
+
+    This dataset contains colour photographs from five decades (1930s-1970s),
+    organised for decade classification. Upon first use, the dataset is
+    automatically downloaded, verified, preprocessed, and split into training
+    and test subsets.
+
+    The preprocessing pipeline includes:
+    - verifying and downloading the dataset archive if necessary;
+    - extracting and normalising directory names according to class labels;
+    - resizing all images to 224x224 pixels;
+    - creating a stratified 70/30 train/test split;
+    - generating an MD5 checksum file for future integrity checks.
+
+    Parameters
+    ----------
+    root : str or Path
+        Root directory where the dataset will be stored and processed.
+    transform : callable, optional
+        A function/transform applied to each loaded PIL image.
+    target_transform : callable, optional
+        A function/transform applied to the target label.
+    is_valid_file : callable, optional
+        A function that takes a file path and returns ``True`` if the file
+        should be included.
+    train : bool, default=True
+        If ``True``, loads the training split; otherwise, loads the test split.
+
+    Attributes
+    ----------
+    URL : str
+        Download URL for the dataset archive.
+    MD5 : str
+        MD5 checksum used to verify the downloaded archive.
+    CATEGORIES : dict
+        Mapping from decade names to numeric class labels (as strings).
+
+    Directory Structure
+    -------------------
+    After processing, the dataset directory has the form::
+
+        root/
+            HCI/
+                train/
+                    0/  # 1930s images
+                    1/  # 1940s images
+                    2/  # 1950s images
+                    3/  # 1960s images
+                    4/  # 1970s images
+                test/
+                    0/
+                    1/
+                    2/
+                    3/
+                    4/
+                md5sums.txt
+
+    Usage
+    -----
+    >>> from dlordinal.datasets.hci import HCI
+    >>> dataset = HCI(root="data", train=True)
+    >>> img, label = dataset[0]
+
+    Notes
+    -----
+    The train/test split is stratified by decade, with 70% of the images in the
+    training set and 30% in the test set. Preprocessing is only performed the
+    first time the dataset is initialised.
+    """
+
     URL = "http://graphics.cs.cmu.edu/projects/historicalColor/HistoricalColor-ECCV2012-DecadeDatabase.tar"
     MD5 = "afb4c47b7da105c4afd1f27e06bea171"
     CATEGORIES = {"1930s": "0", "1940s": "1", "1950s": "2", "1960s": "3", "1970s": "4"}
