@@ -216,14 +216,14 @@ def test_mes():
     result = mes(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = (sensitivities[0] + sensitivities[-1]) / 2.0
-    assert result == pytest.approx(expected_result, rel=1e-6)
+    run_metric_test(mes, y_true, y_pred, expected_result)
 
     y_true = np.array([0, 0, 1, 1, 2, 2])
     y_pred = np.array([0, 0, 1, 1, 2, 2])
     result = mes(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = (sensitivities[0] + sensitivities[-1]) / 2.0
-    assert result == pytest.approx(expected_result, rel=1e-6)
+    run_metric_test(mes, y_true, y_pred, expected_result)
 
 
 def test_gmes():
@@ -233,14 +233,14 @@ def test_gmes():
     result = gmes(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = sqrt(sensitivities[0] * sensitivities[-1])
-    assert result == pytest.approx(expected_result, rel=1e-6)
+    run_metric_test(gmes, y_true, y_pred, expected_result)
 
     y_true = np.array([0, 0, 1, 1, 2, 2])
     y_pred = np.array([0, 0, 1, 1, 2, 2])
     result = gmes(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = sqrt(sensitivities[0] * sensitivities[-1])
-    assert result == pytest.approx(expected_result, rel=1e-6)
+    run_metric_test(gmes, y_true, y_pred, expected_result)
 
 
 def test_write_metrics_dict_to_file():

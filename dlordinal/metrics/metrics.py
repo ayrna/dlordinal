@@ -345,8 +345,8 @@ def mes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> mes(y_true, y_pred)
     0.75
     """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    y_true = _to_numpy(y_true, dtype=int)
+    y_pred = _to_numpy(y_pred, dtype=int)
 
     if len(y_true.shape) > 1:
         y_true = np.argmax(y_true, axis=1)
@@ -384,8 +384,8 @@ def gmes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> gmes(y_true, y_pred)
     0.7071067811865476
     """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    y_true = _to_numpy(y_true, dtype=int)
+    y_pred = _to_numpy(y_pred, dtype=int)
 
     if len(y_true.shape) > 1:
         y_true = np.argmax(y_true, axis=1)
