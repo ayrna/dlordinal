@@ -8,12 +8,15 @@ from numpy.typing import ArrayLike
 from sklearn.metrics import confusion_matrix, recall_score
 
 
-def _to_numpy(x: ArrayLike) -> np.ndarray:
+def _to_numpy(x: ArrayLike, dtype: Optional[np.dtype] = None) -> np.ndarray:
     """Helper function to safely convert input to NumPy array (supports torch tensors on CPU/CUDA).
     Parameters
     ----------
     x : numpy array-like
         Input data to be converted to a NumPy array.
+    dtype : numpy data-type, optional
+        Desired data-type for the array. If not provided, the data type of the input
+        is used.
 
     Returns
     -------
@@ -41,7 +44,7 @@ def _to_numpy(x: ArrayLike) -> np.ndarray:
 
     """
     try:
-        import torch  # type: ignore
+        import torch
 
         is_torch = isinstance(x, torch.Tensor)
     except ImportError:
@@ -53,6 +56,8 @@ def _to_numpy(x: ArrayLike) -> np.ndarray:
         # cpu(): moves the tensor to CPU memory if it’s on GPU
         x = x.detach().cpu()
 
+    if dtype is not None:
+        return np.array(x, dtype=dtype)
     return np.array(x)
 
 
@@ -80,7 +85,7 @@ def ranked_probability_score(y_true, y_proba):
     >>> ranked_probability_score(y_true, y_pred)
     0.5068750000000001
     """
-    y_true = _to_numpy(y_true)
+    y_true = _to_numpy(y_true, dtype=int)
     y_proba = _to_numpy(y_proba)
 
     y_oh = np.zeros(y_proba.shape)
