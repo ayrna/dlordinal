@@ -1,6 +1,6 @@
 # v2.3.2
 
-January 2025
+**January 2025**
 
 `dlordinal` `v2.3.2` includes bug fixes in AMAE and MMAE metrics.
 

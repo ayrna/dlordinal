@@ -1,6 +1,6 @@
 # v2.3.0
 
-January 2025
+**January 2025**
 
 `dlordinal` `v2.3.0` this release includes several corrections and the implementation of a new methodology for loss functions for soft labelling. We would like to thank all contributors who helped make this release possible.
 
