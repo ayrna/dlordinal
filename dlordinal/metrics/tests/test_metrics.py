@@ -213,14 +213,12 @@ def test_mes():
     # arithmetic mean of extreme class sensitivities
     y_true = np.array([0, 0, 1, 1])
     y_pred = np.array([0, 1, 0, 1])
-    result = mes(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = (sensitivities[0] + sensitivities[-1]) / 2.0
     run_metric_test(mes, y_true, y_pred, expected_result)
 
     y_true = np.array([0, 0, 1, 1, 2, 2])
     y_pred = np.array([0, 0, 1, 1, 2, 2])
-    result = mes(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = (sensitivities[0] + sensitivities[-1]) / 2.0
     run_metric_test(mes, y_true, y_pred, expected_result)
@@ -230,14 +228,12 @@ def test_gmes():
     # geometric mean of extreme class sensitivities
     y_true = np.array([0, 0, 1, 1])
     y_pred = np.array([0, 1, 0, 1])
-    result = gmes(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = sqrt(sensitivities[0] * sensitivities[-1])
     run_metric_test(gmes, y_true, y_pred, expected_result)
 
     y_true = np.array([0, 0, 1, 1, 2, 2])
     y_pred = np.array([0, 0, 1, 1, 2, 2])
-    result = gmes(y_true, y_pred)
     sensitivities = recall_score(y_true, y_pred, average=None)
     expected_result = sqrt(sensitivities[0] * sensitivities[-1])
     run_metric_test(gmes, y_true, y_pred, expected_result)
