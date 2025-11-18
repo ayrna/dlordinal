@@ -1,5 +1,6 @@
 import json
 import os
+from math import sqrt
 from pathlib import Path
 from typing import Callable, Dict, Optional
 
@@ -52,13 +53,18 @@ def _to_numpy(x: ArrayLike, dtype: Optional[np.dtype] = None) -> np.ndarray:
 
     if is_torch:
         # detach(): removes tensor from the computation graph (no gradients tracked)
-        #           if the tensor doesn’t require grad, this does nothing
         # cpu(): moves the tensor to CPU memory if it’s on GPU
-        x = x.detach().cpu()
+        # Convert to a NumPy array to avoid forwarding torch.Tensor.__array__ into
+        # NumPy which may trigger the deprecation about the `copy` keyword in
+        # NumPy 2.0. Using `.numpy()` produces a plain ndarray we can safely wrap
+        # with np.asarray below.
+        x = x.detach().cpu().numpy()
 
+    # Use np.asarray instead of np.array to avoid calling an object's
+    # `__array__` with unexpected keywords (NumPy 2.0 migration warning).
     if dtype is not None:
-        return np.array(x, dtype=dtype)
-    return np.array(x)
+        return np.asarray(x, dtype=dtype)
+    return np.asarray(x)
 
 
 def ranked_probability_score(y_true, y_proba):
@@ -316,6 +322,84 @@ def mmae(y_true: np.ndarray, y_pred: np.ndarray):
 
     per_class_maes = np.sum(errors, axis=1) / np.sum(cm, axis=1).astype("double")
     return per_class_maes.max()
+
+
+def mes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Computes the Mean of the Sensitivities of the first and last class (MES).
+    This metric is useful for assessing the balanced performance between the extreme classes
+    using arithmetic mean.
+
+    Parameters
+    ----------
+    y_true : array-like
+            Target labels.
+    y_pred : array-like
+            Predicted probabilities or labels.
+
+    Returns
+    -------
+    mes : float
+            Mean of the sensitivities of the extreme classes.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from dlordinal.metrics import mes
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 3, 0, 1])
+    >>> mes(y_true, y_pred)
+    0.75
+    """
+    y_true = _to_numpy(y_true, dtype=int)
+    y_pred = _to_numpy(y_pred, dtype=int)
+
+    if len(y_true.shape) > 1:
+        y_true = np.argmax(y_true, axis=1)
+    if len(y_pred.shape) > 1:
+        y_pred = np.argmax(y_pred, axis=1)
+
+    sensitivities = np.array(recall_score(y_true, y_pred, average=None))
+    mes = (sensitivities[0] + sensitivities[-1]) / 2.0
+    return mes
+
+
+def gmes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Computes the Geometric Mean of the Sensitivities of the first and last class (GMES).
+    This metric is useful for assessing the balanced performance between the extreme classes
+    using geometric mean.
+
+    Parameters
+    ----------
+    y_true : array-like
+            Target labels.
+    y_pred : array-like
+            Predicted probabilities or labels.
+
+    Returns
+    -------
+    gmes : float
+            Geometric mean of the sensitivities of the extreme classes.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from dlordinal.metrics import gmes
+    >>> y_true = np.array([0, 0, 1, 2, 3, 0, 0])
+    >>> y_pred = np.array([0, 1, 1, 2, 3, 0, 1])
+    >>> gmes(y_true, y_pred)
+    0.7071067811865476
+    """
+    y_true = _to_numpy(y_true, dtype=int)
+    y_pred = _to_numpy(y_pred, dtype=int)
+
+    if len(y_true.shape) > 1:
+        y_true = np.argmax(y_true, axis=1)
+    if len(y_pred.shape) > 1:
+        y_pred = np.argmax(y_pred, axis=1)
+
+    sensitivities = np.array(recall_score(y_true, y_pred, average=None))
+    gmes = sqrt(sensitivities[0] * sensitivities[-1])
+    return gmes
 
 
 def write_metrics_dict_to_file(

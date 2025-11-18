@@ -1,7 +1,9 @@
 from .metrics import (
     accuracy_off1,
     amae,
+    gmes,
     gmsec,
+    mes,
     minimum_sensitivity,
     mmae,
     ranked_probability_score,
@@ -18,4 +20,6 @@ __all__ = [
     "write_array_to_file",
     "write_metrics_dict_to_file",
     "ranked_probability_score",
+    "mes",
+    "gmes",
 ]
