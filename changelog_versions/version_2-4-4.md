@@ -1,4 +1,4 @@
-# v2.4.3
+# v2.4.4
 
 **July 2025**
 
@@ -7,6 +7,8 @@
 ---
 
 ## Maintenance
-- Added Python 3.13 support by @victormvy in ([#122](https://github.com/ayrna/dlordinal/pull/122))
+- Added Python 3.13 support by ([victormvy](https://github.com/victormvy)) in ([#122](https://github.com/ayrna/dlordinal/pull/122))
+
+([#120](https://github.com/ayrna/dlordinal/pull/120)) ([franberchez](https://github.com/franberchez))
 
 ---
