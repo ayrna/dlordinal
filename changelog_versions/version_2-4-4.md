@@ -9,6 +9,4 @@
 ## Maintenance
 - Added Python 3.13 support by ([victormvy](https://github.com/victormvy)) in ([#122](https://github.com/ayrna/dlordinal/pull/122))
 
-([#120](https://github.com/ayrna/dlordinal/pull/120)) ([franberchez](https://github.com/franberchez))
-
 ---
