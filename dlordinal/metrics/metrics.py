@@ -53,13 +53,18 @@ def _to_numpy(x: ArrayLike, dtype: Optional[np.dtype] = None) -> np.ndarray:
 
     if is_torch:
         # detach(): removes tensor from the computation graph (no gradients tracked)
-        #           if the tensor doesn’t require grad, this does nothing
         # cpu(): moves the tensor to CPU memory if it’s on GPU
-        x = x.detach().cpu()
+        # Convert to a NumPy array to avoid forwarding torch.Tensor.__array__ into
+        # NumPy which may trigger the deprecation about the `copy` keyword in
+        # NumPy 2.0. Using `.numpy()` produces a plain ndarray we can safely wrap
+        # with np.asarray below.
+        x = x.detach().cpu().numpy()
 
+    # Use np.asarray instead of np.array to avoid calling an object's
+    # `__array__` with unexpected keywords (NumPy 2.0 migration warning).
     if dtype is not None:
-        return np.array(x, dtype=dtype)
-    return np.array(x)
+        return np.asarray(x, dtype=dtype)
+    return np.asarray(x)
 
 
 def ranked_probability_score(y_true, y_proba):
