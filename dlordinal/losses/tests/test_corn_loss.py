@@ -41,11 +41,14 @@ def test_cornloss_zeroloss(device):
 
     loss = CORNLoss(num_classes).to(device)
 
+    zero = -1e3
+    one = 1e3
+
     input_data = torch.tensor(
         [
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [1.0, 1.0],
+            [zero, one],
+            [one, zero],
+            [one, one],
         ]
     ).to(device)
 
