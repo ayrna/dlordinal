@@ -24,7 +24,7 @@ def torch_device(request):
 
 # --- Mock for the base classifier ---
 class MockClassifier:
-    """Mock classifier with required methods and an extra attribute for delegation."""
+    """Mock classifier with required methods, an extra attribute, and __call__."""
 
     def __init__(self, logits_output, device):
         # Move logits to the test device
@@ -38,6 +38,11 @@ class MockClassifier:
     def predict_proba(self, X):
         # Returns the CORN logits that the wrapper will process
         return self._logits_output
+
+    def __call__(self, X):
+        """Mock the PyTorch forward pass, returning raw logits for loss calculation."""
+        # For testing, we just return the pre-set logits, ignoring the input X
+        return self._logits_output.clone()
 
 
 # --- Initialization Tests ---
@@ -232,3 +237,61 @@ def test_predict_with_custom_threshold(torch_device):
 
     # Expected class is 1
     assert np.array_equal(predicted_labels, np.array([1]))
+
+
+@pytest.mark.parametrize(
+    "input_logits",
+    [
+        # Simple case: 4 classes (3 logits)
+        torch.tensor([[-1.0, 0.5, 2.0]], dtype=torch.float32),
+        # Multi-sample case: 6 classes (5 logits)
+        torch.tensor(
+            [[3.0, 3.0, 3.0, 3.0, -3.0], [-3.0, 3.0, 3.0, 3.0, 3.0]],
+            dtype=torch.float32,
+        ),
+    ],
+)
+def test_call_delegation_returns_raw_logits(input_logits, torch_device):
+    """Tests that calling the wrapper directly delegates the call to the
+    underlying classifier, returning raw logits (used during loss calculation)."""
+
+    # Initialize mock and wrapper
+    mock_classifier = MockClassifier(input_logits, device=torch_device)
+
+    # The wrapper must be modified to delegate __call__
+    # (e.g., via a manual __call__ method)
+    # Since the original wrapper didn't have __call__, this test only passes
+    # if the wrapper is fixed to delegate this method.
+    wrapper = CORNClassifierWrapper(mock_classifier)
+
+    X_dummy = torch.empty(0)  # Input is ignored by mock
+
+    # Call the wrapper directly: wrapper(X)
+    result_logits = wrapper(X_dummy)
+
+    # The result should be the raw logits, not processed probabilities
+    # (no sigmoid, no aggregation)
+    assert torch.equal(result_logits.cpu(), input_logits.cpu())
+    assert result_logits.shape == input_logits.shape
+    assert result_logits.dtype == torch.float32
+
+
+def test_call_method_exists():
+    """Tests that the __call__ method exists on the wrapper (either directly
+    or via delegation/__getattr__) to prevent TypeError during fit."""
+
+    # We must use a mock that is callable itself
+    class CallableMock:
+        def predict(self, X):
+            return None
+
+        def predict_proba(self, X):
+            return torch.empty(0)
+
+        def __call__(self, X):
+            return torch.empty(0)
+
+    wrapper = CORNClassifierWrapper(CallableMock())
+
+    # Test that the wrapper instance is callable
+    assert callable(wrapper)

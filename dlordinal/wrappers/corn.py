@@ -50,6 +50,14 @@ class CORNClassifierWrapper:
         """Delegate attribute access to the wrapped classifier."""
         return getattr(self.classifier, name)
 
+    def __call__(self, *args, **kwargs):
+        """
+        Delegates the call to the underlying classifier.
+        This is necessary for the training loop in skorch/PyTorch
+        which expects to call the module directly to get logits.
+        """
+        return self.classifier(*args, **kwargs)
+
     def predict(self, X):
         """
         Predicts the final ordinal class labels for the input data X.
