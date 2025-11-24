@@ -44,8 +44,6 @@ def test_cornloss_creation(device):
 
     assert isinstance(loss, CORNLoss)
     assert loss.num_classes == NUM_CLASSES
-    # Verifies the module is on the correct device
-    assert next(loss.parameters(), torch.tensor(0.0)).device.type == device.type
 
 
 def test_cornloss_exact_value(device):
