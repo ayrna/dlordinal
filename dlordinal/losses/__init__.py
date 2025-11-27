@@ -1,6 +1,7 @@
 from .beta_loss import BetaCrossEntropyLoss, BetaLoss
 from .binomial_loss import BinomialCrossEntropyLoss, BinomialLoss
 from .cdw import CDWCELoss
+from .corn_loss import CORNLoss
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss, CustomTargetsLoss
 from .emd_loss import EMDLoss
 from .exponential_loss import ExponentialCrossEntropyLoss, ExponentialLoss
@@ -22,6 +23,7 @@ __all__ = [
     "BinomialCrossEntropyLoss",
     "BinomialLoss",
     "CDWCELoss",
+    "CORNLoss",
     "CustomTargetsLoss",
     "CustomTargetsCrossEntropyLoss",
     "EMDLoss",
