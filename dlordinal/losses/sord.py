@@ -8,6 +8,52 @@ from torch import Tensor, nn
 
 
 class SORDLoss(nn.Module):
+    """
+    Implements the SORD (Softmax-based Ordinal Regression Distribution) Loss
+    from :footcite:t:`diaz2019soft`.
+
+    SORD Loss generates a smooth, ordinally-weighted target distribution
+    ('softmax_targets') and applies standard Cross-Entropy Loss (or KL
+    Divergence) to the model's prediction. The target distribution is
+    based on the distance from the true target and can be further customized
+    using proximity measures.
+
+    This loss belongs to the family of ordinal losses designed to penalize
+    errors based on the severity of the ordinal distance.
+
+    Parameters
+    ----------
+    alpha : float
+        Scaling factor controlling the 'smoothness' of the softmax target
+        distribution. A higher alpha results in a sharper distribution.
+    num_classes : int
+        The total number of ordinal classes (C).
+    train_targets : torch.Tensor
+        The target labels from the training dataset, required to compute
+        class counts and initialize the proximity matrix (prox_mat).
+    prox : bool, default=False
+        If True, enables the use of class-frequency-based proximity matrices
+        (prox_mat) instead of simple L1 distance.
+    ftype : str, default="max"
+        Defines the function used to convert the proximity matrix into the
+        final penalty (phi). Only used if ``prox`` is True. Options include:
+        "max", "norm_max", "log", "norm_log", "division", "norm_division".
+    weight : Optional[torch.Tensor], default=None
+        Optional class weights of shape [num_classes] to handle class
+        imbalance.
+    use_logits : bool, default=True
+        If True, applies F.log_softmax to the input for numerical stability.
+        If False, assumes input is probabilities and applies log(input + 1e-9).
+
+    Attributes
+    ----------
+    prox_mat : Optional[torch.Tensor]
+        The precomputed proximity matrix based on training set class frequencies.
+        Used when ``prox`` is True.
+    norm_prox_mat : Optional[torch.Tensor]
+        The L1-normalized version of ``prox_mat``.
+    """
+
     def __init__(
         self,
         alpha: float,
@@ -43,6 +89,23 @@ class SORDLoss(nn.Module):
         return class_counts_dict
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        """
+        Calculates the SORD loss between the model's prediction and the ordinal
+        target distribution.
+
+        Parameters
+        ----------
+        input : torch.Tensor
+            The model's output (logits or probabilities) with shape [Batch, C].
+        target : torch.Tensor
+            The true ordinal labels with shape [Batch].
+
+        Returns
+        -------
+        torch.Tensor
+            The scalar mean value of the SORD loss.
+        """
+
         if self.use_logits:
             input_logprob = F.log_softmax(input, dim=1)
         else:
@@ -86,6 +149,30 @@ class SORDLoss(nn.Module):
 
 
 def create_prox_mat(dist_dict, inv=True):
+    """
+    Creates a proximity matrix based on class frequency distributions.
+
+    This matrix captures how "close" two classes are based on the frequency
+    of classes falling between them in the training data.
+
+    Parameters
+    ----------
+    dist_dict : dict
+        A dictionary containing class indices as keys and their counts/frequencies
+        in the training set as values.
+    inv : bool, default=True
+        If True, the matrix values are calculated as the inverse of the
+        logarithm of the normalized cumulative count. If False, the values
+        are calculated as the negative logarithm of the normalized cumulative
+        count (similar to self-entropy, where distance increases with
+        cumulative frequency).
+
+    Returns
+    -------
+    torch.Tensor
+        The proximity matrix of shape [num_classes, num_classes].
+    """
+
     labels = list(dist_dict.keys())
     labels.sort()
     denominator = sum(dist_dict.values())

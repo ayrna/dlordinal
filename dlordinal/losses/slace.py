@@ -6,6 +6,47 @@ from torch import Tensor, nn
 
 
 class SLACELoss(nn.Module):
+    """
+    Implements the SLACE (Soft Labels Accumulating Cross Entropy) loss from
+    :footcite:t:`nachmani2025slace`.
+
+    Ordinal regression classifies objects to classes with a natural order,
+    where the severity of prediction errors varies (e.g., classifying 'No
+    Risk' as 'Critical Risk' is worse than 'High Risk').
+
+    SLACE is ordinality-aware loss designed to ensure the model's
+    output is as close as possible to the correct class, considering the
+    order of labels.
+
+    It provably satisfies two key properties for ordinal losses:
+    **monotonicity** and **balance sensitivity**.
+
+    The mechanism involves generating a smooth, ordinally-weighted target
+    probability distribution ('softmax_targets') and applying cross-entropy
+    to an accumulated version of the model's predicted distribution
+    ('accumulating_softmax').
+
+    Parameters
+    ----------
+    alpha : float
+        Scaling factor controlling the 'smoothness' of the softmax target
+        distribution. A higher alpha results in a sharper distribution.
+    num_classes : int
+        The total number of ordinal classes (C).
+    weight : Optional[torch.Tensor], default=None
+        Optional class weights of shape [num_classes] to handle class imbalance.
+    use_logits : bool, default=True
+        If True, assumes 'input' contains logits and applies softmax internally.
+        If False, assumes 'input' is already probabilities.
+
+    Attributes
+    ----------
+    prox_dom : Optional[torch.Tensor]
+        The precomputed ordinal dominance matrix used for probability accumulation.
+        Registered as a buffer.
+
+    """
+
     prox_dom: Optional[Tensor]
 
     def __init__(
@@ -37,6 +78,23 @@ class SLACELoss(nn.Module):
         self.register_buffer("prox_dom", (distance_j <= distance_i).float())
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        """
+        Calculates the SLACE loss between the model's prediction and the ordinal
+        target distribution.
+
+        Parameters
+        ----------
+        input : torch.Tensor
+            The model's output (logits or probabilities) with shape [Batch, num_classes].
+        target : torch.Tensor
+            The true ordinal labels with shape [Batch] or [Batch, 1].
+
+        Returns
+        -------
+        torch.Tensor
+            The scalar mean value of the SLACE loss.
+        """
+
         if self.use_logits:
             input = F.softmax(input, dim=1)
 
