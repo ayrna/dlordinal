@@ -1,8 +1,8 @@
-# v2.5.1
+# v2.6.0
 
 **December 2025**
 
-`dlordinal` **v2.5.1** includes the following updates:
+`dlordinal` **v2.6.0** includes the following updates:
 
 ---
 
