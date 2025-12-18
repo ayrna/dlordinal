@@ -10,7 +10,7 @@ class CORNClassifierWrapper:
     This wrapper handles the final prediction steps:
     1. Applies the Sigmoid and Cumulative Product to the raw logits (N, J-1).
     2. Determines the final ordinal class label (0 to J-1) based on a probability
-       threshold (default 0.5).
+    threshold (default 0.5).
 
     Parameters
     ----------
