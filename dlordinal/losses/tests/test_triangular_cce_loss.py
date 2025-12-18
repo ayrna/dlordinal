@@ -3,6 +3,9 @@ import torch
 
 from dlordinal.losses import TriangularCrossEntropyLoss
 
+# TODO: remove in 3.0.0
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 
 def test_triangular_loss_creation():
     loss = TriangularCrossEntropyLoss(num_classes=5)

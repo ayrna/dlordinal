@@ -4,6 +4,9 @@ import torch
 
 from dlordinal.losses import GeneralTriangularCrossEntropyLoss
 
+# TODO: remove in 3.0.0
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 
 def test_general_triangular_loss_creation():
     # Generate 12 random values between 0.01 and 0.2

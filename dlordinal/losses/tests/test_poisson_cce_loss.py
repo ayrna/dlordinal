@@ -3,6 +3,9 @@ import torch
 
 from dlordinal.losses import PoissonCrossEntropyLoss
 
+# TODO: remove in 3.0.0
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 
 def test_poisson_loss_creation():
     loss = PoissonCrossEntropyLoss(num_classes=5)

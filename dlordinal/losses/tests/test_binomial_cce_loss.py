@@ -3,6 +3,9 @@ import torch
 
 from dlordinal.losses import BinomialCrossEntropyLoss
 
+# TODO: remove in 3.0.0
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 
 def test_binomial_loss_creation():
     loss = BinomialCrossEntropyLoss(num_classes=5)

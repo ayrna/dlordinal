@@ -84,7 +84,7 @@ class SORDLoss(nn.Module):
                 self.register_buffer("norm_prox_mat", self.norm_prox_mat)
 
     def _create_classcounts_dict(self, targets):
-        class_counts = Counter(np.array(targets))
+        class_counts = Counter(np.asarray(targets))
         class_counts_dict = {i: class_counts.get(i, 0) for i in range(self.num_classes)}
         return class_counts_dict
 

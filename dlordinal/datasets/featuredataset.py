@@ -68,7 +68,7 @@ class FeatureDataset(Dataset):
         if isinstance(v, pd.Series):
             v = v.values  # type: ignore
         if len(v.shape) == 1:  # type: ignore
-            v = np.reshape(v, (-1, 1))
+            v = np.reshape(np.asarray(v), (-1, 1))
         return v
 
     def _get_normalized(

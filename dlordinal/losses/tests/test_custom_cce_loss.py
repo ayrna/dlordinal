@@ -1,6 +1,10 @@
+import pytest
 import torch
 
 from dlordinal.losses import CustomTargetsCrossEntropyLoss
+
+# TODO: remove in 3.0.0
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 
 # Auxiliar function to get a test class

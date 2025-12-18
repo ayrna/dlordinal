@@ -3,6 +3,9 @@ import torch
 
 from dlordinal.losses import ExponentialCrossEntropyLoss
 
+# TODO: remove in 3.0.0
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 
 def test_exponential_loss_creation():
     loss = ExponentialCrossEntropyLoss(num_classes=5)

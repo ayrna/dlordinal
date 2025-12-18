@@ -148,7 +148,7 @@ class HybridDropout(nn.Module):
                 patterns = torch.reshape(patterns, (1, x.shape[0]))
                 concat = torch.cat((patterns, targets), 0)
                 corr = torch.corrcoef(concat)
-                correlation_list.append(float(corr[0, 1]))
+                correlation_list.append(float(corr[0, 1].cpu().detach()))
 
             correlations = torch.Tensor(correlation_list)
 

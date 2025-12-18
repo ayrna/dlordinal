@@ -64,7 +64,7 @@ def test_copoc_layer(device):
     input_data = torch.randn(num_rows, num_classes).to(device)
 
     # Compute unimodal probabilities from COPOC layer
-    probs = torch.nn.functional.softmax(layer(input_data))
+    probs = torch.nn.functional.softmax(layer(input_data), dim=1)
 
     # Check that probabilities have the expected shape
     assert probs.shape == (num_rows, num_classes)

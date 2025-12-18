@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dlordinal"
-version = "2.5.0"
+version = "2.5.1"
 authors = [
     {name = "Francisco Bérchez-Moreno", email = "fberchez@uco.es"},
     {name = "Víctor Manuel Vargas", email = "vvargas@uco.es"},
@@ -14,7 +14,7 @@ authors = [
 ]
 description = "Deep learning for ordinal classification"
 readme = "README.md"
-requires-python = ">=3.8,<3.14"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD License",
@@ -62,5 +62,4 @@ fix = true
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
-experimental-string-processing = true
+target-version = ['py313']

@@ -62,7 +62,8 @@ class COPOC(Module):
         # Step 1: Compute η(x) = f(x; θ), which is given by the input tensor.
         n = x.clone()  # η ∈ ℝ^K — raw logits for each class
 
-        # Step 2: Ensure all values are non-negative: v_k = φ(η_k), φ = softplus ensures v_k ≥ 0
+        # Step 2: Ensure all values are non-negative: v_k = φ(η_k),
+        # φ = softplus ensures v_k ≥ 0
         v_rest = self.phi(n[:, 1:])
         v = torch.cat([n[:, :1], v_rest], dim=1)
 
@@ -72,6 +73,6 @@ class COPOC(Module):
         # Step 4: Apply symmetric decreasing function: z_k = ψ_E(r_k) = -|r_k|
         z = self.psi(r)  # z ∈ ℝ^K, unimodal due to symmetric log-probability decay
 
-        # Step 5: To turn logits into unimodal probabilities compute class probabilities: p̂_k = softmax(z_k)
-        # Here, we only return the logits
+        # Step 5: To turn logits into unimodal probabilities compute class probabilities:
+        # p̂_k = softmax(z_k). Here, we only return the logits
         return z
