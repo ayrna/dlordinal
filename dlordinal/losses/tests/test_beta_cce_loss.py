@@ -3,6 +3,9 @@ import torch
 
 from dlordinal.losses import BetaCrossEntropyLoss
 
+# TODO: remove in 3.0.0
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 
 def test_beta_loss_creation():
     loss = BetaCrossEntropyLoss(num_classes=5)

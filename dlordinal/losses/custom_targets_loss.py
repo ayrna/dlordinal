@@ -98,7 +98,7 @@ class CustomTargetsLoss(torch.nn.Module):
 @deprecated(
     version="2.4.0",
     reason="Use CustomTargetsLoss instead with CrossEntropyLoss as base_loss. Will be removed in 3.0.0.",
-    category=FutureWarning,
+    category=DeprecationWarning,
 )
 class CustomTargetsCrossEntropyLoss(CustomTargetsLoss):
     def __init__(

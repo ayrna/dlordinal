@@ -3,6 +3,9 @@ import torch
 
 from dlordinal.losses import GeometricCrossEntropyLoss
 
+# TODO: remove in 3.0.0
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 
 @pytest.fixture
 def device():

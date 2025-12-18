@@ -67,7 +67,7 @@ class PoissonLoss(CustomTargetsLoss):
 @deprecated(
     version="2.4.0",
     reason="Use PoissonLoss instead with CrossEntropyLoss as base_loss. Will be removed in 3.0.0.",
-    category=FutureWarning,
+    category=DeprecationWarning,
 )
 class PoissonCrossEntropyLoss(PoissonLoss):
     def __init__(
