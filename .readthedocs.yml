@@ -10,6 +10,11 @@ python:
       extra_requirements:
         - docs
 
+formats:
+  - pdf
+  - epub
+  - htmlzip
+
 build:
   os: ubuntu-22.04
   tools:

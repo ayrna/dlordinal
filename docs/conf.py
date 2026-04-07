@@ -9,7 +9,7 @@
 project = "dlordinal"
 copyright = "2023, Francisco Bérchez, Víctor Vargas"
 author = "Francisco Bérchez, Víctor Vargas"
-release = "2.3.2"
+release = "2.6.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -17,7 +17,7 @@ release = "2.3.2"
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
-    "sphinx.ext.imgmath",
+    "sphinx.ext.mathjax",
     "sphinxcontrib.bibtex",
     "sphinx.ext.viewcode",
 ]
@@ -33,8 +33,29 @@ bibtex_bibfiles = ["references.bib"]
 html_theme = "sphinx_rtd_theme"
 # html_static_path = ["_static"]
 
-html_math_renderer = "imgmath"
-imgmath_image_format = "svg"
-imgmath_latex_preamble = "\\usepackage{fouriernc}"
+# html_math_renderer = "imgmath"
+# imgmath_image_format = "svg"
+# imgmath_latex_preamble = "\\usepackage{fouriernc}"
 
 autodoc_inherit_docstrings = True
+
+# -- Options for LaTeX output -------------------------------------------------
+
+latex_documents = [
+    (
+        "index",
+        "dlordinal.tex",
+        "dlordinal Documentation",
+        "Francisco Bérchez, Víctor Vargas",
+        "manual",
+    ),
+]
+
+latex_engine = "xelatex"
+
+latex_elements = {
+    "preamble": r"""
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+""",
+}
