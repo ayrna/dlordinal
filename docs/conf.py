@@ -33,9 +33,9 @@ bibtex_bibfiles = ["references.bib"]
 html_theme = "sphinx_rtd_theme"
 # html_static_path = ["_static"]
 
-html_math_renderer = "imgmath"
-imgmath_image_format = "svg"
-imgmath_latex_preamble = "\\usepackage{fouriernc}"
+# html_math_renderer = "imgmath"
+# imgmath_image_format = "svg"
+# imgmath_latex_preamble = "\\usepackage{fouriernc}"
 
 autodoc_inherit_docstrings = True
 
@@ -50,3 +50,10 @@ latex_documents = [
         "manual",
     ),
 ]
+
+latex_elements = {
+    "preamble": r"""
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+""",
+}
