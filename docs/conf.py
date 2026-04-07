@@ -9,7 +9,7 @@
 project = "dlordinal"
 copyright = "2023, Francisco Bérchez, Víctor Vargas"
 author = "Francisco Bérchez, Víctor Vargas"
-release = "2.3.2"
+release = "2.6.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -50,6 +50,8 @@ latex_documents = [
         "manual",
     ),
 ]
+
+latex_engine = "xelatex"
 
 latex_elements = {
     "preamble": r"""
