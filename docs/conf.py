@@ -17,7 +17,7 @@ release = "2.3.2"
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
-    "sphinx.ext.imgmath",
+    "sphinx.ext.mathjax",
     "sphinxcontrib.bibtex",
     "sphinx.ext.viewcode",
 ]
@@ -38,3 +38,15 @@ imgmath_image_format = "svg"
 imgmath_latex_preamble = "\\usepackage{fouriernc}"
 
 autodoc_inherit_docstrings = True
+
+# -- Options for LaTeX output -------------------------------------------------
+
+latex_documents = [
+    (
+        "index",
+        "dlordinal.tex",
+        "dlordinal Documentation",
+        "Francisco Bérchez, Víctor Vargas",
+        "manual",
+    ),
+]
