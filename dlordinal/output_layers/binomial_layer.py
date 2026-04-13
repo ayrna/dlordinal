@@ -5,7 +5,7 @@ from torch.distributions import Binomial
 class BinomialLayer(torch.nn.Module):
     """
     Unimodal output layer for ordinal classification based on the binomial distribution.
-    Proposed by Beckham et al. :footcite:t:`beckham2020binomial`.
+    Proposed by :footcite:t:`beckham2017unimodal`.
 
     Learns the p parameter of the binomial distribution from the input features and uses the
     binomial distribution to compute the probabilities of each class, ensuring that the output
