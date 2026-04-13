@@ -63,6 +63,13 @@ def test_initialization(base_config, torch_device):
     assert layer.p_layer.out_features == 1
 
 
+def test_doc_example():
+    layer = BinomialLayer(in_features=5, num_classes=3)
+    input = torch.randn(2, 5)
+    probs = layer(input)
+    print(probs)
+
+
 def test_forward_pass(base_config, input_data_on_device, torch_device):
     """Tests that the forward pass produces valid probabilities."""
     layer = BinomialLayer(**base_config).to(torch_device)
