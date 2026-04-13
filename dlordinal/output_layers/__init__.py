@@ -1,3 +1,4 @@
+from .binomial_layer import BinomialLayer
 from .clm import CLM
 from .copoc import COPOC
 from .ordinal_fully_connected import (
@@ -12,4 +13,5 @@ __all__ = [
     "VGGOrdinalFullyConnected",
     "StickBreakingLayer",
     "COPOC",
+    "BinomialLayer",
 ]
