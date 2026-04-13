@@ -44,7 +44,7 @@ class BinomialLayer(torch.nn.Module):
         self.num_classes = num_classes
         self.p_layer = torch.nn.Linear(in_features, 1)
 
-    def forward(self, input):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         """
         Compute class probabilities using a binomial distribution.
 

@@ -5,6 +5,7 @@ from .ordinal_fully_connected import (
     ResNetOrdinalFullyConnected,
     VGGOrdinalFullyConnected,
 )
+from .poisson_layer import PoissonLayer
 from .stick_breaking_layer import StickBreakingLayer
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "StickBreakingLayer",
     "COPOC",
     "BinomialLayer",
+    "PoissonLayer",
 ]

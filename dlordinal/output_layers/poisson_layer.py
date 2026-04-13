@@ -70,7 +70,21 @@ class PoissonLayer(torch.nn.Module):
             self.register_buffer("log_tau", tau_init)
         self.lambda_layer = torch.nn.Linear(in_features, 1)
 
-    def forward(self, input):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Compute class probabilities using a Poisson-based discrete distribution.
+
+        Parameters
+        ----------
+        input : torch.Tensor, shape (batch_size, in_features)
+            Input feature tensor.
+
+        Returns
+        -------
+        torch.Tensor, shape (batch_size, num_classes)
+            Probability distribution over discrete classes.
+        """
+
         # 1. Compute rate λ > 0
         lambda_ = torch.nn.functional.softplus(self.lambda_layer(input).squeeze(-1))
         lambda_ = lambda_.clamp(min=1e-8, max=1e4)
