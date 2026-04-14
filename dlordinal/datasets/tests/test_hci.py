@@ -1,26 +1,46 @@
+import time
+from urllib.error import URLError
+
 from torchvision.transforms import ToTensor
 
 from dlordinal.datasets import HCI
 
 
 def test_hci_basic(tmp_path):
-    hci_train = HCI(
-        root=tmp_path,
-        train=True,
-    )
-    hci_test = HCI(
-        root=tmp_path,
-        train=False,
-    )
+    for i in range(3):
+        try:
+            hci_train = HCI(
+                root=tmp_path,
+                train=True,
+            )
+            hci_test = HCI(
+                root=tmp_path,
+                train=False,
+            )
+            break
+        except URLError as e:
+            time.sleep(5 * (i + 1))
+
+            if i == 2:
+                raise e
+
     assert len(hci_train) > 0
     assert len(hci_test) > 0
 
 
 def test_hci_prepare_again(tmp_path):
-    hci = HCI(
-        root=tmp_path,
-        train=True,
-    )
+    for i in range(3):
+        try:
+            hci = HCI(
+                root=tmp_path,
+                train=True,
+            )
+            break
+        except URLError as e:
+            time.sleep(5 * (i + 1))
+
+            if i == 2:
+                raise e
     prepared_first = hci._prepare_dataset()
     prepared_second = hci._prepare_dataset()
     assert prepared_first is True
@@ -28,14 +48,23 @@ def test_hci_prepare_again(tmp_path):
 
 
 def test_hci_categories(tmp_path):
-    hci_train = HCI(
-        root=tmp_path,
-        train=True,
-    )
-    hci_test = HCI(
-        root=tmp_path,
-        train=False,
-    )
+    for i in range(3):
+        try:
+            hci_train = HCI(
+                root=tmp_path,
+                train=True,
+            )
+            hci_test = HCI(
+                root=tmp_path,
+                train=False,
+            )
+            break
+        except URLError as e:
+            time.sleep(5 * (i + 1))
+
+            if i == 2:
+                raise e
+
     train_categories = set()
     for _, label in hci_train:
         train_categories.add(label)
@@ -48,14 +77,23 @@ def test_hci_categories(tmp_path):
 
 
 def test_hci_image_size(tmp_path):
-    hci_train = HCI(
-        root=tmp_path,
-        train=True,
-    )
-    hci_test = HCI(
-        root=tmp_path,
-        train=False,
-    )
+    for i in range(3):
+        try:
+            hci_train = HCI(
+                root=tmp_path,
+                train=True,
+            )
+            hci_test = HCI(
+                root=tmp_path,
+                train=False,
+            )
+            break
+        except URLError as e:
+            time.sleep(5 * (i + 1))
+
+            if i == 2:
+                raise e
+
     for img, _ in hci_train:
         assert img.size == (224, 224)
     for img, _ in hci_test:
@@ -63,14 +101,23 @@ def test_hci_image_size(tmp_path):
 
 
 def test_hci_md5_verification(tmp_path):
-    hci_train = HCI(
-        root=tmp_path,
-        train=True,
-    )
-    hci_test = HCI(
-        root=tmp_path,
-        train=False,
-    )
+    for i in range(3):
+        try:
+            hci_train = HCI(
+                root=tmp_path,
+                train=True,
+            )
+            hci_test = HCI(
+                root=tmp_path,
+                train=False,
+            )
+            break
+        except URLError as e:
+            time.sleep(5 * (i + 1))
+
+            if i == 2:
+                raise e
+
     # Modify one file to test MD5 verification
     sample_img_path = hci_train.root / "0" / next(iter(hci_train.samples))[0]
     with open(sample_img_path, "rb+") as f:
@@ -84,14 +131,23 @@ def test_hci_md5_verification(tmp_path):
 
 
 def test_hci_prepare_after_corruption(tmp_path):
-    hci_train = HCI(
-        root=tmp_path,
-        train=True,
-    )
-    hci_test = HCI(
-        root=tmp_path,
-        train=False,
-    )
+    for i in range(3):
+        try:
+            hci_train = HCI(
+                root=tmp_path,
+                train=True,
+            )
+            hci_test = HCI(
+                root=tmp_path,
+                train=False,
+            )
+            break
+        except URLError as e:
+            time.sleep(5 * (i + 1))
+
+            if i == 2:
+                raise e
+
     # Modify one file to test re-preparation
     sample_train_img_path = hci_train.root / "0" / next(iter(hci_train.samples))[0]
     with open(sample_train_img_path, "rb+") as f:
@@ -119,16 +175,24 @@ def test_hci_prepare_after_corruption(tmp_path):
 def test_hci_load_data_with_dataloader(tmp_path):
     from torch.utils.data import DataLoader
 
-    hci_train = HCI(
-        root=tmp_path,
-        train=True,
-        transform=ToTensor(),
-    )
-    hci_test = HCI(
-        root=tmp_path,
-        train=False,
-        transform=ToTensor(),
-    )
+    for i in range(3):
+        try:
+            hci_train = HCI(
+                root=tmp_path,
+                train=True,
+                transform=ToTensor(),
+            )
+            hci_test = HCI(
+                root=tmp_path,
+                train=False,
+                transform=ToTensor(),
+            )
+            break
+        except URLError as e:
+            time.sleep(5 * (i + 1))
+
+            if i == 2:
+                raise e
 
     train_loader = DataLoader(hci_train, batch_size=32, shuffle=True)
     test_loader = DataLoader(hci_test, batch_size=32, shuffle=False)
