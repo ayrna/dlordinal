@@ -7,7 +7,7 @@ from dlordinal.datasets import HCI
 
 
 def test_hci_basic(tmp_path):
-    for i in range(3):
+    for i in range(5):
         try:
             hci_train = HCI(
                 root=tmp_path,
@@ -19,7 +19,7 @@ def test_hci_basic(tmp_path):
             )
             break
         except URLError as e:
-            time.sleep(5 * (i + 1))
+            time.sleep(10 * (i + 1))
 
             if i == 2:
                 raise e
@@ -29,7 +29,7 @@ def test_hci_basic(tmp_path):
 
 
 def test_hci_prepare_again(tmp_path):
-    for i in range(3):
+    for i in range(5):
         try:
             hci = HCI(
                 root=tmp_path,
@@ -37,7 +37,7 @@ def test_hci_prepare_again(tmp_path):
             )
             break
         except URLError as e:
-            time.sleep(5 * (i + 1))
+            time.sleep(10 * (i + 1))
 
             if i == 2:
                 raise e
@@ -48,7 +48,7 @@ def test_hci_prepare_again(tmp_path):
 
 
 def test_hci_categories(tmp_path):
-    for i in range(3):
+    for i in range(5):
         try:
             hci_train = HCI(
                 root=tmp_path,
@@ -60,7 +60,7 @@ def test_hci_categories(tmp_path):
             )
             break
         except URLError as e:
-            time.sleep(5 * (i + 1))
+            time.sleep(10 * (i + 1))
 
             if i == 2:
                 raise e
@@ -77,7 +77,7 @@ def test_hci_categories(tmp_path):
 
 
 def test_hci_image_size(tmp_path):
-    for i in range(3):
+    for i in range(5):
         try:
             hci_train = HCI(
                 root=tmp_path,
@@ -89,7 +89,7 @@ def test_hci_image_size(tmp_path):
             )
             break
         except URLError as e:
-            time.sleep(5 * (i + 1))
+            time.sleep(10 * (i + 1))
 
             if i == 2:
                 raise e
@@ -101,7 +101,7 @@ def test_hci_image_size(tmp_path):
 
 
 def test_hci_md5_verification(tmp_path):
-    for i in range(3):
+    for i in range(5):
         try:
             hci_train = HCI(
                 root=tmp_path,
@@ -113,7 +113,7 @@ def test_hci_md5_verification(tmp_path):
             )
             break
         except URLError as e:
-            time.sleep(5 * (i + 1))
+            time.sleep(10 * (i + 1))
 
             if i == 2:
                 raise e
@@ -131,7 +131,7 @@ def test_hci_md5_verification(tmp_path):
 
 
 def test_hci_prepare_after_corruption(tmp_path):
-    for i in range(3):
+    for i in range(5):
         try:
             hci_train = HCI(
                 root=tmp_path,
@@ -143,7 +143,7 @@ def test_hci_prepare_after_corruption(tmp_path):
             )
             break
         except URLError as e:
-            time.sleep(5 * (i + 1))
+            time.sleep(10 * (i + 1))
 
             if i == 2:
                 raise e
@@ -175,7 +175,7 @@ def test_hci_prepare_after_corruption(tmp_path):
 def test_hci_load_data_with_dataloader(tmp_path):
     from torch.utils.data import DataLoader
 
-    for i in range(3):
+    for i in range(5):
         try:
             hci_train = HCI(
                 root=tmp_path,
@@ -189,7 +189,7 @@ def test_hci_load_data_with_dataloader(tmp_path):
             )
             break
         except URLError as e:
-            time.sleep(5 * (i + 1))
+            time.sleep(10 * (i + 1))
 
             if i == 2:
                 raise e
