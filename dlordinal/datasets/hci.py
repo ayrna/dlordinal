@@ -52,6 +52,10 @@ class HCI(ImageFolder):
         MD5 checksum used to verify the downloaded archive.
     CATEGORIES : dict
         Mapping from decade names to numeric class labels (as strings).
+    base_root: Path
+        Base directory for dataset storage and processing.
+    train: bool
+        Indicates whether the dataset instance is for training or testing.
 
     Example
     -----
@@ -79,10 +83,11 @@ class HCI(ImageFolder):
         is_valid_file: Optional[Callable[[str], bool]] = None,
         train: bool = True,
     ):
-        self.root = Path(root)
+        self.base_root = Path(root)
+        self.train = train
         self._prepare_dataset()
         super().__init__(
-            root=self.root / "HCI" / ("train" if train else "test"),
+            root=str(self.base_root / "HCI" / ("train" if self.train else "test")),
             loader=default_loader,
             transform=transform,
             target_transform=target_transform,
@@ -90,35 +95,35 @@ class HCI(ImageFolder):
         )
 
     def _prepare_dataset(self) -> bool:
-        target_folder = self.root / "HCI"
+        target_folder = self.base_root / "HCI"
         if not target_folder.exists() or not self._verify_md5sums():
             if target_folder.exists():
                 rmtree(target_folder, ignore_errors=True)
 
-            if not (
-                self.root / "HistoricalColor-ECCV2012-DecadeDatabase.tar"
-            ).exists() or not check_integrity(
-                str(self.root / "HistoricalColor-ECCV2012-DecadeDatabase.tar"), self.MD5
-            ):
+            tar_path = self.base_root / "HistoricalColor-ECCV2012-DecadeDatabase.tar"
+
+            if not tar_path.exists() or not check_integrity(str(tar_path), self.MD5):
                 # Download and extract
-                download_and_extract_archive(self.URL, str(self.root), md5=self.MD5)
+                download_and_extract_archive(
+                    self.URL, str(self.base_root), md5=self.MD5
+                )
             else:
                 # Extract from existing tar
                 extract_archive(
-                    str(self.root / "HistoricalColor-ECCV2012-DecadeDatabase.tar"),
-                    str(self.root),
+                    str(tar_path),
+                    str(self.base_root),
                     False,
                 )
 
             extracted_folder = (
-                self.root
+                self.base_root
                 / "HistoricalColor-ECCV2012"
                 / "data"
                 / "imgs"
                 / "decade_database"
             )
             extracted_folder.rename(target_folder)
-            rmtree(self.root / "HistoricalColor-ECCV2012", ignore_errors=True)
+            rmtree(self.base_root / "HistoricalColor-ECCV2012", ignore_errors=True)
 
             # Rename categories
             for old_name, new_name in self.CATEGORIES.items():
@@ -133,8 +138,8 @@ class HCI(ImageFolder):
                             with Image.open(img_path) as img:
                                 img = img.resize((224, 224), Image.Resampling.LANCZOS)
                                 img.save(img_path)
-                        except UnidentifiedImageError as e:
-                            print(f"Removing corrupted image: {img_path} ({e})")
+                        except UnidentifiedImageError:
+                            # print(f"Removing corrupted image: {img_path} ({e})")
                             img_path.unlink()
 
             # Train/test split
@@ -175,23 +180,23 @@ class HCI(ImageFolder):
                 cat_folder.rmdir()
 
     def _create_md5sums_file(self):
-        md5sum_path = self.root / "HCI" / "md5sums.txt"
+        md5sum_path = self.base_root / "HCI" / "md5sums.txt"
         with open(md5sum_path, "w") as f:
-            for img_path in (self.root / "HCI").rglob("*"):
+            for img_path in (self.base_root / "HCI").rglob("*"):
                 if img_path.suffix.lower() in IMG_EXTENSIONS:
                     with open(img_path, "rb") as img_file:
                         file_hash = md5(img_file.read()).hexdigest()
-                    relative_path = img_path.relative_to(self.root / "HCI")
+                    relative_path = img_path.relative_to(self.base_root / "HCI")
                     f.write(f"{file_hash} {relative_path}\n")
 
     def _verify_md5sums(self) -> bool:
-        md5sum_path = self.root / "HCI" / "md5sums.txt"
+        md5sum_path = self.base_root / "HCI" / "md5sums.txt"
         if not md5sum_path.exists():
             return False
         with open(md5sum_path, "r") as f:
             for line in f:
                 expected_hash, relative_path = line.strip().split(" ", 1)
-                img_path = self.root / "HCI" / relative_path
+                img_path = self.base_root / "HCI" / relative_path
                 if not img_path.exists():
                     return False
                 with open(img_path, "rb") as img_file:

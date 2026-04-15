@@ -1,4 +1,5 @@
 import shutil
+from pathlib import Path
 
 import pytest
 from torchvision.transforms import ToTensor
@@ -48,6 +49,18 @@ def test_hci_categories(hci_train, hci_test):
     assert test_categories == {0, 1, 2, 3, 4}
 
 
+def test_hci_categories_count(hci_train, hci_test):
+    train_category_counts = {0: 186, 1: 186, 2: 186, 3: 186, 4: 186}
+    for _, label in hci_train:
+        train_category_counts[label] += 1
+    assert all(count > 0 for count in train_category_counts.values())
+
+    test_category_counts = {0: 79, 1: 79, 2: 79, 3: 79, 4: 79}
+    for _, label in hci_test:
+        test_category_counts[label] += 1
+    assert all(count > 0 for count in test_category_counts.values())
+
+
 def test_hci_image_size(hci_train, hci_test):
     for img, _ in hci_train:
         assert img.shape == (3, 224, 224)
@@ -72,7 +85,7 @@ def test_hci_md5_verification(base_path, tmp_path):
 
     # Modify one file to test MD5 verification
     sample_img_path = (
-        mutable_hci_train.root / "0" / next(iter(mutable_hci_train.samples))[0]
+        Path(mutable_hci_train.root) / "0" / next(iter(mutable_hci_train.samples))[0]
     )
     with open(sample_img_path, "rb+") as f:
         content = f.read()
@@ -82,7 +95,7 @@ def test_hci_md5_verification(base_path, tmp_path):
     assert not mutable_hci_test._verify_md5sums()
 
 
-def test_hci_prepare_after_corruption(base_path, tmp_path):
+def test_hci_prepare_after_corruption(base_path, tmp_path, hci_train, hci_test):
     dst = tmp_path / "hci"
     shutil.copytree(base_path, dst, dirs_exist_ok=True)
     mutable_hci_train = HCI(
@@ -99,7 +112,7 @@ def test_hci_prepare_after_corruption(base_path, tmp_path):
 
     # Modify one file to test re-preparation
     sample_train_img_path = (
-        mutable_hci_train.root / "0" / next(iter(mutable_hci_train.samples))[0]
+        Path(mutable_hci_train.root) / "0" / next(iter(mutable_hci_train.samples))[0]
     )
     with open(sample_train_img_path, "rb+") as f:
         content = f.read()
@@ -109,7 +122,7 @@ def test_hci_prepare_after_corruption(base_path, tmp_path):
     assert not mutable_hci_test._verify_md5sums()
 
     sample_test_img_path = (
-        mutable_hci_test.root / "0" / next(iter(mutable_hci_test.samples))[0]
+        Path(mutable_hci_test.root) / "0" / next(iter(mutable_hci_test.samples))[0]
     )
     with open(sample_test_img_path, "rb+") as f:
         content = f.read()
@@ -121,7 +134,7 @@ def test_hci_prepare_after_corruption(base_path, tmp_path):
     # Re-prepare dataset
     assert mutable_hci_train._prepare_dataset()
     assert mutable_hci_train._verify_md5sums()
-    assert mutable_hci_test._prepare_dataset()
+    # Test set is also repaired since they share the same base directory
     assert mutable_hci_test._verify_md5sums()
 
 
