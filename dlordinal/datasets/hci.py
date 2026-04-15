@@ -7,7 +7,11 @@ import pandas as pd
 from PIL import Image, UnidentifiedImageError
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import IMG_EXTENSIONS, default_loader
-from torchvision.datasets.utils import download_and_extract_archive
+from torchvision.datasets.utils import (
+    check_integrity,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
 class HCI(ImageFolder):
@@ -90,8 +94,22 @@ class HCI(ImageFolder):
         if not target_folder.exists() or not self._verify_md5sums():
             if target_folder.exists():
                 rmtree(target_folder, ignore_errors=True)
-            # Download and extract
-            download_and_extract_archive(self.URL, self.root, md5=self.MD5)
+
+            if not (
+                self.root / "HistoricalColor-ECCV2012-DecadeDatabase.tar"
+            ).exists() or not check_integrity(
+                str(self.root / "HistoricalColor-ECCV2012-DecadeDatabase.tar"), self.MD5
+            ):
+                # Download and extract
+                download_and_extract_archive(self.URL, str(self.root), md5=self.MD5)
+            else:
+                # Extract from existing tar
+                extract_archive(
+                    str(self.root / "HistoricalColor-ECCV2012-DecadeDatabase.tar"),
+                    str(self.root),
+                    False,
+                )
+
             extracted_folder = (
                 self.root
                 / "HistoricalColor-ECCV2012"
