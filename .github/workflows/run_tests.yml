@@ -47,6 +47,8 @@ jobs:
 
   pytest-gpu:
     runs-on: [gpu]
+    env:
+      PYTEST_CUDA_ONLY: "1"
 
     strategy:
       fail-fast: false
