@@ -1,12 +1,6 @@
-import pytest
 import torch
 
 from dlordinal.output_layers import COPOC
-
-
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def _is_unimodal(probs: torch.Tensor) -> bool:

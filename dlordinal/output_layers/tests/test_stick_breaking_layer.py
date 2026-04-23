@@ -1,12 +1,6 @@
-import pytest
 import torch
 
 from dlordinal.output_layers import StickBreakingLayer
-
-
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def test_stick_breaking_layer_creation(device):

@@ -19,21 +19,6 @@ def num_classes():
     return 5
 
 
-@pytest.fixture(
-    params=[
-        "cpu",
-        pytest.param(
-            "cuda",
-            marks=pytest.mark.skipif(
-                not torch.cuda.is_available(), reason="CUDA not available"
-            ),
-        ),
-    ]
-)
-def device(request):
-    return torch.device(request.param)
-
-
 def test_cornloss_creation(device):
     """
     Tests successful initialization of CORNLoss, ensuring the correct number
