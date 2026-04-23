@@ -6,28 +6,46 @@ from torch import nn
 from dlordinal.losses import CDWCELoss
 
 
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
+@pytest.fixture(
+    params=[
+        "cpu",
+        pytest.param(
+            "cuda",
+            marks=pytest.mark.skipif(
+                not torch.cuda.is_available(), reason="CUDA not available"
+            ),
+        ),
+    ]
+)
+def device(request):
+    return torch.device(request.param)
 
 
-def cdwce_loop_softmax(y_pred, y_true, alpha, device):
+def cdwce_loop_softmax(y_pred, y_true, alpha, device, margin=0.0):
     y_pred = nn.functional.softmax(y_pred, dim=1).to(device)
     y_true = y_true.to(device)
     N = y_true.size(0)
     J = y_true.size(1)
 
-    loss = 0
+    loss = torch.tensor(0.0).to(device)
     for i in range(N):
         for j in range(J):
-            loss += (
-                torch.log(1.0 - y_pred[i, j] + 1e-8).to(device)
-                * torch.abs(j - torch.argmax(y_true[i])).to(device) ** alpha
-            )
+            if margin > 0.0:
+                loss += (
+                    torch.log(
+                        torch.min(1.0 - y_pred[i, j] + margin, torch.tensor(1.0)) + 1e-8
+                    ).to(device)
+                    * torch.abs(j - torch.argmax(y_true[i])).to(device) ** alpha
+                )
+            else:
+                loss += (
+                    torch.log(1.0 - y_pred[i, j] + 1e-8).to(device)
+                    * torch.abs(j - torch.argmax(y_true[i])).to(device) ** alpha
+                )
     return -loss / N
 
 
-def cdwce_vect_softmax(y_pred, y_true, alpha, device):
+def cdwce_vect_softmax(y_pred, y_true, alpha, device, margin=0.0):
     y_pred = nn.functional.softmax(y_pred, dim=1).to(device)
     y_true = y_true.to(device)
 
@@ -41,28 +59,46 @@ def cdwce_vect_softmax(y_pred, y_true, alpha, device):
     # Calculate the absolute differences
     abs_diff = torch.abs(indices - true_indices).to(device)
     # Calculate the loss
-    loss = torch.log(1.0 - y_pred + 1e-8).to(device) * (abs_diff**alpha)
+    if margin > 0.0:
+        loss = torch.log(
+            torch.min(1.0 - y_pred + margin, torch.tensor(1.0)).to(device) + 1e-8
+        ) * (abs_diff**alpha)
+    else:
+        loss = torch.log(1.0 - y_pred + 1e-8).to(device) * (abs_diff**alpha)
     return -loss.sum() / N
 
 
-def cdwce_loop(y_pred, y_true, alpha, device):
+def cdwce_loop(y_pred, y_true, alpha, device, margin=0.0):
     N = y_true.size(0)
     J = y_true.size(1)
 
     y_true = y_true.to(device)
     y_pred = y_pred.to(device)
 
-    loss = 0.0
-    for n in range(N):
-        for i in range(J):
-            s = 0
-            for j in range(J):
-                s += torch.exp(y_pred[n, j]).to(device)
+    loss = torch.tensor(0.0, device=device)
+    eps = 1e-8
 
-            l1 = torch.log(s - torch.exp(y_pred[n, i])).to(device)
-            l2 = torch.log(s).to(device)
+    for n in range(N):
+        y_idx = torch.argmax(y_true[n])
+
+        s = torch.tensor(0.0, device=device)
+        for j in range(J):
+            s += torch.exp(y_pred[n, j])
+
+        for i in range(J):
+            exp_i = torch.exp(y_pred[n, i])
+
+            if margin > 0.0:
+                l1 = torch.log(torch.min(s - exp_i + margin * s, s) + eps)
+            else:
+                l1 = torch.log(s - exp_i + eps)
+
+            l2 = torch.log(s + eps)
             l_1_2 = l1 - l2
-            loss += l_1_2 * (abs(i - torch.argmax(y_true[n])).to(device) ** alpha)
+
+            weight = torch.abs(torch.tensor(i, device=device) - y_idx).float() ** alpha
+
+            loss += l_1_2 * weight
 
     return -loss / N
 
@@ -101,8 +137,8 @@ def test_cdwce_exact_value_class_weights(device):
         assert loss_value.item() == pytest.approx(result, abs=1e-4)
 
 
-def test_cdwce_compare_different_versions(device):
-    alpha = 0.5
+@pytest.mark.parametrize("alpha", [0.0, 0.5, 1.0, 2.0])
+def test_cdwce_compare_different_versions(device, alpha):
     loss = CDWCELoss(num_classes=4, alpha=alpha).to(device)
     y_true = torch.tensor([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]).to(
         device
@@ -115,6 +151,37 @@ def test_cdwce_compare_different_versions(device):
     loss_value_loop_softmax = cdwce_loop_softmax(y_pred, y_true, alpha, device)
     loss_value_vect = cdwce_vect_softmax(y_pred, y_true, alpha, device)
     loss_value_loop = cdwce_loop(y_pred, y_true, alpha, device)
+
+    # First test that all the versions implemented in this test are the same
+    assert loss_value_loop_softmax.item() == pytest.approx(
+        loss_value_vect.item(), abs=1e-4
+    )
+    assert loss_value_loop_softmax.item() == pytest.approx(
+        loss_value_loop.item(), abs=1e-4
+    )
+    assert loss_value_vect.item() == pytest.approx(loss_value_loop.item(), abs=1e-4)
+
+    # Then compare these versions with the one implemented in the library
+    assert loss_value.item() == pytest.approx(loss_value_loop_softmax.item(), abs=1e-4)
+    assert loss_value.item() == pytest.approx(loss_value_vect.item(), abs=1e-4)
+    assert loss_value.item() == pytest.approx(loss_value_loop.item(), abs=1e-4)
+
+
+@pytest.mark.parametrize("alpha", [0.0, 0.5, 1.0, 2.0])
+@pytest.mark.parametrize("margin", [0.0, 0.01, 0.1, 0.25, 0.5])
+def test_cdwce_compare_different_versions_margin(device, alpha, margin):
+    loss = CDWCELoss(num_classes=4, alpha=alpha, margin=margin).to(device)
+    y_true = torch.tensor([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]).to(
+        device
+    )
+    y_pred = torch.tensor(
+        [[1, 0, 0, 0], [0.2, 0.3, 0.5, 0], [0.7, 0.1, 0.1, 0.1], [0, 0, 0.05, 0.95]]
+    ).to(device)
+    loss_value = loss(y_pred, y_true)
+
+    loss_value_loop_softmax = cdwce_loop_softmax(y_pred, y_true, alpha, device, margin)
+    loss_value_vect = cdwce_vect_softmax(y_pred, y_true, alpha, device, margin)
+    loss_value_loop = cdwce_loop(y_pred, y_true, alpha, device, margin)
 
     # First test that all the versions implemented in this test are the same
     assert loss_value_loop_softmax.item() == pytest.approx(
