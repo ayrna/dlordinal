@@ -6,11 +6,6 @@ from torch.nn import CrossEntropyLoss
 from dlordinal.losses import GeneralTriangularLoss
 
 
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
-
-
 def test_general_triangular_loss_creation(device):
     # Generate 12 random values between 0.01 and 0.2
     alphas = np.array(

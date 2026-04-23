@@ -1,13 +1,7 @@
-import pytest
 import torch
 from torch.nn import CrossEntropyLoss
 
 from dlordinal.losses import CustomTargetsLoss
-
-
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # Auxiliar function to get a test class

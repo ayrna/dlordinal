@@ -5,11 +5,6 @@ from torch.nn import CrossEntropyLoss
 from dlordinal.losses import PoissonLoss
 
 
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
-
-
 def test_poisson_loss_creation(device):
     base_loss = CrossEntropyLoss().to(device)
     loss = PoissonLoss(base_loss=base_loss, num_classes=5).to(device)

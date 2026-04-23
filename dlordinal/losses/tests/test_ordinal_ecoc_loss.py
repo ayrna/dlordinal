@@ -1,12 +1,6 @@
-import pytest
 import torch
 
 from dlordinal.losses import OrdinalECOCDistanceLoss
-
-
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def test_ordinal_ecoc_distance_loss_creation(device):

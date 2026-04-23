@@ -5,12 +5,6 @@ from torch.nn import CrossEntropyLoss
 from dlordinal.losses import TriangularLoss
 
 
-@pytest.fixture
-def device():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    return device
-
-
 def test_triangular_loss_creation(device):
     base_loss = CrossEntropyLoss().to(device)
     loss = TriangularLoss(base_loss=base_loss, num_classes=5).to(device)
