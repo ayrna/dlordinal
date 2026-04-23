@@ -5,11 +5,6 @@ from dlordinal.losses import EMDLoss
 from dlordinal.metrics import ranked_probability_score
 
 
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
-
-
 def test_emd_loss_creation(device):
     loss = EMDLoss(num_classes=5).to(device)
     assert isinstance(loss, EMDLoss)

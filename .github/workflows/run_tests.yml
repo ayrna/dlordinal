@@ -37,6 +37,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Cache HCI raw tar
+      uses: actions/cache@v4
+      with:
+        path: .cache/hci_data/HistoricalColor-ECCV2012-DecadeDatabase.tar
+        key: hci-tar-v1
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -47,6 +53,8 @@ jobs:
 
   pytest-gpu:
     runs-on: [gpu]
+    env:
+      PYTEST_CUDA_ONLY: "1"
 
     strategy:
       fail-fast: false
@@ -62,13 +70,19 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Cache HCI raw tar
+      uses: actions/cache@v4
+      with:
+        path: .cache/hci_data/HistoricalColor-ECCV2012-DecadeDatabase.tar
+        key: hci-tar-v1
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install .[dev]
 
     - name: Run tests
-      run: python -m pytest -n 10
+      run: python -m pytest -n auto -m "not no_gpu_ci"
 
   tests-codecov:
     runs-on: ubuntu-22.04
@@ -84,6 +98,12 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Cache HCI raw tar
+      uses: actions/cache@v4
+      with:
+        path: .cache/hci_data/HistoricalColor-ECCV2012-DecadeDatabase.tar
+        key: hci-tar-v1
 
     - name: Install dependencies
       run: |
@@ -114,6 +134,12 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Cache HCI raw tar
+      uses: actions/cache@v4
+      with:
+        path: .cache/hci_data/HistoricalColor-ECCV2012-DecadeDatabase.tar
+        key: hci-tar-v1
 
     - name: Install dependencies
       run: |

@@ -1,13 +1,7 @@
 import numpy as np
-import pytest
 import torch
 
 from dlordinal.output_layers import CLM
-
-
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def _test_probas(clm, device):

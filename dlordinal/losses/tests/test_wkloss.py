@@ -4,11 +4,6 @@ import torch
 from dlordinal.losses import WKLoss
 
 
-@pytest.fixture
-def device():
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
 def test_wkloss_creation(device):
     loss = WKLoss(num_classes=6).to(device)
     assert isinstance(loss, WKLoss)

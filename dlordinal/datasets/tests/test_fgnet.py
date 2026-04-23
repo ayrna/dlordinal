@@ -27,11 +27,13 @@ def fgnet_test(tmp_path):
     return fgnet
 
 
+@pytest.mark.no_gpu_ci
 def test_download(fgnet_train):
     fgnet_train.download()
     assert fgnet_train._check_integrity_download()
 
 
+@pytest.mark.no_gpu_ci
 def test_process(fgnet_train):
     fgnet_train.process(
         fgnet_train.root / "FGNET/images",
@@ -40,6 +42,7 @@ def test_process(fgnet_train):
     assert fgnet_train._check_integrity_process()
 
 
+@pytest.mark.no_gpu_ci
 def test_split(fgnet_train):
     fgnet_train.split(
         fgnet_train.root / "FGNET/data_processed/fgnet.csv",
@@ -52,6 +55,7 @@ def test_split(fgnet_train):
     assert fgnet_train._check_integrity_split()
 
 
+@pytest.mark.no_gpu_ci
 def test_find_category(fgnet_train):
     assert fgnet_train.find_category(1) == 0
     assert fgnet_train.find_category(9) == 1
@@ -60,22 +64,26 @@ def test_find_category(fgnet_train):
     assert fgnet_train.find_category(33) == 4
 
 
+@pytest.mark.no_gpu_ci
 def test_get_age_from_filename(fgnet_train):
     filename = "001A12X_X.jpg"
     assert fgnet_train.get_age_from_filename(filename) == 12
 
 
+@pytest.mark.no_gpu_ci
 def test_load_data(fgnet_train):
     data = fgnet_train.load_data(fgnet_train.root / "FGNET/images")
     assert len(data) > 0
 
 
+@pytest.mark.no_gpu_ci
 def test_process_images_from_df(fgnet_train):
     data = fgnet_train.load_data(fgnet_train.root / "FGNET/images")
     processed_images = list((fgnet_train.root / "FGNET/data_processed").rglob("*.JPG"))
     assert len(processed_images) == len(data)
 
 
+@pytest.mark.no_gpu_ci
 def test_split_dataframe(fgnet_train):
     csv_path = fgnet_train.root / "FGNET/data_processed/fgnet.csv"
     train_images_path = fgnet_train.root / "FGNET/train"
@@ -88,6 +96,7 @@ def test_split_dataframe(fgnet_train):
     assert len(test_df) > 0
 
 
+@pytest.mark.no_gpu_ci
 def test_getitem(fgnet_train, fgnet_test):
     for fgnet in [fgnet_train, fgnet_test]:
         for i in range(len(fgnet)):
@@ -111,12 +120,14 @@ def test_getitem(fgnet_train, fgnet_test):
             assert np.array_equal(fgnet[i][1], fgnet.targets[i])
 
 
+@pytest.mark.no_gpu_ci
 def test_len(fgnet_train, fgnet_test):
     for fgnet in [fgnet_train, fgnet_test]:
         assert len(fgnet) == len(fgnet.targets)
         assert len(fgnet) == len(fgnet.data)
 
 
+@pytest.mark.no_gpu_ci
 def test_targets(fgnet_train):
     assert len(fgnet_train.targets) > 0
     assert isinstance(fgnet_train.targets, list)
@@ -124,6 +135,7 @@ def test_targets(fgnet_train):
     assert np.all(np.array(fgnet_train.targets) >= 0)
 
 
+@pytest.mark.no_gpu_ci
 def test_classes(fgnet_train, fgnet_test):
     assert len(fgnet_train.classes) == 6
     assert isinstance(fgnet_train.classes, list)
