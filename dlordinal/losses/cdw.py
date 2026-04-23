@@ -28,6 +28,9 @@ class CDWCELoss(nn.Module):
         imbalance. The weight for each class is applied during loss computation and can
         be normalised automatically. If `None`, no class weights are applied.
 
+    margin : float, default=0.0
+        A margin value that encourages a minimum separation between classes.
+
     Example
     -------
     >>> import torch
@@ -39,7 +42,7 @@ class CDWCELoss(nn.Module):
     >>> print(loss)
     """
 
-    def __init__(self, num_classes, alpha=0.5, weight=None):
+    def __init__(self, num_classes, alpha=0.5, weight=None, margin=0.0):
         super(CDWCELoss, self).__init__()
         self.num_classes = num_classes
         self.alpha = alpha
@@ -47,6 +50,7 @@ class CDWCELoss(nn.Module):
         self.normalised_weight_ = None
         if self.weight_ is not None:
             self.normalised_weight_ = self.weight_ / self.weight_.sum()
+        self.margin = margin
 
     def forward(self, y_pred, y_true):
         """
@@ -81,9 +85,14 @@ class CDWCELoss(nn.Module):
         J = self.num_classes
 
         s = torch.exp(y_pred).sum(dim=1, keepdim=True)
-        l1 = torch.log(s - torch.exp(y_pred) + 1e-8)
-        l2 = torch.log(s + 1e-8)
-        l_1_2 = l1 - l2
+        if self.margin > 0.0:
+            l1 = torch.log(torch.min(s - torch.exp(y_pred) + self.margin * s, s) + 1e-8)
+            l2 = torch.log(s + 1e-8)
+            l_1_2 = l1 - l2
+        else:
+            l1 = torch.log(s - torch.exp(y_pred) + 1e-8)
+            l2 = torch.log(s + 1e-8)
+            l_1_2 = l1 - l2
 
         i_indices = torch.arange(J).view(1, -1).expand(N, J).to(y_true_indices.device)
         weights = (torch.abs(i_indices - y_true_indices) ** self.alpha).float()
