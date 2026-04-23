@@ -82,7 +82,7 @@ jobs:
         pip install .[dev]
 
     - name: Run tests
-      run: python -m pytest -n 10
+      run: python -m pytest -n auto -m "not no_gpu_ci"
 
   tests-codecov:
     runs-on: ubuntu-22.04

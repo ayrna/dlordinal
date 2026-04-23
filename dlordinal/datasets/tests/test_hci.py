@@ -32,11 +32,13 @@ def hci_test(base_path):
     return hci_test
 
 
+@pytest.mark.no_gpu_ci
 def test_hci_basic(hci_train, hci_test):
     assert len(hci_train) > 0
     assert len(hci_test) > 0
 
 
+@pytest.mark.no_gpu_ci
 def test_hci_categories(hci_train, hci_test):
     train_categories = set()
     for _, label in hci_train:
@@ -49,6 +51,7 @@ def test_hci_categories(hci_train, hci_test):
     assert test_categories == {0, 1, 2, 3, 4}
 
 
+@pytest.mark.no_gpu_ci
 def test_hci_categories_count(hci_train, hci_test):
     train_category_counts = {0: 186, 1: 186, 2: 186, 3: 186, 4: 186}
     for _, label in hci_train:
@@ -61,6 +64,7 @@ def test_hci_categories_count(hci_train, hci_test):
     assert all(count > 0 for count in test_category_counts.values())
 
 
+@pytest.mark.no_gpu_ci
 def test_hci_image_size(hci_train, hci_test):
     for img, _ in hci_train:
         assert img.shape == (3, 224, 224)
@@ -68,6 +72,7 @@ def test_hci_image_size(hci_train, hci_test):
         assert img.shape == (3, 224, 224)
 
 
+@pytest.mark.no_gpu_ci
 def test_hci_md5_verification(base_path, tmp_path):
     dst = tmp_path / "hci"
     shutil.copytree(base_path, dst, dirs_exist_ok=True)
@@ -95,6 +100,7 @@ def test_hci_md5_verification(base_path, tmp_path):
     assert not mutable_hci_test._verify_md5sums()
 
 
+@pytest.mark.no_gpu_ci
 def test_hci_prepare_after_corruption(base_path, tmp_path, hci_train, hci_test):
     dst = tmp_path / "hci"
     shutil.copytree(base_path, dst, dirs_exist_ok=True)
@@ -138,6 +144,7 @@ def test_hci_prepare_after_corruption(base_path, tmp_path, hci_train, hci_test):
     assert mutable_hci_test._verify_md5sums()
 
 
+@pytest.mark.no_gpu_ci
 def test_hci_load_data_with_dataloader(hci_train, hci_test):
     from torch.utils.data import DataLoader
 

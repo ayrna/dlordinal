@@ -18,11 +18,13 @@ def sample_data(tmp_path):
     return csv_path
 
 
+@pytest.mark.no_gpu_ci
 def test_feature_dataset_creation(sample_data):
     dataset = FeatureDataset(sample_data)
     assert isinstance(dataset, FeatureDataset)
 
 
+@pytest.mark.no_gpu_ci
 def test_feature_dataset(sample_data):
     dataset = FeatureDataset(sample_data)
 
