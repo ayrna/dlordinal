@@ -1,4 +1,3 @@
-import pytest
 import torch
 from torch import nn
 
@@ -6,11 +5,6 @@ from dlordinal.output_layers import (
     ResNetOrdinalFullyConnected,
     VGGOrdinalFullyConnected,
 )
-
-
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def test_ordinal_resnet_fc_creation(device):

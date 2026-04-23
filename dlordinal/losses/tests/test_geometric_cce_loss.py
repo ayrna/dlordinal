@@ -7,11 +7,6 @@ from dlordinal.losses import GeometricCrossEntropyLoss
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 
-@pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
-
-
 def test_geometric_loss_creation(device):
     loss = GeometricCrossEntropyLoss(num_classes=5).to(device)
     assert isinstance(loss, GeometricCrossEntropyLoss)

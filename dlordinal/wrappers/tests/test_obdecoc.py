@@ -6,11 +6,6 @@ from dlordinal.wrappers import OBDECOCModel
 
 
 @pytest.fixture
-def device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
-
-
-@pytest.fixture
 def sample_tensor():
     return torch.randn(1, 3, 224, 224)
 

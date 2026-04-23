@@ -4,11 +4,6 @@ import torch
 from dlordinal.losses import MCEAndWKLoss, MCELoss, WKLoss
 
 
-@pytest.fixture
-def device():
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
 def test_mcewkloss_creation(device):
     loss = MCEAndWKLoss(num_classes=6).to(device)
     loss_logits = MCEAndWKLoss(num_classes=6, use_logits=True).to(device)

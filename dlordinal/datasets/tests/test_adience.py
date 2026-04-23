@@ -231,6 +231,7 @@ def adience_test(tmp_path):
     return get_adience_instance(tmp_path, train=False, verbose=False)
 
 
+@pytest.mark.no_gpu_ci
 def test_adience_init(adience_train, adience_test):
     for adience in [adience_train, adience_test]:
         assert adience._check_if_extracted()
@@ -239,6 +240,7 @@ def test_adience_init(adience_train, adience_test):
         assert adience._check_input_files()
 
 
+@pytest.mark.no_gpu_ci
 def test_adience_len(adience_train, adience_test):
     for adience in [adience_train, adience_test]:
         assert len(adience) == len(adience.targets)
@@ -250,6 +252,7 @@ def test_adience_len(adience_train, adience_test):
             len(adience)
 
 
+@pytest.mark.no_gpu_ci
 def test_adience_getitem(adience_train, adience_test):
     for adience in [adience_train, adience_test]:
         for i in range(len(adience)):
@@ -273,6 +276,7 @@ def test_adience_getitem(adience_train, adience_test):
             assert np.array_equal(adience[i][1], adience.targets[i])
 
 
+@pytest.mark.no_gpu_ci
 def test_assign_range_integers(adience_train, adience_test):
     for adience in [adience_train, adience_test]:
         assert adience._assign_range("1") == 0
@@ -286,6 +290,7 @@ def test_assign_range_integers(adience_train, adience_test):
         assert adience._assign_range("101") is None
 
 
+@pytest.mark.no_gpu_ci
 def test_assing_range_tuples(adience_train, adience_test):
     for adience in [adience_train, adience_test]:
         assert adience._assign_range("(0, 2)") == 0
@@ -298,11 +303,13 @@ def test_assing_range_tuples(adience_train, adience_test):
         assert adience._assign_range("(60, 100)") == 7
 
 
+@pytest.mark.no_gpu_ci
 def test_assign_range_none(adience_train, adience_test):
     for adience in [adience_train, adience_test]:
         assert adience._assign_range("None") is None
 
 
+@pytest.mark.no_gpu_ci
 def test_adience_train_test(adience_train, adience_test):
     assert len(adience_train) != len(adience_test)
 
@@ -312,12 +319,14 @@ def test_adience_train_test(adience_train, adience_test):
     assert train_labels != test_labels
 
 
+@pytest.mark.no_gpu_ci
 def test_image_path_from_row():
     row = {"user_id": "123", "face_id": "456", "original_image": "image.jpg"}
     path = _image_path_from_row(row)
     assert path == "123/landmark_aligned_face.456.image.jpg"
 
 
+@pytest.mark.no_gpu_ci
 def test_track_progress():
     tar_file_path = "fake.tar.gz"
 
@@ -330,6 +339,7 @@ def test_track_progress():
         os.remove(tar_file_path)
 
 
+@pytest.mark.no_gpu_ci
 def test_process_and_split(monkeypatch, tmp_path):
     mock_image_open = Mock(side_effect=lambda _: Image.new("RGB", (128, 128)))
     monkeypatch.setattr("PIL.Image.open", mock_image_open)
@@ -384,12 +394,14 @@ def test_process_and_split(monkeypatch, tmp_path):
         assert mock_symlink_to.call_count == initial_symlink_count
 
 
+@pytest.mark.no_gpu_ci
 def test_adience_classes(adience_train, adience_test):
     assert adience_train.classes == adience_test.classes
     assert adience_train.classes == np.unique(adience_train.targets).tolist()
     assert adience_test.classes == np.unique(adience_test.targets).tolist()
 
 
+@pytest.mark.no_gpu_ci
 def test_check_input_files(adience_train, adience_test, tmp_path):
     assert adience_train._check_input_files()
     assert adience_test._check_input_files()
@@ -404,6 +416,7 @@ def test_check_input_files(adience_train, adience_test, tmp_path):
         Adience(root=Path(tmp_path) / "test", train=True)
 
 
+@pytest.mark.no_gpu_ci
 def test_check_if_extracted(adience_train, adience_test):
     assert adience_train._check_if_extracted()
     assert adience_test._check_if_extracted()
@@ -413,6 +426,7 @@ def test_check_if_extracted(adience_train, adience_test):
     assert not adience_test._check_if_extracted()
 
 
+@pytest.mark.no_gpu_ci
 def test_check_if_transformed(adience_train, adience_test):
     assert adience_train._check_if_transformed()
     assert adience_test._check_if_transformed()
@@ -422,6 +436,7 @@ def test_check_if_transformed(adience_train, adience_test):
     assert not adience_test._check_if_transformed()
 
 
+@pytest.mark.no_gpu_ci
 def test_check_if_partitioned(adience_train, adience_test):
     assert adience_train._check_if_partitioned()
     assert adience_test._check_if_partitioned()
@@ -432,6 +447,7 @@ def test_check_if_partitioned(adience_train, adience_test):
     assert not adience_test._check_if_partitioned()
 
 
+@pytest.mark.no_gpu_ci
 def test_extract_data(adience_train, adience_test):
     assert adience_train._check_if_extracted()
     assert adience_test._check_if_extracted()

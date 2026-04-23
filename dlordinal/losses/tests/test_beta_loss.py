@@ -5,16 +5,6 @@ from torch.nn import CrossEntropyLoss
 from dlordinal.losses import BetaLoss
 
 
-@pytest.fixture
-def device():
-    d = "cpu"
-
-    if torch.cuda.is_available():
-        d = "cuda"
-
-    return d
-
-
 def test_beta_loss_creation(device):
     base_loss = CrossEntropyLoss().to(device)
     loss = BetaLoss(base_loss=base_loss, num_classes=5).to(device)

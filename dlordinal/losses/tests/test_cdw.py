@@ -6,21 +6,6 @@ from torch import nn
 from dlordinal.losses import CDWCELoss
 
 
-@pytest.fixture(
-    params=[
-        "cpu",
-        pytest.param(
-            "cuda",
-            marks=pytest.mark.skipif(
-                not torch.cuda.is_available(), reason="CUDA not available"
-            ),
-        ),
-    ]
-)
-def device(request):
-    return torch.device(request.param)
-
-
 def cdwce_loop_softmax(y_pred, y_true, alpha, device, margin=0.0):
     y_pred = nn.functional.softmax(y_pred, dim=1).to(device)
     y_true = y_true.to(device)
