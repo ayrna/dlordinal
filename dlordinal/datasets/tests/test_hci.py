@@ -2,34 +2,61 @@ import shutil
 from pathlib import Path
 
 import pytest
+from torchvision.datasets.utils import check_integrity
 from torchvision.transforms import ToTensor
 
 from dlordinal.datasets import HCI
 
-
-@pytest.fixture(scope="session")
-def base_path():
-    return ".cache/hci_data"
+TEST_DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
-@pytest.fixture(scope="session")
-def hci_train(base_path):
-    hci_train = HCI(
-        root=base_path,
-        train=True,
-        transform=ToTensor(),
+def fake_download(
+    url: str,
+    download_root: str,
+    filename: str,
+    md5: str,
+) -> None:
+    # Copy local test dataset instead of downloading from the internet
+    src = url
+    dst = Path(download_root) / filename
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(src, dst)
+    assert check_integrity(str(dst), md5)
+
+
+@pytest.fixture()
+def patched_hci(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "torchvision.datasets.utils.download_url",
+        fake_download,
     )
-    return hci_train
-
-
-@pytest.fixture(scope="session")
-def hci_test(base_path):
-    hci_test = HCI(
-        root=base_path,
-        train=False,
-        transform=ToTensor(),
+    monkeypatch.setattr(
+        "dlordinal.datasets.HCI.URL",
+        str(TEST_DATA_DIR / "HistoricalColor-ECCV2012-DecadeDatabase.tar"),
     )
-    return hci_test
+    monkeypatch.setattr(
+        "dlordinal.datasets.HCI.MD5",
+        "03fd41ecaff6311b751404651a68f626",
+    )
+
+    def _create(train):
+        return HCI(
+            root=tmp_path,
+            train=train,
+            transform=ToTensor(),
+        )
+
+    return _create
+
+
+@pytest.fixture()
+def hci_train(patched_hci):
+    return patched_hci(train=True)
+
+
+@pytest.fixture()
+def hci_test(patched_hci):
+    return patched_hci(train=False)
 
 
 @pytest.mark.no_gpu_ci
@@ -53,12 +80,12 @@ def test_hci_categories(hci_train, hci_test):
 
 @pytest.mark.no_gpu_ci
 def test_hci_categories_count(hci_train, hci_test):
-    train_category_counts = {0: 186, 1: 186, 2: 186, 3: 186, 4: 186}
+    train_category_counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
     for _, label in hci_train:
         train_category_counts[label] += 1
     assert all(count > 0 for count in train_category_counts.values())
 
-    test_category_counts = {0: 79, 1: 79, 2: 79, 3: 79, 4: 79}
+    test_category_counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
     for _, label in hci_test:
         test_category_counts[label] += 1
     assert all(count > 0 for count in test_category_counts.values())
@@ -73,90 +100,58 @@ def test_hci_image_size(hci_train, hci_test):
 
 
 @pytest.mark.no_gpu_ci
-def test_hci_md5_verification(base_path, tmp_path):
-    dst = tmp_path / "hci"
-    shutil.copytree(base_path, dst, dirs_exist_ok=True)
-    mutable_hci_train = HCI(
-        root=dst,
-        train=True,
-        transform=ToTensor(),
-    )
-
-    mutable_hci_test = HCI(
-        root=dst,
-        train=False,
-        transform=ToTensor(),
-    )
-
+def test_hci_md5_verification(tmp_path, hci_train, hci_test):
     # Modify one file to test MD5 verification
-    sample_img_path = (
-        Path(mutable_hci_train.root) / "0" / next(iter(mutable_hci_train.samples))[0]
-    )
+    sample_img_path = Path(hci_train.root) / "0" / next(iter(hci_train.samples))[0]
     with open(sample_img_path, "rb+") as f:
         content = f.read()
         f.seek(0)
         f.write(b"corrupted_data" + content)
-    assert not mutable_hci_train._verify_md5sums()
-    assert not mutable_hci_test._verify_md5sums()
+    assert not hci_train._verify_md5sums()
+    assert not hci_test._verify_md5sums()
 
 
 @pytest.mark.no_gpu_ci
-def test_hci_prepare_after_corruption(base_path, tmp_path, hci_train, hci_test):
-    dst = tmp_path / "hci"
-    shutil.copytree(base_path, dst, dirs_exist_ok=True)
-    mutable_hci_train = HCI(
-        root=dst,
-        train=True,
-        transform=ToTensor(),
-    )
-
-    mutable_hci_test = HCI(
-        root=dst,
-        train=False,
-        transform=ToTensor(),
-    )
-
+def test_hci_prepare_after_corruption(tmp_path, hci_train, hci_test):
     # Modify one file to test re-preparation
     sample_train_img_path = (
-        Path(mutable_hci_train.root) / "0" / next(iter(mutable_hci_train.samples))[0]
+        Path(hci_train.root) / "0" / next(iter(hci_train.samples))[0]
     )
     with open(sample_train_img_path, "rb+") as f:
         content = f.read()
         f.seek(0)
         f.write(b"corrupted_data" + content)
-    assert not mutable_hci_train._verify_md5sums()
-    assert not mutable_hci_test._verify_md5sums()
+    assert not hci_train._verify_md5sums()
+    assert not hci_test._verify_md5sums()
 
-    sample_test_img_path = (
-        Path(mutable_hci_test.root) / "0" / next(iter(mutable_hci_test.samples))[0]
-    )
+    sample_test_img_path = Path(hci_test.root) / "0" / next(iter(hci_test.samples))[0]
     with open(sample_test_img_path, "rb+") as f:
         content = f.read()
         f.seek(0)
         f.write(b"corrupted_data" + content)
-    assert not mutable_hci_train._verify_md5sums()
-    assert not mutable_hci_test._verify_md5sums()
+    assert not hci_train._verify_md5sums()
+    assert not hci_test._verify_md5sums()
 
     # Re-prepare dataset
-    assert mutable_hci_train._prepare_dataset()
-    assert mutable_hci_train._verify_md5sums()
+    assert hci_train._prepare_dataset()
+    assert hci_train._verify_md5sums()
     # Test set is also repaired since they share the same base directory
-    assert mutable_hci_test._verify_md5sums()
+    assert hci_test._verify_md5sums()
 
 
 @pytest.mark.no_gpu_ci
 def test_hci_load_data_with_dataloader(hci_train, hci_test):
     from torch.utils.data import DataLoader
 
-    train_loader = DataLoader(hci_train, batch_size=32, shuffle=True)
-    test_loader = DataLoader(hci_test, batch_size=32, shuffle=False)
+    train_loader = DataLoader(hci_train, batch_size=10, shuffle=True)
+    test_loader = DataLoader(hci_test, batch_size=10, shuffle=False)
 
     for images, labels in train_loader:
-        assert images.shape == (32, 3, 224, 224)
-        assert labels.shape == (32,)
+        assert images.shape == (10, 3, 224, 224)
+        assert labels.shape == (10,)
         break
 
     for images, labels in test_loader:
-        assert images.shape == (32, 3, 224, 224)
-        assert labels.shape == (32,)
+        assert images.shape == (10, 3, 224, 224)
+        assert labels.shape == (10,)
         break
