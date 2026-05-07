@@ -5,6 +5,7 @@ from .corn_loss import CORNLoss
 from .custom_targets_loss import CustomTargetsCrossEntropyLoss, CustomTargetsLoss
 from .emd_loss import EMDLoss
 from .exponential_loss import ExponentialCrossEntropyLoss, ExponentialLoss
+from .gaussian_uncertainty_loss_wrapper import GaussianUncertaintyLossWrapper
 from .general_triangular_loss import (
     GeneralTriangularCrossEntropyLoss,
     GeneralTriangularLoss,
@@ -26,11 +27,12 @@ __all__ = [
     "BinomialLoss",
     "CDWCELoss",
     "CORNLoss",
-    "CustomTargetsLoss",
     "CustomTargetsCrossEntropyLoss",
+    "CustomTargetsLoss",
     "EMDLoss",
     "ExponentialCrossEntropyLoss",
     "ExponentialLoss",
+    "GaussianUncertaintyLossWrapper",
     "GeneralTriangularCrossEntropyLoss",
     "GeneralTriangularLoss",
     "GeometricCrossEntropyLoss",
@@ -40,9 +42,9 @@ __all__ = [
     "OrdinalECOCDistanceLoss",
     "PoissonCrossEntropyLoss",
     "PoissonLoss",
+    "SLACELoss",
+    "SORDLoss",
     "TriangularCrossEntropyLoss",
     "TriangularLoss",
     "WKLoss",
-    "SORDLoss",
-    "SLACELoss",
 ]
