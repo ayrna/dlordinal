@@ -1,30 +1,65 @@
+import shutil
+from pathlib import Path
+
 import numpy as np
 import pytest
 import torch
 from PIL import Image
+from torchvision.datasets.utils import check_integrity
 from torchvision.transforms import ToTensor
 
 from dlordinal.datasets import FGNet
 
+TEST_DATA_DIR = Path(__file__).resolve().parent / "data"
+
+
+def fake_download(
+    url: str,
+    download_root: str,
+    filename: str,
+    md5: str,
+) -> None:
+    # Copy local test dataset instead of downloading from the internet
+    src = url
+    dst = Path(download_root) / filename
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(src, dst)
+    assert check_integrity(str(dst), md5)
+
+
+@pytest.fixture()
+def patched_fgnet(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "torchvision.datasets.utils.download_url",
+        fake_download,
+    )
+    monkeypatch.setattr(
+        "dlordinal.datasets.FGNet.URL",
+        str(TEST_DATA_DIR / "FGNET.zip"),
+    )
+    monkeypatch.setattr(
+        "dlordinal.datasets.FGNet.MD5",
+        "f730a9d177bf61c84b46fb4391c4c473",
+    )
+
+    def _create(train):
+        return FGNet(
+            root=tmp_path,
+            train=train,
+            download=True,
+        )
+
+    return _create
+
 
 @pytest.fixture
-def fgnet_train(tmp_path):
-    fgnet = FGNet(
-        root=tmp_path,
-        download=True,
-        train=True,
-    )
-    return fgnet
+def fgnet_train(patched_fgnet):
+    return patched_fgnet(True)
 
 
 @pytest.fixture
-def fgnet_test(tmp_path):
-    fgnet = FGNet(
-        root=tmp_path,
-        download=True,
-        train=False,
-    )
-    return fgnet
+def fgnet_test(patched_fgnet):
+    return patched_fgnet(False)
 
 
 @pytest.mark.no_gpu_ci
@@ -143,3 +178,16 @@ def test_classes(fgnet_train, fgnet_test):
     assert fgnet_train.classes == np.unique(fgnet_train.targets).tolist()
     assert fgnet_test.classes == np.unique(fgnet_test.targets).tolist()
     assert fgnet_train.classes == [0, 1, 2, 3, 4, 5]
+
+
+@pytest.mark.no_gpu_ci
+def test_categories_count(fgnet_train, fgnet_test):
+    train_category_counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for _, label in fgnet_train:
+        train_category_counts[label] += 1
+    assert all(count > 0 for count in train_category_counts.values())
+
+    test_category_counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for _, label in fgnet_test:
+        test_category_counts[label] += 1
+    assert all(count > 0 for count in test_category_counts.values())
