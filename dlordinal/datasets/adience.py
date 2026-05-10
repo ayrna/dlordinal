@@ -1,5 +1,6 @@
+import hashlib
+import json
 import re
-import shutil
 import sys
 import tarfile
 from pathlib import Path
@@ -17,19 +18,31 @@ from tqdm import tqdm
 
 class Adience(VisionDataset):
     """
-    Base class for the Adience dataset.
+    PyTorch dataset for the Adience age classification benchmark
+    :footcite:t:`eidinger2014age`.
+
+    The Adience dataset contains unfiltered face images collected from Flickr
+    albums and is commonly used for age and gender classification benchmarks.
 
     Parameters
     ----------
     root : Union[str, Path]
-        Root directory where the datasets are stored. The Adience dataset is expected
-        to be located under the `adience` directory inside the root directory. In the
-        `adience` directory, the following files are expected:
-        1) `aligned.tar.gz`: a tar.gz file containing the images;
-        2) `folds`: a directory containing the folds. Each fold is expected to be
-        a file named `fold_{f}_data.txt`, where `f` is the fold number starting from 0.
-        These files can be downloaded from the Adience website
-        (https://talhassner.github.io/home/projects/Adience/Adience-data.html)
+        Root directory where the dataset will be stored.
+
+        The dataset is stored under the ``adience`` directory inside ``root``.
+
+        If ``download=False`` (default), the following files are expected
+        to already exist inside the ``adience`` directory:
+
+        1. ``aligned.tar.gz``:
+        tar.gz archive containing the aligned face images.
+
+        2. ``folds``:
+        directory containing the official Adience fold files:
+        ``fold_0_data.txt`` through ``fold_4_data.txt``.
+
+        If ``download=True``, these files are downloaded automatically
+        from the official Adience website.
     ranges : list, optional
         List of age ranges to use, by default [(0, 2), (4, 6), (8, 13),
         (15, 20), (25, 32), (38, 43), (48, 53), (60, 100)].
@@ -42,9 +55,10 @@ class Adience(VisionDataset):
     verbose : bool, optional, default = False
         Whether to print progress messages.
     download : bool, optional, default = False
-        Whether to download the dataset if it is not already present in the root
-        directory. If False, the files are expected to be already present in the root
-        directory.
+        Whether to download the dataset automatically.
+
+        Downloading requires valid username and password credentials
+        provided by the Adience dataset authors.
     username : str, optional
         Username to download the dataset. If not provided, the dataset will not be
         downloaded and the files are expected to be already present in the root
@@ -60,10 +74,6 @@ class Adience(VisionDataset):
         Root directory where the datasets are stored.
     train : bool
         Whether to use the training or test partition.
-    ranges : list
-        List of age ranges to use to define the categories.
-    test_size : float
-        Percentage of the dataset to use for testing.
     transform : Callable
         A callable that takes in an PIL image and returns a transformed version.
     target_transform : Callable
@@ -111,14 +121,15 @@ class Adience(VisionDataset):
 
     root: Path
     train: bool
-    ranges: list
-    test_size: float
+    _ranges: list
+    _test_size: float
     transform: Optional[Callable]
     target_transform: Optional[Callable]
     verbose: bool
     data: list
     targets: list
     classes: list
+    download: bool
 
     def __init__(
         self,
@@ -150,14 +161,16 @@ class Adience(VisionDataset):
 
         self.root = Path(root)
         self.train = train
-        self.ranges = ranges
-        self.test_size = test_size
+        self._ranges = ranges
+        self._test_size = test_size
         self.transform = transform
         self.target_transform = target_transform
         self.verbose = verbose
         self.download = download
-        self._username = username
-        self._password = password
+
+        self._version = "1.0"
+        self._config = self._get_config_dict()
+        self._cache_key = self._make_cache_key(self._config)
 
         self.data = []
         self.targets = []
@@ -169,16 +182,11 @@ class Adience(VisionDataset):
         self.images_path_ = self.root_adience_ / "aligned"
         self.transformed_images_path_ = self.root_adience_ / "transformed"
 
-        if self.train:
-            self.partition_path_ = self.root_adience_ / "train"
-        else:
-            self.partition_path_ = self.root_adience_ / "test"
-
-        if self.download and (self._username is None or self._password is None):
+        if self.download and (username is None or password is None):
             raise ValueError("username and password are required when download=True")
 
-        if self.download and self._username is not None and self._password is not None:
-            self._download()
+        if self.download and username is not None and password is not None:
+            self._download(username, password)
 
         if not self._check_input_files():
             raise FileNotFoundError(
@@ -193,8 +201,9 @@ class Adience(VisionDataset):
         ]
 
         self._extract_data()
-        self._process_and_split(self.folds_)
-        self._load_data()
+        self._build_transformed()
+        self._df = self._build_dataframe(self.folds_)
+        self._build_splits()
 
     def _check_input_files(self) -> bool:
         """
@@ -228,19 +237,42 @@ class Adience(VisionDataset):
 
     def _check_if_partitioned(self) -> bool:
         """
-        Check if the images have been partitioned.
+        Check if a valid cached split exists for the current configuration.
         """
-        return self.partition_path_.exists()
+
+        split_dir = self.root_adience_ / "cache" / f"splits_{self._cache_key}"
+        config_path = split_dir / "config.json"
+        train_path = split_dir / "train.csv"
+        test_path = split_dir / "test.csv"
+
+        if not (config_path.exists() and train_path.exists() and test_path.exists()):
+            return False
+
+        try:
+            with open(config_path, "r") as f:
+                config = json.load(f)
+        except Exception:
+            return False
+
+        ranges = [tuple(r) for r in config.get("ranges")]
+
+        return (
+            config.get("version") == self._version
+            and config.get("test_size") == self._test_size
+            and ranges == self._ranges
+        )
 
     def _download_file(
         self,
         url: str,
         output_path: Path,
+        username: str,
+        password: str,
         md5: Optional[str] = None,
     ):
         response = requests.get(
             url,
-            auth=(self._username, self._password),
+            auth=(username, password),
             stream=True,
             timeout=(10, 300),
         )
@@ -273,10 +305,10 @@ class Adience(VisionDataset):
                 f"Downloaded file {output_path} has an invalid MD5 checksum."
             )
 
-    def _download(self, force: bool = False):
+    def _download(self, username: str, password: str, force: bool = False):
         self.root_adience_.mkdir(exist_ok=True, parents=True)
 
-        if self._username is None or self._password is None:
+        if username is None or password is None:
             raise ValueError(
                 "Username and password must be provided to download the dataset."
             )
@@ -288,9 +320,15 @@ class Adience(VisionDataset):
         ):
             aligned_name = "aligned.tar.gz"
 
+            if self.verbose:
+                print(f"{aligned_name} is missing or corrupted. Downloading...")
+
             self._download_file(
                 url=self.ALIGNED_URL[0],
                 output_path=self.root_adience_ / aligned_name,
+                username=username,
+                password=password,
+                md5=self.ALIGNED_URL[1],
             )
 
         self.folds_path_.mkdir(exist_ok=True, parents=True)
@@ -303,9 +341,15 @@ class Adience(VisionDataset):
                 or not check_integrity(str(self.folds_path_ / filename), md5)
             ):
 
+                if self.verbose:
+                    print(f"{filename} is missing or corrupted. Downloading...")
+
                 self._download_file(
                     url=url,
                     output_path=self.folds_path_ / filename,
+                    username=username,
+                    password=password,
+                    md5=md5,
                 )
 
     def _extract_data(self):
@@ -317,7 +361,9 @@ class Adience(VisionDataset):
                 print("File already extracted.")
             return
 
-        print("Extracting file...")
+        if self.verbose:
+            print("Extracting file...")
+
         with tarfile.open(self.data_file_path_, "r:gz") as file:
             path = self.data_file_path_.parent
             path.mkdir(exist_ok=True, parents=True)
@@ -328,123 +374,151 @@ class Adience(VisionDataset):
             else:
                 file.extractall(path, members=_track_progress(file, self.verbose))
 
-    def _process_and_split(self, folds: list) -> None:
+    def _build_transformed(self) -> None:
         """
-        Process the folds and split the images into partitions.
+        Create a transformed (resized) version of all images.
 
-        Parameters
-        ----------
-        folds : list
-            List of folds.
+        This step is independent of:
+        - train/test split
+        - age ranges
+        - dataset partitioning
+
+        It depends only on:
+        - raw images
+        - resize policy (fixed here: 128px height)
         """
 
-        is_transformed = self._check_if_transformed()
-        is_partitioned = self._check_if_partitioned()
-
-        if is_transformed and is_partitioned:
+        if self._check_if_transformed():
             if self.verbose:
-                print("Files already transformed and partitioned.")
+                print("Transformed images already exist.")
             return
 
-        fold_dfs = list()
-        for f, fold in enumerate(folds):
-            notna = fold["age"].notna()
-            n_discarded = (~notna).sum()
-            if self.verbose:
-                print(
-                    f"Fold {f}: discarding {n_discarded} entries"
-                    f" ({(n_discarded / len(fold)) * 100:.1f}%)"
+        self.transformed_images_path_.mkdir(exist_ok=True, parents=True)
+
+        if self.verbose:
+            print("Creating transformed images...")
+
+        # We need the full image list from the extracted dataset
+        image_paths = list(self.images_path_.rglob("*"))
+        image_paths = [p for p in image_paths if p.is_file()]
+
+        for src_image in tqdm(
+            image_paths,
+            total=len(image_paths),
+            disable=not self.verbose,
+            desc="transforming",
+        ):
+            # Preserve relative structure
+            rel_path = src_image.relative_to(self.images_path_)
+            dst_image = self.transformed_images_path_ / rel_path
+
+            if dst_image.exists():
+                continue
+
+            dst_image.parent.mkdir(parents=True, exist_ok=True)
+
+            with Image.open(src_image) as img:
+                img = img.convert("RGB")
+
+                width_percent = 128 / float(img.size[1])
+                new_width = int(img.size[0] * width_percent)
+
+                resized = img.resize(
+                    (new_width, 128),
+                    Image.Resampling.BILINEAR,
                 )
-            fold = fold.loc[notna]
+
+                resized.save(dst_image)
+
+    def _build_dataframe(self, folds: list) -> pd.DataFrame:
+        """
+        Build the internal dataframe from raw fold files.
+
+        This includes:
+        - Filtering invalid age entries
+        - Mapping ages to class ranges
+        - Constructing relative image paths
+        - Merging all folds into a single dataframe
+        """
+
+        fold_dfs = []
+
+        for f, fold in enumerate(folds):
+            valid = fold["age"].notna()
+            fold = fold.loc[valid]
+
             fold = fold.assign(age=fold["age"].map(self._assign_range))
             fold = fold.dropna(subset=["age"])
             fold = fold.assign(age=fold["age"].astype(int))
 
-            fold_dfs.append(
-                pd.DataFrame(
-                    dict(
-                        path=fold.apply(_image_path_from_row, axis="columns"),
-                        age=fold["age"],
-                    )
-                )
-            )
-        self._df: pd.DataFrame = pd.concat(fold_dfs, ignore_index=True)
-
-        if is_transformed:
-            if self.verbose:
-                print("File already transformed.")
-        else:
-            self.transformed_images_path_.mkdir(exist_ok=True)
-            if self.verbose:
-                print("Resizing images...")
-            for row in tqdm(
-                self._df.itertuples(),
-                total=len(self._df),
-                disable=not self.verbose,
-            ):
-                dst_image = self.transformed_images_path_ / row.path
-                if dst_image.is_file():
-                    continue
-                src_image = self.images_path_ / row.path
-                dst_image.parent.mkdir(exist_ok=True, parents=True)
-
-                # open the source image
-                with Image.open(src_image) as img:
-                    # calculate the new width that maintains the aspect ratio
-                    width_percent = 128 / float(img.size[1])
-                    new_width = int((float(img.size[0]) * float(width_percent)))
-
-                    # resize the image using the calculated width and 128 height
-                    resized_img = img.resize(
-                        (new_width, 128), Image.Resampling.BILINEAR
-                    )
-
-                    # save the resized image to the destination path
-                    resized_img.save(dst_image)
-
-        if is_partitioned:
-            if self.verbose:
-                print("File already partitioned.")
-        else:
-            for c in range(len(self.ranges)):
-                (self.partition_path_ / f"{c}").mkdir(parents=True, exist_ok=True)
-
-            sss = StratifiedShuffleSplit(
-                n_splits=1, test_size=self.test_size, random_state=0
+            df = pd.DataFrame(
+                {
+                    "path": fold.apply(_image_path_from_row, axis="columns"),
+                    "age": fold["age"],
+                }
             )
 
-            train_index, test_index = next(sss.split(self._df, self._df["age"]))
-            if self.train:
-                name = "train"
-                partition_df: pd.DataFrame = self._df.iloc[train_index]
-            else:
-                name = "test"
-                partition_df: pd.DataFrame = self._df.iloc[test_index]
+            fold_dfs.append(df)
 
-            for row in tqdm(
-                partition_df.itertuples(),
-                total=len(partition_df),
-                leave=False,
-                desc=name,
-                disable=not self.verbose,
-            ):
-                image_path = self.transformed_images_path_ / row.path
-                assert image_path.is_file()
-                new_path = self.root_adience_ / f"{name}/{row.age}/{image_path.name}"
-                if not new_path.exists():
-                    try:
-                        new_path.symlink_to(image_path.resolve())
-                    except OSError:
-                        shutil.copy2(image_path, new_path)
+        return pd.concat(fold_dfs, ignore_index=True)
 
-    def _load_data(self):
-        for cls in range(len(self.ranges)):
-            path = self.partition_path_ / f"{cls}"
-            for image_path in path.iterdir():
-                self.data.append(str(image_path))
-                self.targets.append(cls)
+    def _build_splits(self):
+        """
+        Create train/test splits and persist them as CSV files.
 
+        The split is cached using a hash of the dataset configuration
+        (e.g. test_size, ranges).
+        """
+
+        split_dir = self.root_adience_ / "cache" / f"splits_{self._cache_key}"
+        train_path = split_dir / "train.csv"
+        test_path = split_dir / "test.csv"
+        config_path = split_dir / "config.json"
+
+        if self._check_if_partitioned():
+            if self.verbose:
+                print("Splits already exist. Loading from cache.")
+            self._load_split_from_csv(train_path, test_path)
+            return
+
+        split_dir.mkdir(parents=True, exist_ok=True)
+
+        sss = StratifiedShuffleSplit(
+            n_splits=1,
+            test_size=self._test_size,
+            random_state=0,
+        )
+
+        train_idx, test_idx = next(sss.split(self._df, self._df["age"]))
+
+        train_df = self._df.iloc[train_idx][["path", "age"]]
+        test_df = self._df.iloc[test_idx][["path", "age"]]
+
+        train_df.to_csv(train_path, index=False)
+        test_df.to_csv(test_path, index=False)
+
+        with open(config_path, "w") as f:
+            json.dump(self._config, f, indent=2)
+
+        self._load_split_from_csv(train_path, test_path)
+
+    def _load_split_from_csv(self, train_path, test_path):
+        df = pd.read_csv(train_path if self.train else test_path)
+
+        self.data = [str(self.transformed_images_path_ / p) for p in df["path"]]
+        self.targets = df["age"].tolist()
         self.classes = np.unique(self.targets).tolist()
+
+    def _get_config_dict(self):
+        return {
+            "ranges": self._ranges,
+            "test_size": self._test_size,
+            "version": self._version,
+        }
+
+    def _make_cache_key(self, config):
+        s = json.dumps(config, sort_keys=True)
+        return hashlib.sha256(s.encode()).hexdigest()[:16]
 
     def _assign_range(self, age: str):
         """
@@ -465,18 +539,18 @@ class Adience(VisionDataset):
             else:
                 return None
 
-        if age in self.ranges:
-            return self.ranges.index(age)
+        if age in self._ranges:
+            return self._ranges.index(age)
 
         if isinstance(age, tuple):
             age_minimum, age_maximum = age
-            for i, (range_minimum, range_maximum) in enumerate(self.ranges):
+            for i, (range_minimum, range_maximum) in enumerate(self._ranges):
                 if (age_minimum >= range_minimum) and (age_maximum <= range_maximum):
                     return i
             return None
 
         if isinstance(age, int):
-            for i, (range_minimum, range_maximum) in enumerate(self.ranges):
+            for i, (range_minimum, range_maximum) in enumerate(self._ranges):
                 if (age >= range_minimum) and (age <= range_maximum):
                     return i
             return None
