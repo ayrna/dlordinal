@@ -1,4 +1,5 @@
 import re
+import shutil
 import sys
 import tarfile
 from pathlib import Path
@@ -6,8 +7,10 @@ from typing import Callable, Optional, Union
 
 import numpy as np
 import pandas as pd
+import requests
 from PIL import Image
 from sklearn.model_selection import StratifiedShuffleSplit
+from torchvision.datasets.utils import check_integrity
 from torchvision.datasets.vision import VisionDataset
 from tqdm import tqdm
 
@@ -38,6 +41,18 @@ class Adience(VisionDataset):
         A callable that takes in the target and transforms it.
     verbose : bool, optional, default = False
         Whether to print progress messages.
+    download : bool, optional, default = False
+        Whether to download the dataset if it is not already present in the root
+        directory. If False, the files are expected to be already present in the root
+        directory.
+    username : str, optional
+        Username to download the dataset. If not provided, the dataset will not be
+        downloaded and the files are expected to be already present in the root
+        directory.
+    password : str, optional
+        Password to download the dataset. If not provided, the dataset will not be
+        downloaded and the files are expected to be already present in the root
+        directory.
 
     Attributes
     ----------
@@ -61,7 +76,38 @@ class Adience(VisionDataset):
         Contains the target of each sampel contained in the dataset.
     classes : list
         Unique classes in the dataset.
+    download : bool
+        Whether to download the dataset if it is not already present in the root
+        directory. If False, the files are expected to be already present in the root
+        directory.
     """
+
+    ALIGNED_URL = (
+        "http://www.cslab.openu.ac.il/download/adiencedb/AdienceBenchmarkOfUnfilteredFacesForGenderAndAgeClassification/aligned.tar.gz",
+        "bf8336d576433f0143828925eadbe23f",
+    )
+    FOLDS_URLS = [
+        (
+            "http://www.cslab.openu.ac.il/download/adiencedb/AdienceBenchmarkOfUnfilteredFacesForGenderAndAgeClassification/fold_0_data.txt",
+            "dda2131b5a4934a67f0acfda8b50a65b",
+        ),
+        (
+            "http://www.cslab.openu.ac.il/download/adiencedb/AdienceBenchmarkOfUnfilteredFacesForGenderAndAgeClassification/fold_1_data.txt",
+            "bb558fff6aba953b5b05403d74dfd8a8",
+        ),
+        (
+            "http://www.cslab.openu.ac.il/download/adiencedb/AdienceBenchmarkOfUnfilteredFacesForGenderAndAgeClassification/fold_2_data.txt",
+            "a156e37bf4292a61ee5e11a06cfc6c5f",
+        ),
+        (
+            "http://www.cslab.openu.ac.il/download/adiencedb/AdienceBenchmarkOfUnfilteredFacesForGenderAndAgeClassification/fold_3_data.txt",
+            "7c9f7dab8fb034affe8a08e97da24266",
+        ),
+        (
+            "http://www.cslab.openu.ac.il/download/adiencedb/AdienceBenchmarkOfUnfilteredFacesForGenderAndAgeClassification/fold_4_data.txt",
+            "68ebc064a70274551a565fdd5235f0cc",
+        ),
+    ]
 
     root: Path
     train: bool
@@ -92,8 +138,15 @@ class Adience(VisionDataset):
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
         verbose: bool = False,
+        download: bool = False,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
     ) -> None:
-        super().__init__()
+        super().__init__(
+            root=str(root),
+            transform=transform,
+            target_transform=target_transform,
+        )
 
         self.root = Path(root)
         self.train = train
@@ -102,6 +155,10 @@ class Adience(VisionDataset):
         self.transform = transform
         self.target_transform = target_transform
         self.verbose = verbose
+        self.download = download
+        self._username = username
+        self._password = password
+
         self.data = []
         self.targets = []
         self.classes = []
@@ -117,10 +174,17 @@ class Adience(VisionDataset):
         else:
             self.partition_path_ = self.root_adience_ / "test"
 
+        if self.download and (self._username is None or self._password is None):
+            raise ValueError("username and password are required when download=True")
+
+        if self.download and self._username is not None and self._password is not None:
+            self._download()
+
         if not self._check_input_files():
             raise FileNotFoundError(
                 "Some input files are missing. Please, check the documentation of the"
-                " root parameter to see the expected directory structure."
+                " root parameter to see the expected directory structure or provide the"
+                " username and password to download the files automatically."
             )
 
         self.folds_ = [
@@ -138,8 +202,14 @@ class Adience(VisionDataset):
         """
 
         result = self.data_file_path_.exists() and self.folds_path_.exists()
+        result = result and check_integrity(
+            str(self.data_file_path_), self.ALIGNED_URL[1]
+        )
         for i in range(5):
             result = result and (self.folds_path_ / f"fold_{i}_data.txt").exists()
+            result = result and check_integrity(
+                str(self.folds_path_ / f"fold_{i}_data.txt"), self.FOLDS_URLS[i][1]
+            )
         return result
 
     def _check_if_extracted(self) -> bool:
@@ -148,7 +218,7 @@ class Adience(VisionDataset):
         """
         path = self.data_file_path_.parent
         path = path / "aligned"
-        return path.exists()
+        return any(path.rglob("*.jpg"))
 
     def _check_if_transformed(self) -> bool:
         """
@@ -161,6 +231,82 @@ class Adience(VisionDataset):
         Check if the images have been partitioned.
         """
         return self.partition_path_.exists()
+
+    def _download_file(
+        self,
+        url: str,
+        output_path: Path,
+        md5: Optional[str] = None,
+    ):
+        response = requests.get(
+            url,
+            auth=(self._username, self._password),
+            stream=True,
+            timeout=(10, 300),
+        )
+
+        response.raise_for_status()
+
+        total_size = response.headers.get("content-length")
+        total_size = int(total_size) if total_size is not None else None
+
+        with (
+            open(output_path, "wb") as f,
+            tqdm(
+                total=total_size,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+                desc=output_path.name,
+                disable=not self.verbose,
+            ) as pbar,
+        ):
+
+            for chunk in response.iter_content(chunk_size=1024 * 1024):
+
+                if chunk:
+                    f.write(chunk)
+                    pbar.update(len(chunk))
+
+        if md5 is not None and not check_integrity(str(output_path), md5):
+            raise ValueError(
+                f"Downloaded file {output_path} has an invalid MD5 checksum."
+            )
+
+    def _download(self, force: bool = False):
+        self.root_adience_.mkdir(exist_ok=True, parents=True)
+
+        if self._username is None or self._password is None:
+            raise ValueError(
+                "Username and password must be provided to download the dataset."
+            )
+
+        if (
+            force
+            or not self.data_file_path_.exists()
+            or not check_integrity(str(self.data_file_path_), self.ALIGNED_URL[1])
+        ):
+            aligned_name = "aligned.tar.gz"
+
+            self._download_file(
+                url=self.ALIGNED_URL[0],
+                output_path=self.root_adience_ / aligned_name,
+            )
+
+        self.folds_path_.mkdir(exist_ok=True, parents=True)
+
+        for url, md5 in self.FOLDS_URLS:
+            filename = url.rsplit("/", 1)[-1]
+
+            if force or (
+                not (self.folds_path_ / filename).exists()
+                or not check_integrity(str(self.folds_path_ / filename), md5)
+            ):
+
+                self._download_file(
+                    url=url,
+                    output_path=self.folds_path_ / filename,
+                )
 
     def _extract_data(self):
         """
@@ -176,9 +322,11 @@ class Adience(VisionDataset):
             path = self.data_file_path_.parent
             path.mkdir(exist_ok=True, parents=True)
             if sys.version_info >= (3, 12):
-                file.extractall(path, members=_track_progress(file), filter="data")
+                file.extractall(
+                    path, members=_track_progress(file, self.verbose), filter="data"
+                )
             else:
-                file.extractall(path, members=_track_progress(file))
+                file.extractall(path, members=_track_progress(file, self.verbose))
 
     def _process_and_split(self, folds: list) -> None:
         """
@@ -220,7 +368,7 @@ class Adience(VisionDataset):
                     )
                 )
             )
-        self.df_: pd.DataFrame = pd.concat(fold_dfs, ignore_index=True)
+        self._df: pd.DataFrame = pd.concat(fold_dfs, ignore_index=True)
 
         if is_transformed:
             if self.verbose:
@@ -229,7 +377,11 @@ class Adience(VisionDataset):
             self.transformed_images_path_.mkdir(exist_ok=True)
             if self.verbose:
                 print("Resizing images...")
-            for row in tqdm(self.df_.itertuples(), total=len(self.df_)):
+            for row in tqdm(
+                self._df.itertuples(),
+                total=len(self._df),
+                disable=not self.verbose,
+            ):
                 dst_image = self.transformed_images_path_ / row.path
                 if dst_image.is_file():
                     continue
@@ -243,7 +395,9 @@ class Adience(VisionDataset):
                     new_width = int((float(img.size[0]) * float(width_percent)))
 
                     # resize the image using the calculated width and 128 height
-                    resized_img = img.resize((new_width, 128))
+                    resized_img = img.resize(
+                        (new_width, 128), Image.Resampling.BILINEAR
+                    )
 
                     # save the resized image to the destination path
                     resized_img.save(dst_image)
@@ -259,25 +413,29 @@ class Adience(VisionDataset):
                 n_splits=1, test_size=self.test_size, random_state=0
             )
 
-            train_index, test_index = next(sss.split(self.df_, self.df_["age"]))
+            train_index, test_index = next(sss.split(self._df, self._df["age"]))
             if self.train:
                 name = "train"
-                partition_df: pd.DataFrame = self.df_.iloc[train_index]
+                partition_df: pd.DataFrame = self._df.iloc[train_index]
             else:
                 name = "test"
-                partition_df: pd.DataFrame = self.df_.iloc[test_index]
+                partition_df: pd.DataFrame = self._df.iloc[test_index]
 
             for row in tqdm(
                 partition_df.itertuples(),
                 total=len(partition_df),
                 leave=False,
                 desc=name,
+                disable=not self.verbose,
             ):
                 image_path = self.transformed_images_path_ / row.path
                 assert image_path.is_file()
                 new_path = self.root_adience_ / f"{name}/{row.age}/{image_path.name}"
                 if not new_path.exists():
-                    new_path.symlink_to(image_path.resolve())
+                    try:
+                        new_path.symlink_to(image_path.resolve())
+                    except OSError:
+                        shutil.copy2(image_path, new_path)
 
     def _load_data(self):
         for cls in range(len(self.ranges)):
@@ -363,10 +521,11 @@ class Adience(VisionDataset):
         image_path = self.data[index]
         target = self.targets[index]
 
-        image = Image.open(image_path)
+        with Image.open(image_path) as image:
+            image = image.convert("RGB")
 
-        if self.transform is not None:
-            image = self.transform(image)
+            if self.transform is not None:
+                image = self.transform(image)
 
         if self.target_transform is not None:
             target = self.target_transform(target)
@@ -386,7 +545,7 @@ def _image_path_from_row(row):
     return f'{row["user_id"]}/landmark_aligned_face.{row["face_id"]}.{row["original_image"]}'
 
 
-def _track_progress(file):
+def _track_progress(file, verbose: bool = False):
     """
     Track the progress of the extraction.
 
@@ -395,7 +554,7 @@ def _track_progress(file):
     file : tarfile.TarFile
         File to track the progress of.
     """
-    for member in tqdm(file, total=len(file.getmembers())):
+    for member in tqdm(file, total=len(file.getmembers()), disable=not verbose):
         # this will be the current file being extracted
         # Go over each member
         yield member
