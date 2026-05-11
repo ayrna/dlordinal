@@ -272,7 +272,7 @@ def test_adience_train_test(adience_train, adience_test):
 def test_image_path_from_row():
     row = {"user_id": "123", "face_id": "456", "original_image": "image.jpg"}
     path = _image_path_from_row(row)
-    assert path == "123" / "landmark_aligned_face.456.image.jpg"
+    assert path == "123/landmark_aligned_face.456.image.jpg"
 
 
 @pytest.mark.no_gpu_ci
