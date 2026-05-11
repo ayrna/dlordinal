@@ -61,6 +61,9 @@ class FGNet(VisionDataset):
         A function/transform that takes in the target and transforms it.
     """
 
+    URL = "http://yanweifu.github.io/FG_NET_data/FGNET.zip"
+    MD5 = "1206978cac3626321b84c22b24cc8d19"
+
     # Attributes
     root: Path
     target_size: tuple
@@ -215,10 +218,10 @@ class FGNet(VisionDataset):
             return
 
         download_and_extract_archive(
-            "http://yanweifu.github.io/FG_NET_data/FGNET.zip",
+            self.URL,
             str(self.root),
             filename="fgnet.zip",
-            md5="1206978cac3626321b84c22b24cc8d19",
+            md5=self.MD5,
         )
 
     def process(self, original_path, processed_path):
