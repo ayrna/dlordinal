@@ -3,6 +3,7 @@ import json
 import re
 import sys
 import tarfile
+import warnings
 from pathlib import Path
 from typing import Callable, Optional, Union
 
@@ -28,8 +29,6 @@ class Adience(VisionDataset):
     ----------
     root : Union[str, Path]
         Root directory where the dataset will be stored.
-
-        The dataset is stored under the ``adience`` directory inside ``root``.
 
         If ``download=False`` (default), the following files are expected
         to already exist inside the ``adience`` directory:
@@ -71,7 +70,7 @@ class Adience(VisionDataset):
     Attributes
     ----------
     root : Path
-        Root directory where the datasets are stored.
+        Root directory where the Adience dataset is stored.
     train : bool
         Whether to use the training or test partition.
     transform : Callable
@@ -118,6 +117,16 @@ class Adience(VisionDataset):
             "68ebc064a70274551a565fdd5235f0cc",
         ),
     ]
+    DEFAULT_RANGES = (
+        (0, 2),
+        (4, 6),
+        (8, 13),
+        (15, 20),
+        (25, 32),
+        (38, 43),
+        (48, 53),
+        (60, 100),
+    )
 
     root: Path
     train: bool
@@ -135,16 +144,7 @@ class Adience(VisionDataset):
         self,
         root: Union[str, Path],
         train: bool = True,
-        ranges: list = [
-            (0, 2),
-            (4, 6),
-            (8, 13),
-            (15, 20),
-            (25, 32),
-            (38, 43),
-            (48, 53),
-            (60, 100),
-        ],
+        ranges: Union[list, tuple] = DEFAULT_RANGES,
         test_size: float = 0.2,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
@@ -161,7 +161,14 @@ class Adience(VisionDataset):
 
         self.root = Path(root)
         self.train = train
-        self._ranges = ranges
+        self._ranges = tuple([tuple(r) for r in ranges])
+        if self._ranges != self.DEFAULT_RANGES:
+            warnings.warn(
+                "Custom age ranges differ from the official Adience benchmark "
+                "and may make results non-comparable.",
+                UserWarning,
+            )
+
         self._test_size = test_size
         self.transform = transform
         self.target_transform = target_transform
@@ -176,11 +183,25 @@ class Adience(VisionDataset):
         self.targets = []
         self.classes = []
 
-        self.root_adience_ = self.root / "adience"
-        self.data_file_path_ = self.root_adience_ / "aligned.tar.gz"
-        self.folds_path_ = self.root_adience_ / "folds"
-        self.images_path_ = self.root_adience_ / "aligned"
-        self.transformed_images_path_ = self.root_adience_ / "transformed"
+        # TODO: remove in 3.0.0
+        if (self.root / "adience").exists():
+            warnings.warn(
+                (
+                    "Workspace-style root is deprecated and will be removed in v3.0.0. "
+                    "Pass root='.../adience' directly instead. "
+                    "Current behavior will be removed."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self._root_adience = self.root / "adience"
+        else:
+            self._root_adience = self.root
+
+        self._data_file_path = self._root_adience / "aligned.tar.gz"
+        self._folds_path = self._root_adience / "folds"
+        self._images_path = self._root_adience / "aligned"
+        self._transformed_images_path = self._root_adience / "transformed"
 
         if self.download and (username is None or password is None):
             raise ValueError("username and password are required when download=True")
@@ -196,7 +217,7 @@ class Adience(VisionDataset):
             )
 
         self.folds_ = [
-            pd.read_csv(self.folds_path_ / f"fold_{f}_data.txt", sep="\t")
+            pd.read_csv(self._folds_path / f"fold_{f}_data.txt", sep="\t")
             for f in range(5)
         ]
 
@@ -210,14 +231,15 @@ class Adience(VisionDataset):
         Check if the input files are present.
         """
 
-        result = self.data_file_path_.exists() and self.folds_path_.exists()
+        result = self._data_file_path.exists() and self._folds_path.exists()
         result = result and check_integrity(
-            str(self.data_file_path_), self.ALIGNED_URL[1]
+            str(self._data_file_path), self.ALIGNED_URL[1]
         )
+
         for i in range(5):
-            result = result and (self.folds_path_ / f"fold_{i}_data.txt").exists()
+            result = result and (self._folds_path / f"fold_{i}_data.txt").exists()
             result = result and check_integrity(
-                str(self.folds_path_ / f"fold_{i}_data.txt"), self.FOLDS_URLS[i][1]
+                str(self._folds_path / f"fold_{i}_data.txt"), self.FOLDS_URLS[i][1]
             )
         return result
 
@@ -225,7 +247,7 @@ class Adience(VisionDataset):
         """
         Check if the tar.gz file has been extracted.
         """
-        path = self.data_file_path_.parent
+        path = self._data_file_path.parent
         path = path / "aligned"
         return any(path.rglob("*.jpg"))
 
@@ -233,14 +255,14 @@ class Adience(VisionDataset):
         """
         Check if the images have been transformed.
         """
-        return self.transformed_images_path_.exists()
+        return any(self._transformed_images_path.rglob("*.jpg"))
 
     def _check_if_partitioned(self) -> bool:
         """
         Check if a valid cached split exists for the current configuration.
         """
 
-        split_dir = self.root_adience_ / "cache" / f"splits_{self._cache_key}"
+        split_dir = self._root_adience / "cache" / f"splits_{self._cache_key}"
         config_path = split_dir / "config.json"
         train_path = split_dir / "train.csv"
         test_path = split_dir / "test.csv"
@@ -254,7 +276,7 @@ class Adience(VisionDataset):
         except Exception:
             return False
 
-        ranges = [tuple(r) for r in config.get("ranges")]
+        ranges = tuple([tuple(r) for r in config.get("ranges")])
 
         return (
             config.get("version") == self._version
@@ -306,7 +328,7 @@ class Adience(VisionDataset):
             )
 
     def _download(self, username: str, password: str, force: bool = False):
-        self.root_adience_.mkdir(exist_ok=True, parents=True)
+        self._root_adience.mkdir(exist_ok=True, parents=True)
 
         if username is None or password is None:
             raise ValueError(
@@ -315,8 +337,8 @@ class Adience(VisionDataset):
 
         if (
             force
-            or not self.data_file_path_.exists()
-            or not check_integrity(str(self.data_file_path_), self.ALIGNED_URL[1])
+            or not self._data_file_path.exists()
+            or not check_integrity(str(self._data_file_path), self.ALIGNED_URL[1])
         ):
             aligned_name = "aligned.tar.gz"
 
@@ -325,20 +347,20 @@ class Adience(VisionDataset):
 
             self._download_file(
                 url=self.ALIGNED_URL[0],
-                output_path=self.root_adience_ / aligned_name,
+                output_path=self._root_adience / aligned_name,
                 username=username,
                 password=password,
                 md5=self.ALIGNED_URL[1],
             )
 
-        self.folds_path_.mkdir(exist_ok=True, parents=True)
+        self._folds_path.mkdir(exist_ok=True, parents=True)
 
         for url, md5 in self.FOLDS_URLS:
             filename = url.rsplit("/", 1)[-1]
 
             if force or (
-                not (self.folds_path_ / filename).exists()
-                or not check_integrity(str(self.folds_path_ / filename), md5)
+                not (self._folds_path / filename).exists()
+                or not check_integrity(str(self._folds_path / filename), md5)
             ):
 
                 if self.verbose:
@@ -346,7 +368,7 @@ class Adience(VisionDataset):
 
                 self._download_file(
                     url=url,
-                    output_path=self.folds_path_ / filename,
+                    output_path=self._folds_path / filename,
                     username=username,
                     password=password,
                     md5=md5,
@@ -364,8 +386,8 @@ class Adience(VisionDataset):
         if self.verbose:
             print("Extracting file...")
 
-        with tarfile.open(self.data_file_path_, "r:gz") as file:
-            path = self.data_file_path_.parent
+        with tarfile.open(self._data_file_path, "r:gz") as file:
+            path = self._data_file_path.parent
             path.mkdir(exist_ok=True, parents=True)
             if sys.version_info >= (3, 12):
                 file.extractall(
@@ -393,14 +415,12 @@ class Adience(VisionDataset):
                 print("Transformed images already exist.")
             return
 
-        self.transformed_images_path_.mkdir(exist_ok=True, parents=True)
+        self._transformed_images_path.mkdir(exist_ok=True, parents=True)
 
         if self.verbose:
             print("Creating transformed images...")
 
-        # We need the full image list from the extracted dataset
-        image_paths = list(self.images_path_.rglob("*"))
-        image_paths = [p for p in image_paths if p.is_file()]
+        image_paths = list(self._images_path.rglob("*.jpg"))
 
         for src_image in tqdm(
             image_paths,
@@ -409,8 +429,8 @@ class Adience(VisionDataset):
             desc="transforming",
         ):
             # Preserve relative structure
-            rel_path = src_image.relative_to(self.images_path_)
-            dst_image = self.transformed_images_path_ / rel_path
+            rel_path = src_image.relative_to(self._images_path)
+            dst_image = self._transformed_images_path / rel_path
 
             if dst_image.exists():
                 continue
@@ -470,15 +490,16 @@ class Adience(VisionDataset):
         (e.g. test_size, ranges).
         """
 
-        split_dir = self.root_adience_ / "cache" / f"splits_{self._cache_key}"
+        split_dir = self._root_adience / "cache" / f"splits_{self._cache_key}"
         train_path = split_dir / "train.csv"
         test_path = split_dir / "test.csv"
         config_path = split_dir / "config.json"
+        split_path = train_path if self.train else test_path
 
         if self._check_if_partitioned():
             if self.verbose:
                 print("Splits already exist. Loading from cache.")
-            self._load_split_from_csv(train_path, test_path)
+            self._load_split_from_csv(split_path)
             return
 
         split_dir.mkdir(parents=True, exist_ok=True)
@@ -500,12 +521,12 @@ class Adience(VisionDataset):
         with open(config_path, "w") as f:
             json.dump(self._config, f, indent=2)
 
-        self._load_split_from_csv(train_path, test_path)
+        self._load_split_from_csv(split_path)
 
-    def _load_split_from_csv(self, train_path, test_path):
-        df = pd.read_csv(train_path if self.train else test_path)
+    def _load_split_from_csv(self, split_path: Path):
+        df = pd.read_csv(split_path)
 
-        self.data = [str(self.transformed_images_path_ / p) for p in df["path"]]
+        self.data = [str(self._transformed_images_path / p) for p in df["path"]]
         self.targets = df["age"].tolist()
         self.classes = np.unique(self.targets).tolist()
 
@@ -529,11 +550,17 @@ class Adience(VisionDataset):
         age : str
             Age to assign a range to.
         """
-        m = re.match(r"\((\d+), *(\d+)\)", age)
+        if age is None:
+            return None
+        if not isinstance(age, str):
+            age = str(age)
+        age = age.strip()
+
+        m = re.match(r"^\((\d+) *, *(\d+)\)$", age)
         if m:
             age = (int(m.group(1)), int(m.group(2)))
         else:
-            m = re.match(r"(\d+)", age)
+            m = re.match(r"^(\d+)$", age)
             if m:
                 age = int(m.group(0))
             else:
