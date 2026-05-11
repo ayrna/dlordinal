@@ -16,6 +16,7 @@ repos:
         args: [ "--remove" ]
       - id: name-tests-test
         args: [ "--pytest-test-first" ]
+        exclude: tests/utils/
       - id: trailing-whitespace
 
   - repo: https://github.com/lk16/detect-missing-init
