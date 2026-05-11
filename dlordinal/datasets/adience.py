@@ -1,15 +1,18 @@
+import base64
 import hashlib
 import json
 import re
 import sys
 import tarfile
 import warnings
+from contextlib import closing
 from pathlib import Path
 from typing import Callable, Optional, Union
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 import numpy as np
 import pandas as pd
-import requests
 from PIL import Image
 from sklearn.model_selection import StratifiedShuffleSplit
 from torchvision.datasets.utils import check_integrity
@@ -292,35 +295,39 @@ class Adience(VisionDataset):
         password: str,
         md5: Optional[str] = None,
     ):
-        response = requests.get(
-            url,
-            auth=(username, password),
-            stream=True,
-            timeout=(10, 300),
-        )
+        credentials = f"{username}:{password}".encode("utf-8")
+        encoded_credentials = base64.b64encode(credentials).decode("utf-8")
 
-        response.raise_for_status()
+        req = Request(url)
+        req.add_header("Authorization", f"Basic {encoded_credentials}")
 
-        total_size = response.headers.get("content-length")
-        total_size = int(total_size) if total_size is not None else None
+        try:
+            with closing(urlopen(req, timeout=300)) as response:
+                total_size = response.headers.get("Content-Length")
+                total_size = int(total_size) if total_size is not None else None
 
-        with (
-            open(output_path, "wb") as f,
-            tqdm(
-                total=total_size,
-                unit="B",
-                unit_scale=True,
-                unit_divisor=1024,
-                desc=output_path.name,
-                disable=not self.verbose,
-            ) as pbar,
-        ):
+                with (
+                    open(output_path, "wb") as f,
+                    tqdm(
+                        total=total_size,
+                        unit="B",
+                        unit_scale=True,
+                        unit_divisor=1024,
+                        desc=output_path.name,
+                        disable=not self.verbose,
+                    ) as pbar,
+                ):
+                    while True:
+                        chunk = response.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        pbar.update(len(chunk))
 
-            for chunk in response.iter_content(chunk_size=1024 * 1024):
-
-                if chunk:
-                    f.write(chunk)
-                    pbar.update(len(chunk))
+        except HTTPError as e:
+            raise RuntimeError(f"HTTP error while downloading {url}: {e}") from e
+        except URLError as e:
+            raise RuntimeError(f"URL error while downloading {url}: {e}") from e
 
         if md5 is not None and not check_integrity(str(output_path), md5):
             raise ValueError(
