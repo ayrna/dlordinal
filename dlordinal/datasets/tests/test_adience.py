@@ -19,7 +19,6 @@ from .utils.adience import generate_fake_adience, get_adience_md5sums
 @pytest.fixture
 def adience_root(tmp_path):
     path = generate_fake_adience(tmp_path / "adience")
-    print(f"Generated fake Adience dataset at: {path}")
     return path
 
 
@@ -188,11 +187,6 @@ def test_download_corrupted_file(
             username="fake_user",
             password="fake_pass",
         )
-
-        # Corrupt the downloaded file
-        aligned_path = download_root / "aligned.tar.gz"
-        with open(aligned_path, "w") as f:
-            f.write(b"corrupted data")
 
 
 @pytest.mark.no_gpu_ci
