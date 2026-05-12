@@ -48,7 +48,7 @@ def patched_adience(adience_root, monkeypatch):
         password: str,
         md5: Optional[str] = None,
     ):
-        shutil.copy(url, output_path)
+        shutil.copy2(url, output_path)
 
         if md5 is not None and not check_integrity(str(output_path), md5):
             raise ValueError(
@@ -140,53 +140,53 @@ def test_download_without_credentials(patched_adience, tmp_path):
         )
 
 
-# @pytest.mark.parametrize(
-#     "corrupted_file_path",
-#     [
-#         "aligned.tar.gz",
-#         "fold_0_data.txt",
-#         "fold_1_data.txt",
-#         "fold_2_data.txt",
-#         "fold_3_data.txt",
-#         "fold_4_data.txt",
-#     ],
-# )
-# def test_download_corrupted_file(
-#     patched_adience, tmp_path, monkeypatch, corrupted_file_path
-# ):
-#     download_root = tmp_path / "download_root"
-#     download_root.mkdir(parents=True, exist_ok=True)
+@pytest.mark.parametrize(
+    "corrupted_file_path",
+    [
+        "aligned.tar.gz",
+        "fold_0_data.txt",
+        "fold_1_data.txt",
+        "fold_2_data.txt",
+        "fold_3_data.txt",
+        "fold_4_data.txt",
+    ],
+)
+def test_download_corrupted_file(
+    patched_adience, tmp_path, monkeypatch, corrupted_file_path
+):
+    download_root = tmp_path / "download_root"
+    download_root.mkdir(parents=True, exist_ok=True)
 
-#     def corrupt_download_file(
-#         self,
-#         url: str,  # it is a local path
-#         output_path: Path,
-#         username: str,
-#         password: str,
-#         md5: Optional[str] = None,
-#     ):
-#         shutil.copy(url, output_path)
+    def corrupt_download_file(
+        self,
+        url: str,  # it is a local path
+        output_path: Path,
+        username: str,
+        password: str,
+        md5: Optional[str] = None,
+    ):
+        shutil.copy2(url, output_path)
 
-#         if output_path.name == corrupted_file_path:
-#             with open(output_path, "ab") as f:
-#                 f.write(b"corrupted data")
+        if output_path.name == corrupted_file_path:
+            with open(output_path, "ab") as f:
+                f.write(b"corrupted data")
 
-#         if md5 is not None and not check_integrity(str(output_path), md5):
-#             raise ValueError(
-#                 f"Downloaded file {output_path} has an invalid MD5 checksum."
-#             )
+        if md5 is not None and not check_integrity(str(output_path), md5):
+            raise ValueError(
+                f"Downloaded file {output_path} has an invalid MD5 checksum."
+            )
 
-#     monkeypatch.setattr(Adience, "_download_file", corrupt_download_file)
+    monkeypatch.setattr(Adience, "_download_file", corrupt_download_file)
 
-#     with pytest.raises(ValueError):
-#         patched_adience(
-#             train=True,
-#             test_size=0.2,
-#             root=download_root,
-#             download=True,
-#             username="fake_user",
-#             password="fake_pass",
-#         )
+    with pytest.raises(ValueError):
+        patched_adience(
+            train=True,
+            test_size=0.2,
+            root=download_root,
+            download=True,
+            username="fake_user",
+            password="fake_pass",
+        )
 
 
 @pytest.mark.no_gpu_ci
