@@ -50,10 +50,6 @@ jobs:
     env:
       PYTEST_CUDA_ONLY: "1"
 
-    defaults:
-      run:
-        shell: /usr/local/bin/gpu-run.sh {0}
-
     strategy:
       fail-fast: false
       matrix:
@@ -74,7 +70,7 @@ jobs:
         pip install .[dev]
 
     - name: Run tests
-      run: python -m pytest -n auto -m "not no_gpu_ci"
+      run: gpu-run.sh python -m pytest -n auto -m "not no_gpu_ci"
 
   tests-codecov:
     runs-on: ubuntu-22.04
