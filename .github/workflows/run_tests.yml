@@ -50,6 +50,10 @@ jobs:
     env:
       PYTEST_CUDA_ONLY: "1"
 
+    defaults:
+      run:
+        shell: /usr/local/bin/gpu-run.sh {0}
+
     strategy:
       fail-fast: false
       matrix:
