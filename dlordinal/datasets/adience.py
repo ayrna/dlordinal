@@ -362,8 +362,8 @@ class Adience(VisionDataset):
 
         self._folds_path.mkdir(exist_ok=True, parents=True)
 
-        for url, md5 in self.FOLDS_URLS:
-            filename = url.rsplit("/", 1)[-1]
+        for i, (url, md5) in enumerate(self.FOLDS_URLS):
+            filename = f"fold_{i}_data.txt"
 
             if force or (
                 not (self._folds_path / filename).exists()
