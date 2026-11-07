@@ -6,17 +6,19 @@ from scipy.stats import poisson
 def get_poisson_soft_labels(J):
     """Get soft labels using poisson distributions for ``J`` classes or splits using the
     methodology described in :footcite:t:`liu2020unimodal`.
-    The :math:`[0,1]` interval is split into ``J`` intervals and the probability for
-    each interval is computed as the difference between the value of the poisson
-    probability function for the interval boundaries. The probability for the first
-    interval is computed as the value of the poisson probability function for the first
-    interval boundary. Then, a softmax function is applied to each row of the resulting
-    matrix to obtain valid probabilities.
 
-    The poisson probability function is denoted as :math:`\\text{p}(k, \\lambda)`
-    where :math:`k` is given by the order of the class for which the probability is
-    computed, and :math:`\\lambda` is given by :math:`k` where :math:`k` is the order
-    of the target class.
+    For the target class :math:`j` (:math:`j = 0, \\ldots, J-1`), the poisson
+    probability mass function :math:`\\text{p}(k; \\lambda)` with
+    :math:`\\lambda = j + 1` is evaluated at :math:`k = 0, \\ldots, J-1`. Then, a
+    softmax function is applied to each row of the resulting matrix to obtain valid
+    probabilities, i.e. the soft label of class :math:`k` is proportional to
+    :math:`\\exp(\\text{p}(k; j + 1))`.
+
+    Note that the softmax is applied to the probability mass values themselves, not
+    to their logarithms, so the resulting soft labels are much flatter than the
+    poisson distributions. Moreover, because :math:`\\lambda = j + 1` is an integer,
+    the probability mass function takes the same value at :math:`k = j` and
+    :math:`k = j + 1`.
 
     Parameters
     ----------

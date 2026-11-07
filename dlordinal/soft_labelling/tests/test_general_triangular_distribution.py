@@ -137,3 +137,25 @@ def test_general_triangular_soft_labels():
     assert result.shape[1] == n
 
     assert np.allclose(result, expected_result, rtol=1e-6)
+
+
+def test_general_triangular_alphas_indexing_convention():
+    """alphas[2j-1] and alphas[2j] are the left and right errors of class j
+    (1-based), so alphas[0] and alphas[1] are unused."""
+    n = 5
+    # Mirror-symmetric errors: right of class 1 == left of class 5, and so on
+    alphas = np.array([0, 0, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1])
+    result = get_general_triangular_soft_labels(n, alphas)
+    assert np.allclose(result, result[::-1, ::-1], atol=1e-6)
+    assert result[0, 1] == pytest.approx(0.1, abs=1e-6)
+    assert result[4, 3] == pytest.approx(0.1, abs=1e-6)
+
+    # The first two entries do not change the result
+    alphas_unused = alphas.copy()
+    alphas_unused[:2] = [0.3, 0.2]
+    assert np.allclose(get_general_triangular_soft_labels(n, alphas_unused), result)
+
+
+def test_general_triangular_soft_labels_wrong_shape_message():
+    with pytest.raises(ValueError, match=re.escape("but got (3,)")):
+        get_general_triangular_soft_labels(3, [0.1, 0.1, 0.1])
