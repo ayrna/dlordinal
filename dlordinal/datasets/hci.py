@@ -14,6 +14,8 @@ from torchvision.datasets.utils import (
     extract_archive,
 )
 
+from ._utils import rename_with_retry
+
 
 class HCI(ImageFolder):
     """
@@ -123,12 +125,12 @@ class HCI(ImageFolder):
                 / "imgs"
                 / "decade_database"
             )
-            extracted_folder.rename(target_folder)
+            rename_with_retry(extracted_folder, target_folder)
             rmtree(self.base_root / "HistoricalColor-ECCV2012", ignore_errors=True)
 
             # Rename categories
             for old_name, new_name in self.CATEGORIES.items():
-                (target_folder / old_name).rename(target_folder / new_name)
+                rename_with_retry(target_folder / old_name, target_folder / new_name)
 
             # Rescale images to 224x224
             for cat in self.CATEGORIES.values():

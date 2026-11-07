@@ -8,6 +8,7 @@ finished, so an interrupted run is redone instead of being silently reused.
 
 import json
 import os
+import time
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
@@ -148,3 +149,33 @@ def remove_marker(path: Union[str, Path]) -> None:
         Path of the marker file.
     """
     Path(path).unlink(missing_ok=True)
+
+
+def rename_with_retry(
+    src: Union[str, Path], dst: Union[str, Path], attempts: int = 10, delay: float = 0.2
+) -> None:
+    """Rename ``src`` to ``dst``, retrying on transient ``PermissionError``.
+
+    On Windows, a directory whose files were just written cannot be renamed while
+    another process (e.g. an antivirus or indexing service) still holds a handle on
+    one of them, which raises ``PermissionError`` for a short time.
+
+    Parameters
+    ----------
+    src : str or Path
+        Path to rename.
+    dst : str or Path
+        New path.
+    attempts : int, default=10
+        Maximum number of attempts.
+    delay : float, default=0.2
+        Seconds to wait between attempts.
+    """
+    for attempt in range(attempts):
+        try:
+            os.rename(src, dst)
+            return
+        except PermissionError:
+            if attempt == attempts - 1:
+                raise
+            time.sleep(delay)
