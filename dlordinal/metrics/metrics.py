@@ -6,7 +6,7 @@ from typing import Callable, Dict, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
-from sklearn.metrics import confusion_matrix, recall_score
+from sklearn.metrics import recall_score
 
 
 def _to_numpy(x: ArrayLike, dtype: Optional[np.dtype] = None) -> np.ndarray:
@@ -67,6 +67,42 @@ def _to_numpy(x: ArrayLike, dtype: Optional[np.dtype] = None) -> np.ndarray:
     return np.asarray(x)
 
 
+def _to_label_array(y: ArrayLike) -> np.ndarray:
+    """Converts labels, one-hot targets or predicted probabilities to a 1D array
+    of labels.
+
+    Two-dimensional inputs are interpreted as one-hot targets or probabilities and
+    are reduced with ``argmax`` *before* any type conversion, so that probabilities
+    are never truncated.
+
+    Parameters
+    ----------
+    y : array-like
+        Labels of shape (N,), or one-hot targets / probabilities of shape (N, J).
+
+    Returns
+    -------
+    np.ndarray
+        Array of labels of shape (N,).
+    """
+    y = _to_numpy(y)
+    if y.ndim > 1:
+        y = np.argmax(y, axis=1)
+    return y
+
+
+def _per_class_recall(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    """Computes the sensitivity (recall) of every class present in ``y_true``.
+
+    Predicted labels that never occur in ``y_true`` have an undefined sensitivity and
+    must not be reported as a sensitivity of zero, so only the classes in ``y_true``
+    are considered. The returned array is ordered by increasing label.
+    """
+    return np.asarray(
+        recall_score(y_true, y_pred, labels=np.unique(y_true), average=None)
+    )
+
+
 def ranked_probability_score(y_true, y_proba):
     """Computes the ranked probability score as presented in :footcite:t:`janitza2016random`.
 
@@ -91,22 +127,22 @@ def ranked_probability_score(y_true, y_proba):
     >>> ranked_probability_score(y_true, y_pred)
     0.5068750000000001
     """
-    y_true = _to_numpy(y_true, dtype=int)
-    y_proba = _to_numpy(y_proba)
+    y_true = _to_label_array(y_true).astype(int)
+    y_proba = _to_numpy(y_proba, dtype=float)
+
+    n_classes = y_proba.shape[1]
+    if y_true.size and (y_true.min() < 0 or y_true.max() >= n_classes):
+        raise ValueError(
+            f"y_true must contain labels in [0, {n_classes - 1}], the range of"
+            " classes covered by y_proba."
+        )
 
     y_oh = np.zeros(y_proba.shape)
     y_oh[np.arange(len(y_true)), y_true] = 1
 
-    y_oh = y_oh.cumsum(axis=1)
-    y_proba = y_proba.cumsum(axis=1)
-
-    rps = 0
-    for i in range(len(y_true)):
-        if y_true[i] in np.arange(y_proba.shape[1]):
-            rps += np.power(y_proba[i] - y_oh[i], 2).sum()
-        else:
-            rps += 1
-    return rps / len(y_true)
+    # Vectorised over samples: squared distance between the cumulative distributions
+    cdf_diff = y_proba.cumsum(axis=1) - y_oh.cumsum(axis=1)
+    return float(np.mean(np.sum(cdf_diff**2, axis=1)))
 
 
 def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -133,15 +169,10 @@ def minimum_sensitivity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> minimum_sensitivity(y_true, y_pred)
     0.5
     """
-    y_true = _to_numpy(y_true)
-    y_pred = _to_numpy(y_pred)
+    y_true = _to_label_array(y_true)
+    y_pred = _to_label_array(y_pred)
 
-    if len(y_true.shape) > 1:
-        y_true = np.argmax(y_true, axis=1)
-    if len(y_pred.shape) > 1:
-        y_pred = np.argmax(y_pred, axis=1)
-
-    sensitivities = recall_score(y_true, y_pred, average=None)
+    sensitivities = _per_class_recall(y_true, y_pred)
     return np.min(sensitivities)
 
 
@@ -156,12 +187,22 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
     y_pred : array-like
             Predicted probabilities or labels.
     labels : array-like or None
-            Labels of the classes. If None, the labels are inferred from the data.
+            Ordered list of all the classes. Two classes are adjacent when they are
+            consecutive in this list. Every label in ``y_true`` and ``y_pred`` must be
+            included. If None, the labels are taken as numeric values and two classes
+            are adjacent when their labels differ by at most one, which is the usual
+            case of integer labels :math:`0, \\ldots, J-1`.
 
     Returns
     -------
     acc : float
             1-off accuracy.
+
+    Raises
+    ------
+    ValueError
+            If ``labels`` is given and does not include every label of ``y_true`` and
+            ``y_pred``.
 
     Examples
     --------
@@ -172,22 +213,28 @@ def accuracy_off1(y_true: np.ndarray, y_pred: np.ndarray, labels=None) -> float:
     >>> accuracy_off1(y_true, y_pred)
     0.8571428571428571
     """
-    y_true = _to_numpy(y_true)
-    y_pred = _to_numpy(y_pred)
+    y_true = _to_label_array(y_true)
+    y_pred = _to_label_array(y_pred)
 
-    if len(y_true.shape) > 1:
-        y_true = np.argmax(y_true, axis=1)
-    if len(y_pred.shape) > 1:
-        y_pred = np.argmax(y_pred, axis=1)
     if labels is None:
-        labels = np.unique(y_true)
+        # Distances are measured on the label values, so classes that are absent
+        # from the data cannot make two distant classes look adjacent.
+        return float(np.mean(np.abs(y_true - y_pred) <= 1))
 
-    conf_mat = confusion_matrix(y_true, y_pred, labels=labels)
-    n = conf_mat.shape[0]
-    mask = np.eye(n, n) + np.eye(n, n, k=1), +np.eye(n, n, k=-1)
-    correct = mask * conf_mat
+    labels = _to_numpy(labels)
+    sorter = np.argsort(labels)
 
-    return 1.0 * np.sum(correct) / np.sum(conf_mat)
+    def _positions(y):
+        idx = np.clip(np.searchsorted(labels, y, sorter=sorter), 0, len(labels) - 1)
+        pos = sorter[idx]
+        if not np.all(labels[pos] == y):
+            raise ValueError(
+                "labels must include every label of y_true and y_pred, missing:"
+                f" {np.setdiff1d(y, labels)}"
+            )
+        return pos
+
+    return float(np.mean(np.abs(_positions(y_true) - _positions(y_pred)) <= 1))
 
 
 def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -216,15 +263,10 @@ def gmsec(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> gmsec(y_true, y_pred)
     0.7071067811865476
     """
-    y_true = _to_numpy(y_true)
-    y_pred = _to_numpy(y_pred)
+    y_true = _to_label_array(y_true)
+    y_pred = _to_label_array(y_pred)
 
-    if len(y_true.shape) > 1:
-        y_true = np.argmax(y_true, axis=1)
-    if len(y_pred.shape) > 1:
-        y_pred = np.argmax(y_pred, axis=1)
-
-    sensitivities = recall_score(y_true, y_pred, average=None)
+    sensitivities = _per_class_recall(y_true, y_pred)
     return np.sqrt(sensitivities[0] * sensitivities[-1])
 
 
@@ -253,27 +295,7 @@ def amae(y_true: np.ndarray, y_pred: np.ndarray):
     >>> amae(y_true, y_pred)
     0.125
     """
-    y_true = _to_numpy(y_true)
-    y_pred = _to_numpy(y_pred)
-
-    if len(y_true.shape) > 1:
-        y_true = np.argmax(y_true, axis=1)
-    if len(y_pred.shape) > 1:
-        y_pred = np.argmax(y_pred, axis=1)
-
-    cm = confusion_matrix(y_true, y_pred)
-    n_class = cm.shape[0]
-    costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
-    costs = np.abs(costs - np.transpose(costs))
-    errors = costs * cm
-
-    # Remove rows with all zeros in the confusion matrix
-    non_zero_cm_rows = ~np.all(cm == 0, axis=1)
-    errors = errors[non_zero_cm_rows]
-    cm = cm[non_zero_cm_rows]
-
-    per_class_maes = np.sum(errors, axis=1) / np.sum(cm, axis=1).astype("double")
-    return np.mean(per_class_maes)
+    return np.mean(_per_class_mae(y_true, y_pred))
 
 
 def mmae(y_true: np.ndarray, y_pred: np.ndarray):
@@ -301,27 +323,24 @@ def mmae(y_true: np.ndarray, y_pred: np.ndarray):
     >>> mmae(y_true, y_pred)
     0.5
     """
-    y_true = _to_numpy(y_true)
-    y_pred = _to_numpy(y_pred)
+    return _per_class_mae(y_true, y_pred).max()
 
-    if len(y_true.shape) > 1:
-        y_true = np.argmax(y_true, axis=1)
-    if len(y_pred.shape) > 1:
-        y_pred = np.argmax(y_pred, axis=1)
 
-    cm = confusion_matrix(y_true, y_pred)
-    n_class = cm.shape[0]
-    costs = np.reshape(np.tile(range(n_class), n_class), (n_class, n_class))
-    costs = np.abs(costs - np.transpose(costs))
-    errors = costs * cm
+def _per_class_mae(y_true: ArrayLike, y_pred: ArrayLike) -> np.ndarray:
+    """Computes the mean absolute error of every class present in ``y_true``.
 
-    # Remove rows with all zeros in the confusion matrix
-    non_zero_cm_rows = ~np.all(cm == 0, axis=1)
-    errors = errors[non_zero_cm_rows]
-    cm = cm[non_zero_cm_rows]
+    The absolute error is measured on the label values, so classes that do not appear
+    in ``y_true`` or ``y_pred`` do not shrink the distance between the classes that do.
+    The returned array is ordered by increasing label.
+    """
+    y_true = _to_label_array(y_true)
+    y_pred = _to_label_array(y_pred)
 
-    per_class_maes = np.sum(errors, axis=1) / np.sum(cm, axis=1).astype("double")
-    return per_class_maes.max()
+    classes, inverse = np.unique(y_true, return_inverse=True)
+    abs_errors = np.abs(y_true - y_pred).astype(np.float64)
+    error_sums = np.bincount(inverse, weights=abs_errors, minlength=len(classes))
+    counts = np.bincount(inverse, minlength=len(classes))
+    return error_sums / counts
 
 
 def mes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -350,15 +369,11 @@ def mes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> mes(y_true, y_pred)
     0.75
     """
-    y_true = _to_numpy(y_true, dtype=int)
-    y_pred = _to_numpy(y_pred, dtype=int)
+    # argmax is applied before the integer cast, so probabilities are not truncated
+    y_true = _to_label_array(y_true).astype(int)
+    y_pred = _to_label_array(y_pred).astype(int)
 
-    if len(y_true.shape) > 1:
-        y_true = np.argmax(y_true, axis=1)
-    if len(y_pred.shape) > 1:
-        y_pred = np.argmax(y_pred, axis=1)
-
-    sensitivities = np.array(recall_score(y_true, y_pred, average=None))
+    sensitivities = _per_class_recall(y_true, y_pred)
     mes = (sensitivities[0] + sensitivities[-1]) / 2.0
     return mes
 
@@ -389,15 +404,11 @@ def gmes(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> gmes(y_true, y_pred)
     0.7071067811865476
     """
-    y_true = _to_numpy(y_true, dtype=int)
-    y_pred = _to_numpy(y_pred, dtype=int)
+    # argmax is applied before the integer cast, so probabilities are not truncated
+    y_true = _to_label_array(y_true).astype(int)
+    y_pred = _to_label_array(y_pred).astype(int)
 
-    if len(y_true.shape) > 1:
-        y_true = np.argmax(y_true, axis=1)
-    if len(y_pred.shape) > 1:
-        y_pred = np.argmax(y_pred, axis=1)
-
-    sensitivities = np.array(recall_score(y_true, y_pred, average=None))
+    sensitivities = _per_class_recall(y_true, y_pred)
     gmes = sqrt(sensitivities[0] * sensitivities[-1])
     return gmes
 
