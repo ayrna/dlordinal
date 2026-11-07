@@ -233,20 +233,26 @@ class FGNet(VisionDataset):
         return image, target
 
     @property
-    def targets(self) -> List[Any]:
+    def targets(self) -> Union[List[int], np.ndarray, List[Any]]:
         """
         Return the targets of the dataset. If ``target_transform`` is defined, it is
-        applied to each target, as in ``__getitem__``.
+        applied to each target, as in ``__getitem__``, and the results are stacked
+        into a NumPy array (e.g. ``target_transform=np.array`` gives a 1D integer
+        array). Results that cannot be stacked are returned as a list.
 
         Returns
         -------
-        list
-            List of targets.
+        list or np.ndarray
+            List of targets, or array of transformed targets.
         """
 
         targets = [int(t) for t in self.data["category"]]
         if self.target_transform:
-            return [self.target_transform(t) for t in targets]
+            transformed = [self.target_transform(t) for t in targets]
+            try:
+                return np.asarray(transformed)
+            except (ValueError, TypeError):
+                return transformed
         return targets
 
     @property

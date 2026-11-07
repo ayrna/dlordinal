@@ -312,12 +312,35 @@ def test_load_data_ignores_non_image_files(fgnet_train):
 def test_targets_apply_target_transform_per_element(fgnet_train):
     fgnet_train.target_transform = float
     targets = fgnet_train.targets
-    assert isinstance(targets, list)
-    assert targets == [fgnet_train[i][1] for i in range(len(fgnet_train))]
-    assert all(isinstance(t, float) for t in targets)
+    assert isinstance(targets, np.ndarray)
+    assert targets.dtype == np.float64
+    assert targets.tolist() == [fgnet_train[i][1] for i in range(len(fgnet_train))]
 
+    # Encodings of equal length are stacked into a 2D array
     fgnet_train.target_transform = lambda y: [1] * y + [0] * (5 - y)
+    assert fgnet_train.targets.shape == (len(fgnet_train), 5)
+    assert fgnet_train.targets[0].tolist() == fgnet_train[0][1]
+
+    # Ragged results cannot be stacked and are returned as a list
+    fgnet_train.target_transform = lambda y: [0] * (y + 1)
+    assert isinstance(fgnet_train.targets, list)
     assert fgnet_train.targets[0] == fgnet_train[0][1]
+
+
+@pytest.mark.no_gpu_ci
+def test_targets_with_np_array_transform_is_1d(fgnet_train):
+    """Usage in the tutorials: target_transform=np.array, then targets is passed to
+    scikit-learn splitters and torch.tensor."""
+    from sklearn.model_selection import StratifiedShuffleSplit
+
+    fgnet_train.target_transform = np.array
+    targets = fgnet_train.targets
+    assert isinstance(targets, np.ndarray)
+    assert targets.ndim == 1
+    assert np.issubdtype(targets.dtype, np.integer)
+    torch.tensor(targets, dtype=torch.long)
+    sss = StratifiedShuffleSplit(n_splits=1, test_size=0.3, random_state=0)
+    next(sss.split(np.zeros(len(targets)), targets))
 
 
 @pytest.mark.no_gpu_ci
