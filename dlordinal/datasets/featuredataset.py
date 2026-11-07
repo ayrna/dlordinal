@@ -13,6 +13,11 @@ class FeatureDataset(Dataset):
     that are organised in a tabular way in a csv file. The last column is the target
     variable.
 
+    If the target column contains integers (class labels), ``targets`` and
+    ``classes`` are ``torch.int64`` tensors, as required by classification losses.
+    Otherwise (continuous targets), they are ``torch.float32`` tensors.
+    ``normalize_y`` always produces ``torch.float32`` targets.
+
     Example
     -------
     >>> train_data = FeatureDataset("train.csv")
@@ -46,9 +51,17 @@ class FeatureDataset(Dataset):
         self.y_mean: float = 0.0
         self.y_scale: float = 0.0
 
+        # Integer targets are class labels: keep them as int64 so that they can be
+        # used directly with classification losses. Continuous targets stay float.
+        target_dtype = (
+            torch.int64
+            if pd.api.types.is_integer_dtype(df.dtypes.iloc[-1])
+            else torch.float
+        )
+
         self.X = torch.tensor(X, dtype=torch.float)
-        self.targets = torch.tensor(y, dtype=torch.float)
-        self.classes = torch.tensor(np.unique(y), dtype=torch.float)
+        self.targets = torch.tensor(y, dtype=target_dtype)
+        self.classes = torch.tensor(np.unique(y), dtype=target_dtype)
 
     def get_valid_shape_array(self, v: ArrayLike):
         """Convert the input ArrayLike object to a 2D numpy array with shape (n, 1)
@@ -79,8 +92,15 @@ class FeatureDataset(Dataset):
     ) -> Tuple[np.ndarray, ArrayLike, ArrayLike]:
         sc = StandardScaler()
         if mean is not None and scale is not None:
-            sc.mean_ = mean
-            sc.scale_ = scale
+            # Scalars or sequences are broadcast to one value per column, as
+            # StandardScaler expects arrays of shape (n_features,)
+            n_features = np.shape(v)[1]
+            sc.mean_ = np.broadcast_to(
+                np.asarray(mean, dtype=np.float64), (n_features,)
+            ).copy()
+            sc.scale_ = np.broadcast_to(
+                np.asarray(scale, dtype=np.float64), (n_features,)
+            ).copy()
         else:
             sc.fit(v)
         return sc.transform(v), sc.mean_, sc.scale_
