@@ -339,8 +339,9 @@ def test_targets_with_np_array_transform_is_1d(fgnet_train):
     assert targets.ndim == 1
     assert np.issubdtype(targets.dtype, np.integer)
     assert torch.tensor(targets, dtype=torch.long).shape == (len(fgnet_train),)
-    # scikit-learn splitters validate y with type_of_target, which failed with
-    # "unhashable type: 'numpy.ndarray'" for a list of 0-d arrays
+    # A list of 0-d arrays (the previous per-element result) made the scikit-learn
+    # splitters in the tutorials fail with "unhashable type: 'numpy.ndarray'"; the
+    # isinstance/ndim checks above guard against it. y must look like class labels.
     assert type_of_target(targets) in ("binary", "multiclass")
     assert np.unique(targets).tolist() == sorted(set(targets.tolist()))
 
