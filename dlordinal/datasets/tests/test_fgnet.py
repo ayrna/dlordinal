@@ -331,16 +331,18 @@ def test_targets_apply_target_transform_per_element(fgnet_train):
 def test_targets_with_np_array_transform_is_1d(fgnet_train):
     """Usage in the tutorials: target_transform=np.array, then targets is passed to
     scikit-learn splitters and torch.tensor."""
-    from sklearn.model_selection import StratifiedShuffleSplit
+    from sklearn.utils.multiclass import type_of_target
 
     fgnet_train.target_transform = np.array
     targets = fgnet_train.targets
     assert isinstance(targets, np.ndarray)
     assert targets.ndim == 1
     assert np.issubdtype(targets.dtype, np.integer)
-    torch.tensor(targets, dtype=torch.long)
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=0.3, random_state=0)
-    next(sss.split(np.zeros(len(targets)), targets))
+    assert torch.tensor(targets, dtype=torch.long).shape == (len(fgnet_train),)
+    # scikit-learn splitters validate y with type_of_target, which failed with
+    # "unhashable type: 'numpy.ndarray'" for a list of 0-d arrays
+    assert type_of_target(targets) in ("binary", "multiclass")
+    assert np.unique(targets).tolist() == sorted(set(targets.tolist()))
 
 
 @pytest.mark.no_gpu_ci
