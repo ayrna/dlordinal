@@ -67,6 +67,11 @@ class CLM(Module):
         **kwargs,
     ):
         super().__init__()
+        if link_function not in ("logit", "probit", "cloglog"):
+            raise ValueError(
+                f"Invalid link_function '{link_function}'."
+                " Expected one of ['logit', 'probit', 'cloglog']."
+            )
         self.num_classes = num_classes
         self.link_function = link_function
         self.min_distance = min_distance
@@ -115,26 +120,47 @@ class CLM(Module):
 
     def _apply_link_function(self, z3):
         if self.link_function == "probit":
-            a3T = self.dist_.cdf(z3)
+            # Standard normal CDF; avoids the argument validation (and the
+            # host-device sync) of torch.distributions.Normal.cdf
+            a3T = torch.special.ndtr(z3)
         elif self.link_function == "cloglog":
-            a3T = 1 - torch.exp(-torch.exp(z3))
+            # 1 - exp(-exp(z)) cancels to exactly 0 for very negative z; expm1 keeps
+            # the small probabilities (and finite log-likelihoods)
+            a3T = -torch.expm1(-torch.exp(z3))
         else:  # 'logit'
             a3T = stable_sigmoid(z3)
 
         return a3T
+
+    def _apply_survival_function(self, z3):
+        """Returns ``1 - F(z3)`` computed without cancellation, where ``F`` is the
+        inverse link function applied by :meth:`_apply_link_function`."""
+        if self.link_function == "probit":
+            return torch.special.ndtr(-z3)
+        elif self.link_function == "cloglog":
+            return torch.exp(-torch.exp(z3))
+        else:  # 'logit'
+            return torch.sigmoid(-z3)
 
     def _clm(self, projected: torch.Tensor, thresholds: torch.Tensor):
         projected = torch.reshape(projected, shape=(-1,))
 
         m = projected.shape[0]
         z3 = self._compute_z3(projected, thresholds)
-        a3T = self._apply_link_function(z3)
+        cdf = self._apply_link_function(z3)
+        sf = self._apply_survival_function(z3)
 
-        ones = torch.ones((m, 1), device=projected.device)
-        a3 = torch.cat((a3T, ones), dim=1)
-        a3[:, 1:] = a3[:, 1:] - a3[:, 0:-1]
+        zeros = torch.zeros((m, 1), device=projected.device, dtype=cdf.dtype)
+        ones = torch.ones((m, 1), device=projected.device, dtype=cdf.dtype)
+        cdf = torch.cat((zeros, cdf, ones), dim=1)
+        sf = torch.cat((ones, sf, zeros), dim=1)
 
-        return a3
+        # P(y = k) = F(t_k) - F(t_{k-1}) = S(t_{k-1}) - S(t_k). The difference of
+        # CDFs cancels to 0 when both are close to 1 (upper tail), so the survival
+        # functions are used there instead.
+        probs_cdf = cdf[:, 1:] - cdf[:, :-1]
+        probs_sf = sf[:, :-1] - sf[:, 1:]
+        return torch.where(cdf[:, :-1] > 0.5, probs_sf, probs_cdf)
 
     def forward(self, x):
         """

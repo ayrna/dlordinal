@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 
@@ -9,8 +10,10 @@ class CORNClassifierWrapper:
 
     This wrapper handles the final prediction steps:
     1. Applies the Sigmoid and Cumulative Product to the raw logits (N, J-1).
-    2. Determines the final ordinal class label (0 to J-1) based on a probability
-    threshold (default 0.5).
+    2. ``predict`` determines the final ordinal class label (0 to J-1) based on a
+    probability threshold (default 0.5).
+    3. ``predict_proba`` returns the class probabilities (N, J) implied by the
+    CORN logits.
 
     Parameters
     ----------
@@ -48,6 +51,12 @@ class CORNClassifierWrapper:
 
     def __getattr__(self, name):
         """Delegate attribute access to the wrapped classifier."""
+        # __getattr__ only runs when normal lookup fails. While the instance is
+        # being unpickled or deep-copied, ``classifier`` is not set yet, and
+        # delegating would call __getattr__("classifier") again forever. Dunder
+        # lookups (e.g. __setstate__, __deepcopy__) are not delegated either.
+        if name == "classifier" or (name.startswith("__") and name.endswith("__")):
+            raise AttributeError(name)
         return getattr(self.classifier, name)
 
     def __call__(self, *args, **kwargs):
@@ -72,17 +81,25 @@ class CORNClassifierWrapper:
         numpy.ndarray
             An array of integer class labels (0 to J-1) of shape (N,).
         """
-        # Note: The output of predict_proba is already one-hot, so argmax is simple
-        probs = self.predict_proba(X)
-        return probs.argmax(axis=1)
+        # The predicted class is the number of cumulative probabilities
+        # P(y > k) = prod_{i<=k} sigmoid(z_i) that exceed the threshold.
+        cum_probas = self._cumulative_probas(X)
+        predicted_labels = torch.sum(cum_probas > self.threshold, dim=1)
+        return predicted_labels.cpu().numpy().astype(np.int64)
 
     def predict_proba(self, X):
         """
-        Applies the CORN transformation logic to the raw logits to produce
-        one-hot encoded ordinal class probabilities.
+        Applies the CORN transformation to the raw logits to produce the class
+        probabilities.
 
-        The ordinal class is determined by counting the number of cumulative
-        probabilities P(y >= k) that exceed the set threshold.
+        The conditional probabilities :math:`\\sigma(z_k) = P(y > k \\mid y > k-1)`
+        are chained into :math:`P(y > k) = \\prod_{i \\leq k} \\sigma(z_i)`, and the
+        class probabilities are :math:`P(y = k) = P(y > k-1) - P(y > k)`, with
+        :math:`P(y > -1) = 1` and :math:`P(y > J-1) = 0`. They are non-negative and
+        sum to one, so they can be used with probabilistic metrics such as the
+        ranked probability score. The class labels returned by :meth:`predict` use
+        the threshold rule instead, so they are not always the argmax of these
+        probabilities.
 
         Parameters
         ----------
@@ -92,42 +109,22 @@ class CORNClassifierWrapper:
         Returns
         -------
         numpy.ndarray
-            An array of one-hot encoded probabilities of shape (N, J), where
-            J is the total number of classes.
+            An array of class probabilities of shape (N, J), where J is the total
+            number of classes.
         """
-        # Step 1: Get raw logits (N, J-1) from the wrapped classifier
+        cum_probas = self._cumulative_probas(X)
+        n = cum_probas.shape[0]
+        ones = torch.ones((n, 1), dtype=cum_probas.dtype, device=cum_probas.device)
+        zeros = torch.zeros_like(ones)
+        # P(y > k - 1) - P(y > k) for k = 0, ..., J-1
+        probs = torch.cat([ones, cum_probas], dim=1) - torch.cat(
+            [cum_probas, zeros], dim=1
+        )
+        return probs.clamp_min(0.0).cpu().numpy()
+
+    def _cumulative_probas(self, X):
+        """Returns P(y > k) for k = 0, ..., J-2 as a float32 tensor of shape (N, J-1)."""
+        # Raw logits (N, J-1) from the wrapped classifier
         logits = self.classifier.predict_proba(X)
-
-        # Ensure logits are torch.Tensor and on the correct device for processing
-        if not isinstance(logits, torch.Tensor):
-            logits = torch.tensor(logits, dtype=torch.float32)
-
-        device = logits.device
-
-        # Step 2: Apply Sigmoid (N, J-1) -> P(y >= k)
-        probas = torch.sigmoid(logits)
-
-        # Step 3: Apply Cumulative Product. (Used for stability/consistency, though
-        # the thresholding decision is often based on the raw sigmoid output).
-        probas = torch.cumprod(probas, dim=1)
-
-        # Step 4: Determine the predicted level based on the variable threshold
-        # The predicted class 'c' is the count of how many P(y >= k) probabilities
-        # are greater than self.threshold.
-        predict_levels = probas > self.threshold
-        predicted_labels = torch.sum(predict_levels, dim=1)  # Shape (N,)
-
-        # Step 5: Convert the predicted integer labels to one-hot probabilities
-        num_classes = logits.shape[1] + 1
-
-        # Initialize an (N, J) probability tensor
-        probs = torch.zeros(
-            (len(predicted_labels), num_classes), dtype=torch.float32, device=device
-        )
-
-        # Set the probability of the predicted class to 1.0 (one-hot)
-        probs[torch.arange(len(predicted_labels), device=device), predicted_labels] = (
-            1.0
-        )
-
-        return probs.cpu().numpy()
+        logits = torch.as_tensor(logits, dtype=torch.float32)
+        return torch.cumprod(torch.sigmoid(logits), dim=1)

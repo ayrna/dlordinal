@@ -176,11 +176,10 @@ def test_attribute_delegation(torch_device):
         ),
     ],
 )
-def test_predict_proba_corn_logic(
-    input_logits, threshold, expected_probs, torch_device
-):
-    """Tests that predict_proba correctly applies the CORN logic using
-    a variable threshold on the specified device."""
+def test_predict_corn_logic(input_logits, threshold, expected_probs, torch_device):
+    """Tests that predict correctly applies the CORN logic using
+    a variable threshold on the specified device. ``expected_probs`` is the one-hot
+    encoding of the expected class."""
 
     # Initialize mock and wrapper with the specific threshold
     mock_classifier = MockClassifier(input_logits, device=torch_device)
@@ -188,12 +187,51 @@ def test_predict_proba_corn_logic(
 
     # X is irrelevant for the mock
     X_dummy = None
-    result_probs = wrapper.predict_proba(X_dummy)
+    predicted_labels = wrapper.predict(X_dummy)
 
-    # The output is always NumPy on CPU for safe comparison
-    assert np.array_equal(result_probs, expected_probs)
-    assert result_probs.shape == expected_probs.shape
+    assert np.array_equal(predicted_labels, expected_probs.argmax(axis=1))
+
+
+@pytest.mark.parametrize(
+    "input_logits",
+    [
+        torch.tensor([[-5.0, -5.0, -5.0]]),
+        torch.tensor([[3.0, -3.0, -3.0], [3.0, 3.0, -3.0], [0.2, -0.4, 1.3]]),
+        torch.tensor([[50.0, 50.0, 50.0, 50.0]]),
+    ],
+)
+def test_predict_proba_returns_corn_class_probabilities(input_logits, torch_device):
+    """predict_proba returns P(y=k) = P(y>k-1) - P(y>k), with
+    P(y>k) = prod_{i<=k} sigmoid(z_i)."""
+    mock_classifier = MockClassifier(input_logits, device=torch_device)
+    wrapper = CORNClassifierWrapper(mock_classifier)
+
+    result_probs = wrapper.predict_proba(None)
+
+    cum = np.cumprod(1 / (1 + np.exp(-input_logits.double().numpy())), axis=1)
+    n = cum.shape[0]
+    expected = np.hstack([np.ones((n, 1)), cum]) - np.hstack([cum, np.zeros((n, 1))])
+
+    assert isinstance(result_probs, np.ndarray)
     assert result_probs.dtype == np.float32
+    assert result_probs.shape == (n, input_logits.shape[1] + 1)
+    assert np.all(result_probs >= 0)
+    assert np.allclose(result_probs.sum(axis=1), 1.0, atol=1e-6)
+    assert np.allclose(result_probs, expected, atol=1e-6)
+
+
+def test_wrapper_can_be_pickled_and_deep_copied():
+    """__getattr__ delegation must not recurse while the wrapper is rebuilt."""
+    import copy
+    import pickle
+
+    wrapper = CORNClassifierWrapper(
+        MockClassifier(torch.zeros(1, 3), device="cpu"), threshold=0.7
+    )
+    for clone in (copy.deepcopy(wrapper), pickle.loads(pickle.dumps(wrapper))):
+        assert clone.threshold == 0.7
+        assert isinstance(clone.classifier, MockClassifier)
+        assert clone.some_attribute == 42
 
 
 # --- `predict` Tests ---

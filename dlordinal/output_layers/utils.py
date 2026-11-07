@@ -12,9 +12,7 @@ def stable_sigmoid(t: torch.Tensor) -> torch.Tensor:
     t : torch.Tensor
         Input tensor
     """
-    idx = t > 0
-    out = torch.zeros_like(t)
-    out[idx] = 1.0 / (1 + torch.exp(-t[idx]))
-    exp_t = torch.exp(t[~idx])
-    out[~idx] = exp_t / (1.0 + exp_t)
-    return out
+    # torch.sigmoid is already numerically stable for large |t|. It avoids the
+    # boolean indexing of a manual implementation, which needs several kernels and
+    # a host-device synchronisation on GPU.
+    return torch.sigmoid(t)

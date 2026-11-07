@@ -91,7 +91,8 @@ class PoissonLayer(torch.nn.Module):
 
         # 2. Compute Poisson log-probabilities for all classes
         k = torch.arange(self.num_classes, device=input.device, dtype=input.dtype)
-        pois = Poisson(rate=lambda_[:, None])
+        # validate_args=False: the support check of k needs a host-device sync
+        pois = Poisson(rate=lambda_[:, None], validate_args=False)
         log_probs = pois.log_prob(k)
 
         # 3. Temperature scaling (controls sharpness)

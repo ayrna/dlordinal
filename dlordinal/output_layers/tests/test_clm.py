@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import torch
 
 from dlordinal.output_layers import CLM
@@ -89,3 +90,42 @@ def test_clm_all_combinations(device):
                 assert clm.min_distance == min_distance
 
                 _test_probas(clm, device)
+
+
+def test_clm_cloglog_keeps_small_probabilities():
+    clm = CLM(num_classes=4, link_function="cloglog")
+    # Initial thresholds are (0, 1, 2)
+    probs = clm(torch.tensor([[25.0], [-1.0], [0.0]]))
+    assert torch.all(probs > 0)
+    assert torch.isfinite(torch.log(probs)).all()
+    assert torch.allclose(probs.sum(dim=1), torch.ones(3))
+    # Lower tail: P(y = 0) = 1 - exp(-exp(0 - 25)) = -expm1(-exp(-25))
+    expected_p0 = -torch.expm1(-torch.exp(torch.tensor(-25.0, dtype=torch.float64)))
+    assert probs[0, 0].item() == pytest.approx(expected_p0.item(), rel=1e-5)
+    # Upper tail: P(y = 3) = exp(-exp(2 + 1)), about 1.9e-9, below float32 eps
+    expected_p3 = torch.exp(-torch.exp(torch.tensor(3.0, dtype=torch.float64)))
+    assert probs[1, 3].item() == pytest.approx(expected_p3.item(), rel=1e-5)
+
+
+def test_clm_probit_matches_normal_cdf():
+    torch.manual_seed(0)
+    clm = CLM(num_classes=5, link_function="probit")
+    x = torch.randn(10, 1)
+    thresholds = clm._convert_thresholds(
+        clm.thresholds_b_, clm.thresholds_a_, clm.min_distance
+    )
+    cdf = torch.distributions.Normal(0.0, 1.0).cdf(thresholds[None, :] - x)
+    expected = torch.diff(cdf, prepend=torch.zeros(10, 1), append=torch.ones(10, 1))
+    assert torch.allclose(clm(x), expected, atol=1e-6)
+
+
+def test_clm_invalid_link_function():
+    with pytest.raises(ValueError, match="link_function"):
+        CLM(num_classes=4, link_function="Logit")
+
+
+def test_stable_sigmoid_matches_torch_sigmoid():
+    from dlordinal.output_layers.utils import stable_sigmoid
+
+    t = torch.tensor([-1000.0, -50.0, -1.0, 0.0, 1.0, 50.0, 1000.0])
+    assert torch.equal(stable_sigmoid(t), torch.sigmoid(t))
