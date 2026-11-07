@@ -101,9 +101,15 @@ class SLACELoss(nn.Module):
         # In case target has shape [Batch, 1], flatten to [Batch]
         target = target.view(-1)
 
+        # float32 (float64 only for float64 inputs): float64 is very slow on most GPUs
+        work_dtype = torch.promote_types(input.dtype, torch.float32)
+        input = input.to(work_dtype)
+
         phi = torch.abs(
-            torch.arange(self.num_classes, device=input.device).view(1, -1)
-            - target.double().view(-1, 1)
+            torch.arange(self.num_classes, device=input.device, dtype=work_dtype).view(
+                1, -1
+            )
+            - target.to(work_dtype).view(-1, 1)
         )
 
         softmax_targets = F.softmax(-self.alpha * phi, dim=1)
@@ -124,14 +130,10 @@ class SLACELoss(nn.Module):
         # Therefore, mass_weights == softmax_targets
         mass_weights = softmax_targets
 
-        accumulating_softmax = (
-            torch.matmul(
-                self.prox_dom[target.long()].double(),
-                torch.unsqueeze(input, 2).double(),
-            )
-            .double()
-            .squeeze(dim=2)
-        )
+        accumulating_softmax = torch.matmul(
+            self.prox_dom[target.long()].to(work_dtype),
+            torch.unsqueeze(input, 2),
+        ).squeeze(dim=2)
 
         per_sample_loss = -torch.sum(
             mass_weights * torch.log(accumulating_softmax + 1e-9), dim=1

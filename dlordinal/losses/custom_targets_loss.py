@@ -118,6 +118,7 @@ class CustomTargetsCrossEntropyLoss(CustomTargetsLoss):
             ignore_index=ignore_index,
             reduce=reduce,
             reduction=reduction,
+            label_smoothing=label_smoothing,
         )
         super().__init__(
             base_loss=base_loss,

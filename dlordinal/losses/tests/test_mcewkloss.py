@@ -199,3 +199,24 @@ def test_mcewkloss_combination(device):
     assert output_logits.item() == pytest.approx(output_combined_logits.item())
     assert output.item() == pytest.approx(output_combined_logits.item())
     assert output_logits.item() == pytest.approx(output_combined.item())
+
+
+@pytest.mark.parametrize("reduction", ["none", "sum", "mean"])
+def test_mcewkloss_honours_reduction(device, reduction):
+    torch.manual_seed(0)
+    num_classes, C = 5, 0.3
+    input = torch.randn(16, num_classes, device=device)
+    target = torch.randint(0, num_classes, (16,), device=device)
+
+    loss = MCEAndWKLoss(num_classes, C=C, reduction=reduction, use_logits=True).to(
+        device
+    )(input, target)
+
+    wk = WKLoss(num_classes, use_logits=True).to(device)(input, target)
+    mce = MCELoss(num_classes, reduction=reduction, use_logits=True).to(device)(
+        input, target
+    )
+    assert loss.shape == mce.shape
+    if reduction == "none":
+        assert loss.shape == (num_classes,)
+    assert torch.allclose(loss, C * wk + (1 - C) * mce)

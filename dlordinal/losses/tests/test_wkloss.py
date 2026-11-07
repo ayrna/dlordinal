@@ -564,3 +564,35 @@ def test_wk_loss_logarithm(device):
     assert torch.log(output.cpu() + loss_log.epsilon).item() == pytest.approx(
         output_log.item(), rel=1e-6
     )
+
+
+def test_wkloss_penalisation_matrix_follows_device(device):
+    num_classes = 5
+    loss = WKLoss(num_classes, use_logits=True)
+    input = torch.randn(8, num_classes)
+    target = torch.randint(0, num_classes, (8,))
+    # First forward pass on the CPU, then move the loss and the data
+    expected = loss(input, target)
+    loss = loss.to(device)
+    assert loss.weights_.device.type == device.type
+    assert "weights_" not in loss.state_dict()
+    result = loss(input.to(device), target.to(device))
+    assert result.item() == pytest.approx(expected.item(), rel=1e-5)
+
+
+def test_wkloss_device_change_without_moving_loss(device):
+    num_classes = 5
+    loss = WKLoss(num_classes, use_logits=True)
+    input = torch.randn(8, num_classes)
+    target = torch.randint(0, num_classes, (8,))
+    expected = loss(input, target)
+    result = loss(input.to(device), target.to(device))
+    assert result.item() == pytest.approx(expected.item(), rel=1e-5)
+
+
+def test_wkloss_float64_input(device):
+    num_classes = 4
+    loss = WKLoss(num_classes, use_logits=True).to(device)
+    input = torch.randn(8, num_classes, dtype=torch.float64, device=device)
+    target = torch.randint(0, num_classes, (8,), device=device)
+    assert loss(input, target).dtype == torch.float64

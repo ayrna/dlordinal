@@ -68,7 +68,7 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
         if weight is not None and weight.shape != (num_classes,):
             raise ValueError(
                 f"Weight shape {weight.shape} is not compatible"
-                + "with num_classes {num_classes}"
+                + f" with num_classes {num_classes}"
             )
 
         if reduction not in ["mean", "sum", "none"]:
@@ -114,8 +114,7 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
 
         # Apply class weights if defined
         if self.weight is not None:
-            tiled_weight = torch.tile(self.weight, (per_class_se.shape[0], 1))
-            per_class_se = per_class_se * tiled_weight
+            per_class_se = per_class_se * self.weight
 
         # Compute the mean squared error for each class
         per_class_mse = torch.mean(per_class_se, dim=0)
@@ -131,7 +130,8 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
             probabilities.
 
         target : torch.Tensor
-            Ground truth labels, typically in class indices.
+            Ground truth labels, either class indices of shape (N,) or one-hot
+            encoded labels of shape (N, J).
 
         Returns
         -------
@@ -141,7 +141,12 @@ class MCELoss(torch.nn.modules.loss._WeightedLoss):
             Otherwise, the MSE is reduced according to the method (`mean`, `sum`).
         """
 
-        target_oh = torch.nn.functional.one_hot(target, num_classes=self.num_classes)
+        if target.dim() == 1:
+            target_oh = torch.nn.functional.one_hot(
+                target, num_classes=self.num_classes
+            )
+        else:
+            target_oh = target
 
         per_class_mse = self.compute_per_class_mse(input, target_oh)
 

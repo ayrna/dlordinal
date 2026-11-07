@@ -65,7 +65,7 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
         if weight is not None and weight.shape != (num_classes,):
             raise ValueError(
                 f"Weight shape {weight.shape} is not compatible"
-                + "with num_classes {num_classes}"
+                + f" with num_classes {num_classes}"
             )
 
         if C < 0 or C > 1:
@@ -85,25 +85,31 @@ class MCEAndWKLoss(torch.nn.modules.loss._WeightedLoss):
             weight=weight,
             use_logits=self.use_logits,
         )
-        self.mce = MCELoss(self.num_classes, weight=weight, use_logits=self.use_logits)
+        self.mce = MCELoss(
+            self.num_classes,
+            weight=weight,
+            reduction=reduction,
+            use_logits=self.use_logits,
+        )
 
     def forward(self, input: torch.Tensor, target: torch.Tensor):
         """
         Parameters
         ----------
         input : torch.Tensor
+            Predictions of shape (N, num_classes). If `use_logits` is True, these
+            are logits. Otherwise, they are probabilities.
+        target : torch.Tensor
             Ground truth labels of shape (N,) where N is the batch size. Values are
             class indices in the range [0, num_classes-1].
-        target : torch.Tensor
-            Predicted labels of shape (N, num_classes). If `use_logits` is True, these
-            are logits. Otherwise, they are probabilities.
 
         Returns
         -------
         loss : torch.Tensor
             A scalar tensor representing the weighted sum of MCE and QWK loss. If
-            `reduction` is 'none', returns a tensor of shape (num_classes,) containing
-            the per-class loss for both MCE and WK losses.
+            `reduction` is 'none', returns a tensor of shape (num_classes,) with
+            ``C * WK + (1 - C) * MCE_j`` for every class ``j``, where the WK term is
+            the (scalar) batch Weighted Kappa loss.
         """
 
         wk_result = self.wk(input, target)

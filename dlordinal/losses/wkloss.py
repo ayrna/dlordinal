@@ -130,7 +130,13 @@ class WKLoss(nn.Module):
         if self.weight is not None:
             # Repeat weight num_classes times in columns
             tiled_weight = self.weight.repeat((self.num_classes, 1)).to(input.device)
-            self.weights_ *= tiled_weight
+            self.weights_ = self.weights_ * tiled_weight
+
+        # Register as a non-persistent buffer so that the penalisation matrix
+        # follows the module in .to() / .cuda() without entering the state_dict.
+        weights = self.weights_
+        del self.weights_
+        self.register_buffer("weights_", weights, persistent=False)
 
     def forward(self, input, target):
         """
@@ -165,21 +171,20 @@ class WKLoss(nn.Module):
 
         # Convert to onehot if integer labels are provided
         if target.dim() == 1:
-            y = torch.eye(num_classes).to(target.device)
-            target = y[target]
+            target = torch.nn.functional.one_hot(target.long(), num_classes)
 
-        target = target.float()
+        target = target.to(input.dtype)
 
         if self.first_forward_:
             if not self.use_logits and not torch.allclose(
-                input.sum(dim=1), torch.tensor(1.0, device=input.device)
+                input.sum(dim=1), torch.ones((), device=input.device, dtype=input.dtype)
             ):
                 raise ValueError(
                     "When passing use_logits=False, the input"
                     " should be probabilities, not logits."
                 )
             elif self.use_logits and torch.allclose(
-                input.sum(dim=1), torch.tensor(1.0, device=input.device)
+                input.sum(dim=1), torch.ones((), device=input.device, dtype=input.dtype)
             ):
                 raise ValueError(
                     "When passing use_logits=True, the input"
@@ -192,18 +197,22 @@ class WKLoss(nn.Module):
         if self.use_logits:
             input = torch.nn.functional.softmax(input, dim=1)
 
+        # A no-op when the loss was moved with .to(); needed when the device changed
+        # after the first forward pass without moving the loss module.
+        weights = self.weights_.to(input.device)
+
         hist_rater_a = torch.sum(input, 0)
         hist_rater_b = torch.sum(target, 0)
 
         conf_mat = torch.matmul(input.T, target)
 
         bsize = input.size(0)
-        nom = torch.sum(self.weights_ * conf_mat)
+        nom = torch.sum(weights * conf_mat)
         expected_probs = torch.matmul(
             torch.reshape(hist_rater_a, [num_classes, 1]),
             torch.reshape(hist_rater_b, [1, num_classes]),
         )
-        denom = torch.sum(self.weights_ * expected_probs / bsize)
+        denom = torch.sum(weights * expected_probs / bsize)
 
         ret = nom / (denom + self.epsilon)
 

@@ -275,3 +275,31 @@ def test_exact_value_noprox(torch_device):
         torch.tensor(expected_loss, dtype=loss.dtype, device=torch_device),
         atol=1e-5,
     ), f"Exact loss value mismatch. Expected: {expected_loss}, Got: {loss.item()}"
+
+
+def test_prox_mode_rejects_classes_absent_from_train_targets():
+    with pytest.raises(ValueError, match="absent"):
+        SORDLoss(
+            alpha=1.0, num_classes=4, train_targets=torch.tensor([0, 1, 3]), prox=True
+        )
+
+
+def test_prox_mode_rejects_unknown_ftype():
+    with pytest.raises(ValueError, match="ftype"):
+        SORDLoss(
+            alpha=1.0,
+            num_classes=3,
+            train_targets=torch.tensor([0, 1, 2]),
+            prox=True,
+            ftype="unknown",
+        )
+
+
+def test_prox_matrices_are_non_persistent_buffers(torch_device):
+    loss_fn = SORDLoss(
+        alpha=1.0, num_classes=3, train_targets=torch.tensor([0, 1, 1, 2]), prox=True
+    ).to(torch_device)
+    buffers = dict(loss_fn.named_buffers())
+    assert buffers["prox_mat"].device.type == torch_device.type
+    assert buffers["norm_prox_mat"].device.type == torch_device.type
+    assert "prox_mat" not in loss_fn.state_dict()

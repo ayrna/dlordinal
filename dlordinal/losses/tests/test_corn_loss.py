@@ -363,3 +363,41 @@ def test_corn_loss_probabilistic_targets_wrong_shapes(
         corn_loss_fn.to(device)(
             y_pred[:2], torch.full((3, num_classes), 1.0 / num_classes)
         )
+
+
+def _corn_loop_reference(y_pred, y_true, num_classes):
+    """Per-task loop of the reference CORN implementation."""
+    log_sigmoid = nn.LogSigmoid()
+    num_examples, losses = 0, 0.0
+    for task in range(num_classes - 1):
+        mask = y_true > task - 1
+        labels = (y_true[mask] > task).to(y_pred.dtype)
+        if len(labels) < 1:
+            continue
+        num_examples += len(labels)
+        pred = y_pred[mask, task]
+        losses += -torch.sum(
+            log_sigmoid(pred) * labels + (log_sigmoid(pred) - pred) * (1 - labels)
+        )
+    return losses / num_examples
+
+
+@pytest.mark.parametrize("num_classes", [2, 3, 7])
+def test_cornloss_vectorised_matches_loop(device, num_classes):
+    torch.manual_seed(0)
+    y_pred = torch.randn(50, num_classes - 1, device=device, requires_grad=True)
+    y_true = torch.randint(0, num_classes, (50,), device=device)
+    loss = CORNLoss(num_classes)(y_pred, y_true)
+    expected = _corn_loop_reference(y_pred, y_true, num_classes)
+    assert loss.item() == pytest.approx(expected.item(), abs=ATOL)
+
+    grad = torch.autograd.grad(loss, y_pred)[0]
+    expected_grad = torch.autograd.grad(expected, y_pred)[0]
+    assert torch.allclose(grad, expected_grad, atol=ATOL)
+
+
+def test_cornloss_empty_batch(device):
+    y_pred = torch.zeros(0, 4, device=device, requires_grad=True)
+    loss = CORNLoss(5)(y_pred, torch.zeros(0, dtype=torch.long, device=device))
+    loss.backward()
+    assert loss.item() == 0.0

@@ -34,3 +34,13 @@ def test_custom_loss_forward():
 
     # Verifies that the loss is greater than zero
     assert output.item() > 0
+
+
+def test_custom_targets_cross_entropy_loss_label_smoothing():
+    cls_probs = torch.eye(3)
+    loss_fn = CustomTargetsCrossEntropyLoss(cls_probs, eta=0.0, label_smoothing=0.3)
+    assert loss_fn.base_loss.label_smoothing == 0.3
+    input = torch.randn(4, 3)
+    target = torch.tensor([0, 1, 2, 0])
+    expected = torch.nn.CrossEntropyLoss(label_smoothing=0.3)(input, target)
+    assert loss_fn(input, target).item() == pytest.approx(expected.item())

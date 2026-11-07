@@ -81,21 +81,33 @@ class CDWCELoss(nn.Module):
         else:
             y_true_indices = y_true.view(-1, 1)
 
+        y_true_indices = y_true_indices.long()
         N = y_true_indices.size(0)
         J = self.num_classes
 
-        s = torch.exp(y_pred).sum(dim=1, keepdim=True)
-        if self.margin > 0.0:
-            l1 = torch.log(torch.min(s - torch.exp(y_pred) + self.margin * s, s) + 1e-8)
-            l2 = torch.log(s + 1e-8)
-            l_1_2 = l1 - l2
-        else:
-            l1 = torch.log(s - torch.exp(y_pred) + 1e-8)
-            l2 = torch.log(s + 1e-8)
-            l_1_2 = l1 - l2
+        if not y_pred.is_floating_point():
+            y_pred = y_pred.float()
 
-        i_indices = torch.arange(J).view(1, -1).expand(N, J).to(y_true_indices.device)
-        weights = (torch.abs(i_indices - y_true_indices) ** self.alpha).float()
+        # Work with log-probabilities so that large logits cannot overflow exp().
+        log_p = torch.nn.functional.log_softmax(y_pred, dim=1)
+        p = log_p.exp()
+        if self.margin > 0.0:
+            # log(min(1 - p + margin, 1)); the argument is at least `margin` > 0
+            l_1_2 = torch.log(torch.clamp(1.0 - p + self.margin, max=1.0))
+        else:
+            # log(1 - p) without cancellation. log1p(-p) is accurate for p <= 0.5,
+            # and at most one class per sample has p > 0.5. For that class, 1 - p is
+            # the total probability of the other classes, computed as a logsumexp of
+            # their log-probabilities. The clamp keeps the branch that torch.where
+            # discards finite, so its gradient cannot be NaN.
+            dominant = p > 0.5
+            log_rest = torch.logsumexp(
+                log_p.masked_fill(dominant, float("-inf")), dim=1, keepdim=True
+            )
+            l_1_2 = torch.where(dominant, log_rest, torch.log1p(-p.clamp(max=0.5)))
+
+        i_indices = torch.arange(J, device=y_true_indices.device).view(1, -1)
+        weights = (torch.abs(i_indices - y_true_indices) ** self.alpha).to(l_1_2.dtype)
 
         loss = l_1_2 * weights
 

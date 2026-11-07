@@ -506,3 +506,38 @@ def test_cdwce_random_y(device):
         )
         assert loss_value.item() == pytest.approx(loss_value_vect.item(), abs=1e-4)
         assert loss_value.item() == pytest.approx(loss_value_loop.item(), abs=1e-4)
+
+
+@pytest.mark.parametrize("margin", [0.0, 0.1])
+def test_cdwce_large_logits_are_finite(device, margin):
+    loss_fn = CDWCELoss(num_classes=5, alpha=1.0, margin=margin).to(device)
+    y_pred = torch.tensor(
+        [[100.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 1000.0]],
+        device=device,
+        requires_grad=True,
+    )
+    y_true = torch.tensor([1, 0], device=device)
+    loss = loss_fn(y_pred, y_true)
+    loss.backward()
+    assert torch.isfinite(loss)
+    assert torch.isfinite(y_pred.grad).all()
+
+
+def test_cdwce_matches_exact_log_one_minus_p(device):
+    torch.manual_seed(0)
+    num_classes, alpha = 6, 1.5
+    y_pred = (torch.randn(64, num_classes) * 30).to(device)
+    y_true = torch.randint(0, num_classes, (64,)).to(device)
+    loss = CDWCELoss(num_classes=num_classes, alpha=alpha).to(device)(y_pred, y_true)
+
+    # float64 reference: log(1 - p) = logsumexp over the other classes - logsumexp
+    z = y_pred.double()
+    eye = torch.eye(num_classes, dtype=torch.bool, device=device)
+    log_rest = torch.logsumexp(z.unsqueeze(1).masked_fill(eye, float("-inf")), dim=2)
+    log_one_minus_p = log_rest - torch.logsumexp(z, dim=1, keepdim=True)
+    distance = torch.abs(
+        torch.arange(num_classes, device=device).view(1, -1) - y_true.view(-1, 1)
+    )
+    expected = -(log_one_minus_p * distance.double() ** alpha).sum() / len(y_true)
+
+    assert loss.item() == pytest.approx(expected.item(), rel=1e-4)
