@@ -13,6 +13,7 @@ from .general_triangular_loss import (
 from .geometric_loss import GeometricCrossEntropyLoss, GeometricLoss
 from .mceloss import MCELoss
 from .mcewkloss import MCEAndWKLoss
+from .normalized_cross_entropy import NormalizedCrossEntropyLoss
 from .ordinal_ecoc_distance_loss import OrdinalECOCDistanceLoss
 from .poisson_loss import PoissonCrossEntropyLoss, PoissonLoss
 from .slace import SLACELoss
@@ -39,6 +40,7 @@ __all__ = [
     "GeometricLoss",
     "MCEAndWKLoss",
     "MCELoss",
+    "NormalizedCrossEntropyLoss",
     "OrdinalECOCDistanceLoss",
     "PoissonCrossEntropyLoss",
     "PoissonLoss",
