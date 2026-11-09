@@ -155,3 +155,58 @@ def test_hci_load_data_with_dataloader(hci_train, hci_test):
         assert images.shape == (10, 3, 224, 224)
         assert labels.shape == (10,)
         break
+
+
+@pytest.mark.no_gpu_ci
+def test_md5sums_use_posix_separators(hci_train):
+    lines = (hci_train.base_root / "HCI" / "md5sums.txt").read_text().splitlines()
+    assert lines
+    for line in lines:
+        _, relative_path = line.split(" ", 1)
+        assert "\\" not in relative_path
+        assert relative_path.startswith(("train/", "test/"))
+
+
+@pytest.mark.no_gpu_ci
+def test_md5sums_with_backslashes_are_accepted(hci_train):
+    md5sum_path = hci_train.base_root / "HCI" / "md5sums.txt"
+    content = md5sum_path.read_text()
+    md5sum_path.write_text(content.replace("/", "\\"))
+    assert hci_train._verify_md5sums()
+
+
+@pytest.mark.no_gpu_ci
+def test_split_does_not_depend_on_listing_order(
+    hci_train, hci_test, tmp_path, monkeypatch
+):
+    # Rebuild the unsplit category folders twice from the prepared dataset
+    folders = []
+    for name in ("a", "b"):
+        folder = tmp_path / name
+        for path, label in hci_train.samples + hci_test.samples:
+            dest = folder / str(label)
+            dest.mkdir(parents=True, exist_ok=True)
+            shutil.copy(path, dest / Path(path).name)
+        folders.append(folder)
+
+    hci_train._split_train_test(folders[0])
+
+    original_glob = Path.glob
+
+    def reversed_glob(self, pattern, *args, **kwargs):
+        return reversed(sorted(original_glob(self, pattern, *args, **kwargs)))
+
+    monkeypatch.setattr(Path, "glob", reversed_glob)
+    hci_train._split_train_test(folders[1])
+    monkeypatch.setattr(Path, "glob", original_glob)
+
+    for subset in ("train", "test"):
+        a = sorted(
+            p.relative_to(folders[0]).as_posix()
+            for p in (folders[0] / subset).rglob("*.jpg")
+        )
+        b = sorted(
+            p.relative_to(folders[1]).as_posix()
+            for p in (folders[1] / subset).rglob("*.jpg")
+        )
+        assert a and a == b

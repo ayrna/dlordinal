@@ -1,3 +1,4 @@
+import os
 from hashlib import md5
 from pathlib import Path
 from shutil import move, rmtree
@@ -12,6 +13,8 @@ from torchvision.datasets.utils import (
     download_and_extract_archive,
     extract_archive,
 )
+
+from ._utils import rename_with_retry
 
 
 class HCI(ImageFolder):
@@ -122,12 +125,12 @@ class HCI(ImageFolder):
                 / "imgs"
                 / "decade_database"
             )
-            extracted_folder.rename(target_folder)
+            rename_with_retry(extracted_folder, target_folder)
             rmtree(self.base_root / "HistoricalColor-ECCV2012", ignore_errors=True)
 
             # Rename categories
             for old_name, new_name in self.CATEGORIES.items():
-                (target_folder / old_name).rename(target_folder / new_name)
+                rename_with_retry(target_folder / old_name, target_folder / new_name)
 
             # Rescale images to 224x224
             for cat in self.CATEGORIES.values():
@@ -152,11 +155,12 @@ class HCI(ImageFolder):
         return False
 
     def _split_train_test(self, folder: Path, train_frac: float = 0.7, seed: int = 0):
-        # Gather all images and labels
+        # Gather all images and labels. Files are sorted so that the split does not
+        # depend on the order in which the file system lists them.
         records = [
             {"path": str(p.resolve()), "label": int(cat)}
             for cat in self.CATEGORIES.values()
-            for p in (folder / cat).glob("*")
+            for p in sorted((folder / cat).glob("*"), key=lambda p: p.name)
             if p.suffix.lower() in IMG_EXTENSIONS
         ]
         df = pd.DataFrame(records)
@@ -180,22 +184,28 @@ class HCI(ImageFolder):
                 cat_folder.rmdir()
 
     def _create_md5sums_file(self):
+        # md5sums.txt marks a complete preparation: write it atomically, with POSIX
+        # separators so that the file is valid on every operating system.
         md5sum_path = self.base_root / "HCI" / "md5sums.txt"
-        with open(md5sum_path, "w") as f:
-            for img_path in (self.base_root / "HCI").rglob("*"):
+        tmp_path = md5sum_path.with_name(md5sum_path.name + ".tmp")
+        with open(tmp_path, "w", encoding="utf-8", newline="\n") as f:
+            for img_path in sorted((self.base_root / "HCI").rglob("*")):
                 if img_path.suffix.lower() in IMG_EXTENSIONS:
                     with open(img_path, "rb") as img_file:
                         file_hash = md5(img_file.read()).hexdigest()
                     relative_path = img_path.relative_to(self.base_root / "HCI")
-                    f.write(f"{file_hash} {relative_path}\n")
+                    f.write(f"{file_hash} {relative_path.as_posix()}\n")
+        os.replace(tmp_path, md5sum_path)
 
     def _verify_md5sums(self) -> bool:
         md5sum_path = self.base_root / "HCI" / "md5sums.txt"
         if not md5sum_path.exists():
             return False
-        with open(md5sum_path, "r") as f:
+        with open(md5sum_path, "r", encoding="utf-8") as f:
             for line in f:
                 expected_hash, relative_path = line.strip().split(" ", 1)
+                # Files written by older versions on Windows use backslashes
+                relative_path = relative_path.replace("\\", "/")
                 img_path = self.base_root / "HCI" / relative_path
                 if not img_path.exists():
                     return False

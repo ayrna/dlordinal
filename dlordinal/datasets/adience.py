@@ -2,7 +2,6 @@ import base64
 import hashlib
 import json
 import re
-import sys
 import tarfile
 import warnings
 from contextlib import closing
@@ -14,10 +13,17 @@ from urllib.request import Request, urlopen
 import numpy as np
 import pandas as pd
 from PIL import Image
-from sklearn.model_selection import StratifiedShuffleSplit
 from torchvision.datasets.utils import check_integrity
 from torchvision.datasets.vision import VisionDataset
 from tqdm import tqdm
+
+from ._utils import (
+    marker_matches,
+    n_splits_from_test_size,
+    remove_marker,
+    stratified_group_split,
+    write_marker,
+)
 
 
 class Adience(VisionDataset):
@@ -49,7 +55,14 @@ class Adience(VisionDataset):
         List of age ranges to use, by default [(0, 2), (4, 6), (8, 13),
         (15, 20), (25, 32), (38, 43), (48, 53), (60, 100)].
     test_size : float, optional, default = 0.2
-        Test size.
+        Approximate fraction of the images used for the test partition. The
+        partition is subject-disjoint: all the images of a subject (``user_id``)
+        belong to the same partition, so that no identity is shared between train
+        and test. It is obtained as one fold of a
+        :class:`sklearn.model_selection.StratifiedGroupKFold` with
+        ``n_splits = max(2, round(1 / test_size))`` folds, so the actual test
+        fraction is approximately ``1 / n_splits``. The first fold whose train and
+        test partitions both contain every class is used.
     transform : Callable, optional
         A callable that takes in an PIL image and returns a transformed version.
     target_transform : Callable, optional
@@ -92,6 +105,15 @@ class Adience(VisionDataset):
         Whether to download the dataset if it is not already present in the root
         directory. If False, the files are expected to be already present in the root
         directory.
+
+    Notes
+    -----
+    The extracted images, the resized images and the train/test split are cached
+    inside the dataset directory. Each step writes a completion marker with its
+    metadata once it has finished, and is redone when the marker is missing or
+    does not match the current configuration. The MD5 checksum of
+    ``aligned.tar.gz`` is only verified when the archive has to be downloaded or
+    extracted.
     """
 
     ALIGNED_URL = (
@@ -130,6 +152,10 @@ class Adience(VisionDataset):
         (48, 53),
         (60, 100),
     )
+    # Version of the resized images. Bump it when the resize policy changes.
+    _TRANSFORM_VERSION = 1
+    _TRANSFORM_HEIGHT = 128
+    _SPLIT_SEED = 0
 
     root: Path
     train: bool
@@ -173,12 +199,14 @@ class Adience(VisionDataset):
             )
 
         self._test_size = test_size
+        self._n_splits = n_splits_from_test_size(test_size)
         self.transform = transform
         self.target_transform = target_transform
         self.verbose = verbose
         self.download = download
 
-        self._version = "1.0"
+        # Version 2.0: subject-disjoint split (StratifiedGroupKFold by user_id)
+        self._version = "2.0"
         self._config = self._get_config_dict()
         self._cache_key = self._make_cache_key(self._config)
 
@@ -205,6 +233,11 @@ class Adience(VisionDataset):
         self._folds_path = self._root_adience / "folds"
         self._images_path = self._root_adience / "aligned"
         self._transformed_images_path = self._root_adience / "transformed"
+        self._extracted_marker = self._images_path / ".dlordinal_extracted.json"
+        self._transformed_marker = (
+            self._transformed_images_path / ".dlordinal_transformed.json"
+        )
+        self._archive_verified = False
 
         if self.download and (username is None or password is None):
             raise ValueError("username and password are required when download=True")
@@ -212,53 +245,83 @@ class Adience(VisionDataset):
         if self.download and username is not None and password is not None:
             self._download(username, password)
 
-        if not self._check_input_files():
-            raise FileNotFoundError(
-                "Some input files are missing. Please, check the documentation of the"
-                " root parameter to see the expected directory structure or provide the"
-                " username and password to download the files automatically."
-            )
+        if not self._check_folds():
+            raise FileNotFoundError(self._missing_files_message())
 
         self.folds_ = [
             pd.read_csv(self._folds_path / f"fold_{f}_data.txt", sep="\t")
             for f in range(5)
         ]
 
-        self._extract_data()
-        self._build_transformed()
+        # The archive is only needed (and verified) when the resized images are not
+        # available yet.
+        if not self._check_if_transformed():
+            self._extract_data()
+            self._build_transformed()
         self._df = self._build_dataframe(self.folds_)
         self._build_splits()
 
-    def _check_input_files(self) -> bool:
-        """
-        Check if the input files are present.
-        """
-
-        result = self._data_file_path.exists() and self._folds_path.exists()
-        result = result and check_integrity(
-            str(self._data_file_path), self.ALIGNED_URL[1]
+    @staticmethod
+    def _missing_files_message() -> str:
+        return (
+            "Some input files are missing. Please, check the documentation of the"
+            " root parameter to see the expected directory structure or provide the"
+            " username and password to download the files automatically."
         )
 
-        for i in range(5):
-            result = result and (self._folds_path / f"fold_{i}_data.txt").exists()
-            result = result and check_integrity(
-                str(self._folds_path / f"fold_{i}_data.txt"), self.FOLDS_URLS[i][1]
+    def _check_archive(self) -> bool:
+        """
+        Check if the images archive exists and has the expected MD5 checksum.
+        The (expensive) checksum is computed at most once per instance.
+        """
+        if not self._data_file_path.exists():
+            self._archive_verified = False
+            return False
+        if not self._archive_verified:
+            self._archive_verified = check_integrity(
+                str(self._data_file_path), self.ALIGNED_URL[1]
             )
-        return result
+        return self._archive_verified
+
+    def _check_folds(self) -> bool:
+        """
+        Check if the fold files exist and have the expected MD5 checksums.
+        """
+        for i in range(5):
+            fold_path = self._folds_path / f"fold_{i}_data.txt"
+            if not fold_path.exists() or not check_integrity(
+                str(fold_path), self.FOLDS_URLS[i][1]
+            ):
+                return False
+        return True
+
+    def _check_input_files(self) -> bool:
+        """
+        Check if the input files (archive and fold files) are present and valid.
+        """
+        return self._check_archive() and self._check_folds()
+
+    def _extraction_metadata(self) -> dict:
+        return {"archive_md5": self.ALIGNED_URL[1]}
+
+    def _transform_metadata(self) -> dict:
+        return {
+            "archive_md5": self.ALIGNED_URL[1],
+            "height": self._TRANSFORM_HEIGHT,
+            "version": self._TRANSFORM_VERSION,
+        }
 
     def _check_if_extracted(self) -> bool:
         """
-        Check if the tar.gz file has been extracted.
+        Check if the tar.gz file has been completely extracted.
         """
-        path = self._data_file_path.parent
-        path = path / "aligned"
-        return any(path.rglob("*.jpg"))
+        return marker_matches(self._extracted_marker, self._extraction_metadata())
 
     def _check_if_transformed(self) -> bool:
         """
-        Check if the images have been transformed.
+        Check if all the images have been transformed.
         """
-        return any(self._transformed_images_path.rglob("*.jpg"))
+        return marker_matches(self._transformed_marker, self._transform_metadata())
 
     def _check_if_partitioned(self) -> bool:
         """
@@ -270,21 +333,10 @@ class Adience(VisionDataset):
         train_path = split_dir / "train.csv"
         test_path = split_dir / "test.csv"
 
-        if not (config_path.exists() and train_path.exists() and test_path.exists()):
-            return False
-
-        try:
-            with open(config_path, "r") as f:
-                config = json.load(f)
-        except Exception:
-            return False
-
-        ranges = tuple([tuple(r) for r in config.get("ranges")])
-
         return (
-            config.get("version") == self._version
-            and config.get("test_size") == self._test_size
-            and ranges == self._ranges
+            train_path.exists()
+            and test_path.exists()
+            and marker_matches(config_path, self._config)
         )
 
     def _download_file(
@@ -342,11 +394,12 @@ class Adience(VisionDataset):
                 "Username and password must be provided to download the dataset."
             )
 
-        if (
-            force
-            or not self._data_file_path.exists()
-            or not check_integrity(str(self._data_file_path), self.ALIGNED_URL[1])
-        ):
+        # The archive is not needed once its content has been extracted or resized
+        archive_needed = force or not (
+            self._check_if_transformed() or self._check_if_extracted()
+        )
+
+        if archive_needed and (force or not self._check_archive()):
             aligned_name = "aligned.tar.gz"
 
             if self.verbose:
@@ -359,6 +412,8 @@ class Adience(VisionDataset):
                 password=password,
                 md5=self.ALIGNED_URL[1],
             )
+            # _download_file raises if the checksum of the downloaded file is wrong
+            self._archive_verified = True
 
         self._folds_path.mkdir(exist_ok=True, parents=True)
 
@@ -390,18 +445,23 @@ class Adience(VisionDataset):
                 print("File already extracted.")
             return
 
+        if not self._check_archive():
+            raise FileNotFoundError(self._missing_files_message())
+
         if self.verbose:
             print("Extracting file...")
 
+        remove_marker(self._extracted_marker)
         with tarfile.open(self._data_file_path, "r:gz") as file:
             path = self._data_file_path.parent
             path.mkdir(exist_ok=True, parents=True)
-            if sys.version_info >= (3, 12):
-                file.extractall(
-                    path, members=_track_progress(file, self.verbose), filter="data"
-                )
-            else:
-                file.extractall(path, members=_track_progress(file, self.verbose))
+            kwargs = {}
+            if hasattr(tarfile, "data_filter"):
+                # Reject absolute paths, path traversal and special files
+                kwargs["filter"] = "data"
+            file.extractall(path, members=_track_progress(file, self.verbose), **kwargs)
+
+        write_marker(self._extracted_marker, self._extraction_metadata())
 
     def _build_transformed(self) -> None:
         """
@@ -422,12 +482,14 @@ class Adience(VisionDataset):
                 print("Transformed images already exist.")
             return
 
+        remove_marker(self._transformed_marker)
         self._transformed_images_path.mkdir(exist_ok=True, parents=True)
 
         if self.verbose:
             print("Creating transformed images...")
 
-        image_paths = list(self._images_path.rglob("*.jpg"))
+        image_paths = sorted(self._images_path.rglob("*.jpg"))
+        height = self._TRANSFORM_HEIGHT
 
         for src_image in tqdm(
             image_paths,
@@ -435,27 +497,26 @@ class Adience(VisionDataset):
             disable=not self.verbose,
             desc="transforming",
         ):
-            # Preserve relative structure
+            # Preserve relative structure. Existing files are overwritten because
+            # they may come from an interrupted run.
             rel_path = src_image.relative_to(self._images_path)
             dst_image = self._transformed_images_path / rel_path
-
-            if dst_image.exists():
-                continue
-
             dst_image.parent.mkdir(parents=True, exist_ok=True)
 
             with Image.open(src_image) as img:
                 img = img.convert("RGB")
 
-                width_percent = 128 / float(img.size[1])
+                width_percent = height / float(img.size[1])
                 new_width = int(img.size[0] * width_percent)
 
                 resized = img.resize(
-                    (new_width, 128),
+                    (new_width, height),
                     Image.Resampling.BILINEAR,
                 )
 
                 resized.save(dst_image)
+
+        write_marker(self._transformed_marker, self._transform_metadata())
 
     def _build_dataframe(self, folds: list) -> pd.DataFrame:
         """
@@ -482,6 +543,7 @@ class Adience(VisionDataset):
                 {
                     "path": fold.apply(_image_path_from_row, axis="columns"),
                     "age": fold["age"],
+                    "user_id": fold["user_id"].astype(str),
                 }
             )
 
@@ -491,10 +553,16 @@ class Adience(VisionDataset):
 
     def _build_splits(self):
         """
-        Create train/test splits and persist them as CSV files.
+        Create subject-disjoint train/test splits and persist them as CSV files.
+
+        All the images of a subject (``user_id``) are assigned to the same
+        partition. The test partition is one fold of a
+        :class:`sklearn.model_selection.StratifiedGroupKFold` with
+        ``max(2, round(1 / test_size))`` folds, stratified by age range (see
+        :func:`dlordinal.datasets._utils.stratified_group_split`).
 
         The split is cached using a hash of the dataset configuration
-        (e.g. test_size, ranges).
+        (e.g. test_size, ranges, split method).
         """
 
         split_dir = self._root_adience / "cache" / f"splits_{self._cache_key}"
@@ -510,36 +578,41 @@ class Adience(VisionDataset):
             return
 
         split_dir.mkdir(parents=True, exist_ok=True)
+        # config.json marks a complete split: remove it while the split is rebuilt
+        remove_marker(config_path)
 
-        sss = StratifiedShuffleSplit(
-            n_splits=1,
+        train_idx, test_idx = stratified_group_split(
+            self._df["age"],
+            groups=self._df["user_id"],
             test_size=self._test_size,
-            random_state=0,
+            seed=self._SPLIT_SEED,
         )
 
-        train_idx, test_idx = next(sss.split(self._df, self._df["age"]))
-
-        train_df = self._df.iloc[train_idx][["path", "age"]]
-        test_df = self._df.iloc[test_idx][["path", "age"]]
+        columns = ["path", "age", "user_id"]
+        train_df = self._df.iloc[train_idx][columns]
+        test_df = self._df.iloc[test_idx][columns]
 
         train_df.to_csv(train_path, index=False)
         test_df.to_csv(test_path, index=False)
 
-        with open(config_path, "w") as f:
-            json.dump(self._config, f, indent=2)
+        write_marker(config_path, self._config)
 
         self._load_split_from_csv(split_path)
 
     def _load_split_from_csv(self, split_path: Path):
-        df = pd.read_csv(split_path)
+        df = pd.read_csv(split_path, dtype={"path": str, "user_id": str})
 
         self.data = [str(self._transformed_images_path / p) for p in df["path"]]
-        self.targets = df["age"].tolist()
+        self.targets = [int(t) for t in df["age"]]
         self.classes = np.unique(self.targets).tolist()
 
     def _get_config_dict(self):
         return {
+            "group": "user_id",
+            "n_splits": self._n_splits,
             "ranges": self._ranges,
+            "seed": self._SPLIT_SEED,
+            "split_method": "StratifiedGroupKFold",
             "test_size": self._test_size,
             "version": self._version,
         }
@@ -657,12 +730,15 @@ def _track_progress(file, verbose: bool = False):
     """
     Track the progress of the extraction.
 
+    The members are streamed while they are extracted. The total number of members
+    is not computed beforehand because that would require decompressing the whole
+    archive one extra time.
+
     Parameters
     ----------
     file : tarfile.TarFile
         File to track the progress of.
     """
-    for member in tqdm(file, total=len(file.getmembers()), disable=not verbose):
+    for member in tqdm(file, unit=" files", desc="extracting", disable=not verbose):
         # this will be the current file being extracted
-        # Go over each member
         yield member

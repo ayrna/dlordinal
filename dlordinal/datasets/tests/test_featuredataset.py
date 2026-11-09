@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 import torch
@@ -36,9 +37,10 @@ def test_feature_dataset(sample_data):
         torch.tensor([[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0], [5.0, 10.0]]),
         atol=1e-4,
     )
-    assert torch.allclose(
-        dataset.targets, torch.tensor([0.0, 1.0, 0.0, 1.0, 0.0]), atol=1e-4
-    )
+    assert dataset.targets.dtype == torch.int64
+    assert torch.equal(dataset.targets, torch.tensor([0, 1, 0, 1, 0]))
+    assert dataset.classes.dtype == torch.int64
+    assert torch.equal(dataset.classes, torch.tensor([0, 1]))
 
     dataset.normalize_X()
 
@@ -100,3 +102,60 @@ def test_feature_dataset(sample_data):
         torch.tensor([[-0.8165], [1.2247], [-0.8165], [1.2247], [-0.8165]]),
         atol=1e-4,
     )
+
+
+@pytest.fixture
+def train_test_data(tmp_path):
+    train = pd.DataFrame(
+        {"a": [1.0, 2.0, 3.0, 4.0], "b": [2.0, 4.0, 6.0, 9.0], "y": [0, 1, 2, 1]}
+    )
+    test = pd.DataFrame({"a": [1.0, 5.0], "b": [3.0, 7.0], "y": [0, 2]})
+    train.to_csv(tmp_path / "train.csv", index=False)
+    test.to_csv(tmp_path / "test.csv", index=False)
+    return tmp_path / "train.csv", tmp_path / "test.csv"
+
+
+@pytest.mark.no_gpu_ci
+def test_integer_targets_work_with_classification_losses(train_test_data):
+    dataset = FeatureDataset(train_test_data[0])
+    _, y = next(iter(torch.utils.data.DataLoader(dataset, batch_size=4)))
+    assert y.dtype == torch.int64
+    loss = torch.nn.CrossEntropyLoss()(torch.zeros(4, 3), y)
+    assert torch.isfinite(loss)
+
+
+@pytest.mark.no_gpu_ci
+def test_continuous_targets_stay_float(tmp_path):
+    csv_path = tmp_path / "continuous.csv"
+    pd.DataFrame({"a": [1.0, 2.0, 3.0], "y": [0.5, 1.25, 2.0]}).to_csv(
+        csv_path, index=False
+    )
+    dataset = FeatureDataset(csv_path)
+    assert dataset.targets.dtype == torch.float32
+    assert torch.allclose(dataset.targets, torch.tensor([0.5, 1.25, 2.0]))
+
+
+@pytest.mark.no_gpu_ci
+def test_normalize_with_train_statistics(train_test_data):
+    train = FeatureDataset(train_test_data[0]).normalize_X().normalize_y()
+    test = FeatureDataset(train_test_data[1])
+    test.normalize_X(train.X_mean, train.X_scale)
+    test.normalize_y(train.y_mean, train.y_scale)
+
+    raw = pd.read_csv(train_test_data[1]).to_numpy()
+    expected_X = (raw[:, :2] - train.X_mean) / train.X_scale
+    expected_y = (raw[:, 2:] - train.y_mean) / train.y_scale
+    assert torch.allclose(test.X, torch.tensor(expected_X, dtype=torch.float))
+    assert torch.allclose(test.targets, torch.tensor(expected_y, dtype=torch.float))
+
+
+@pytest.mark.no_gpu_ci
+def test_normalize_with_scalar_statistics(train_test_data):
+    dataset = FeatureDataset(train_test_data[1])
+    dataset.normalize_y(0.5, 2.0)
+    assert torch.allclose(dataset.targets, torch.tensor([[-0.25], [0.75]]))
+    assert np.allclose(dataset.y_mean, [0.5])
+    assert np.allclose(dataset.y_scale, [2.0])
+
+    dataset.normalize_X(1.0, 2.0)
+    assert torch.allclose(dataset.X, torch.tensor([[0.0, 1.0], [2.0, 3.0]]))
