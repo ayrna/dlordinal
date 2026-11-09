@@ -65,3 +65,11 @@ def test_copoc_layer(device):
 
     # Check for unimodality
     assert _check_unimodality(probs) == 1.0
+
+
+def test_copoc_can_be_pickled():
+    import pickle
+
+    copoc = pickle.loads(pickle.dumps(COPOC()))
+    x = torch.randn(3, 5)
+    assert torch.equal(copoc(x), COPOC()(x))

@@ -80,11 +80,14 @@ class GaussianUncertaintyLayer(nn.Module):
         k = torch.arange(self.num_classes, device=x.device, dtype=x.dtype)
 
         # 3. Compute probabilities using Gaussian PDF
-        gaussian = torch.distributions.Normal(loc=mu[:, None], scale=sigma[:, None])
+        gaussian = torch.distributions.Normal(
+            loc=mu[:, None], scale=sigma[:, None], validate_args=False
+        )
         log_probs = gaussian.log_prob(k[None, :])
-        probs = torch.exp(log_probs)
 
-        # 4. Normalize to get probabilities
-        probs = probs / probs.sum(dim=-1, keepdim=True).clamp(min=1e-8)
+        # 4. Normalize to get probabilities. Normalising in log space (softmax) is
+        # exact; exp(log_probs) underflows to all zeros for small sigma, which
+        # gave zero probabilities and an infinite loss.
+        probs = torch.softmax(log_probs, dim=-1)
 
         return probs, sigma

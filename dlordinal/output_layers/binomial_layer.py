@@ -64,7 +64,10 @@ class BinomialLayer(torch.nn.Module):
         p = torch.sigmoid(self.p_layer(input)).squeeze(-1)
         k = torch.arange(num_classes, device=input.device, dtype=input.dtype)
 
-        binom = Binomial(total_count=num_classes - 1, probs=p[:, None])
+        # validate_args=False: the support check of k needs a host-device sync
+        binom = Binomial(
+            total_count=num_classes - 1, probs=p[:, None], validate_args=False
+        )
         probs = torch.exp(binom.log_prob(k))
 
         return probs

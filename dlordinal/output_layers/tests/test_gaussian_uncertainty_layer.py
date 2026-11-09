@@ -166,3 +166,33 @@ def test_deterministic_init(base_config, torch_device):
 
     for p1, p2 in zip(layer1.parameters(), layer2.parameters()):
         assert torch.allclose(p1, p2)
+
+
+def test_gaussian_uncertainty_layer_small_sigma_does_not_underflow():
+    num_classes = 5
+    layer = GaussianUncertaintyLayer(in_features=3, num_classes=num_classes)
+    with torch.no_grad():
+        layer.mu_layer.weight.zero_()
+        layer.mu_layer.bias.fill_(0.5)
+        layer.sigma_layer.weight.zero_()
+        layer.sigma_layer.bias.fill_(-6.0)  # softplus(-6) ~ 0.0025
+    probs, sigma = layer(torch.randn(4, 3))
+    assert torch.all(sigma < 0.01)
+    assert torch.isfinite(probs).all()
+    assert torch.allclose(probs.sum(dim=1), torch.ones(4))
+    # mu = 0.5 lies halfway between classes 0 and 1
+    assert torch.allclose(probs[:, 0], torch.full((4,), 0.5), atol=1e-5)
+    assert torch.allclose(probs[:, 1], torch.full((4,), 0.5), atol=1e-5)
+    loss = torch.nn.functional.nll_loss(torch.log(probs), torch.tensor([0, 1, 0, 1]))
+    assert torch.isfinite(loss)
+
+
+def test_gaussian_uncertainty_layer_matches_normalised_pdf():
+    torch.manual_seed(0)
+    layer = GaussianUncertaintyLayer(in_features=3, num_classes=6)
+    x = torch.randn(8, 3)
+    probs, sigma = layer(x)
+    mu = layer.mu_layer(x).squeeze(-1)
+    k = torch.arange(6, dtype=x.dtype)
+    pdf = torch.exp(-((k[None, :] - mu[:, None]) ** 2) / (2 * sigma[:, None] ** 2))
+    assert torch.allclose(probs, pdf / pdf.sum(dim=1, keepdim=True), atol=1e-6)

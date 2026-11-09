@@ -5,6 +5,12 @@ from torch import Tensor
 from torch.nn import Module
 
 
+def _negative_abs(x: Tensor) -> Tensor:
+    """Default :math:`\\psi(x) = -|x|`, a module-level function so that COPOC
+    can be pickled (lambdas cannot)."""
+    return -torch.abs(x)
+
+
 class COPOC(Module):
     """Implements the  Conformal Predictions for OC (COPOC) output layer(s) from :footcite:t:`dey2023conformal`,
     which enforce unimodality in the output probabilities in a non-parametric way.
@@ -39,8 +45,8 @@ class COPOC(Module):
 
     def __init__(
         self,
-        phi: Callable[[Tensor], Tensor] = lambda x: torch.abs(x),
-        psi: Callable[[Tensor], Tensor] = lambda x: -torch.abs(x),
+        phi: Callable[[Tensor], Tensor] = torch.abs,
+        psi: Callable[[Tensor], Tensor] = _negative_abs,
     ) -> None:
         super().__init__()
         self.phi = phi
@@ -60,7 +66,7 @@ class COPOC(Module):
             Logits of the unimodal output layer (batch_size, num_classes).
         """
         # Step 1: Compute η(x) = f(x; θ), which is given by the input tensor.
-        n = x.clone()  # η ∈ ℝ^K — raw logits for each class
+        n = x  # η ∈ ℝ^K — raw logits for each class (not modified in place)
 
         # Step 2: Ensure all values are non-negative: v_k = φ(η_k),
         # φ = softplus ensures v_k ≥ 0
