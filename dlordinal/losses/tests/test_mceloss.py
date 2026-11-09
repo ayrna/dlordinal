@@ -378,3 +378,18 @@ def test_mceloss_weights(device):
     assert output3_weighted.item() > output3.item()
     assert output2_logits_weighted.item() > output2_logits.item()
     assert output3_logits_weighted.item() > output3_logits.item()
+
+
+def test_mceloss_accepts_one_hot_targets(device):
+    torch.manual_seed(0)
+    num_classes = 4
+    input = torch.softmax(torch.randn(8, num_classes, device=device), dim=1)
+    target = torch.randint(0, num_classes, (8,), device=device)
+    loss_fn = MCELoss(num_classes=num_classes).to(device)
+    one_hot = torch.nn.functional.one_hot(target, num_classes)
+    assert torch.allclose(loss_fn(input, target), loss_fn(input, one_hot))
+
+
+def test_mceloss_weight_error_message():
+    with pytest.raises(ValueError, match="with num_classes 4"):
+        MCELoss(num_classes=4, weight=torch.ones(3))

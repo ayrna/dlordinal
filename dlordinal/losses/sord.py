@@ -6,6 +6,8 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
 
+_SORD_FTYPES = ("max", "norm_max", "log", "norm_log", "division", "norm_division")
+
 
 class SORDLoss(nn.Module):
     """
@@ -73,15 +75,28 @@ class SORDLoss(nn.Module):
         self.train_targets = train_targets
         self.weight = weight
 
+        if self.prox and self.ftype not in _SORD_FTYPES:
+            raise ValueError(
+                f"Invalid ftype '{self.ftype}'. Expected one of {list(_SORD_FTYPES)}."
+            )
+
         # Initialize proximity matrix if needed
         if self.prox:
             self.class_counts_dict = self._create_classcounts_dict(train_targets)
-            self.prox_mat = create_prox_mat(self.class_counts_dict, inv=False)
-            if not hasattr(self, "prox_mat"):
-                self.register_buffer("prox_mat", self.prox_mat)
-            self.norm_prox_mat = F.normalize(self.prox_mat, p=1, dim=0)
-            if not hasattr(self, "norm_prox_mat"):
-                self.register_buffer("norm_prox_mat", self.norm_prox_mat)
+            missing = [c for c, n in self.class_counts_dict.items() if n == 0]
+            if missing:
+                raise ValueError(
+                    "SORDLoss with prox=True needs every class to appear in"
+                    f" train_targets, but classes {missing} are absent. Their"
+                    " proximity is -log(0) = inf, which makes the loss NaN."
+                )
+            prox_mat = create_prox_mat(self.class_counts_dict, inv=False).float()
+            # Non-persistent buffers follow the module across devices without
+            # changing its state_dict.
+            self.register_buffer("prox_mat", prox_mat, persistent=False)
+            self.register_buffer(
+                "norm_prox_mat", F.normalize(prox_mat, p=1, dim=0), persistent=False
+            )
 
     def _create_classcounts_dict(self, targets):
         class_counts = Counter(np.asarray(targets))
@@ -111,28 +126,30 @@ class SORDLoss(nn.Module):
         else:
             input_logprob = torch.log(input + 1e-9)
 
-        if self.prox:
-            self.prox_mat = self.prox_mat.to(input.device)
-            self.norm_prox_mat = self.norm_prox_mat.to(input.device)
+        # float32 (float64 only for float64 inputs): float64 is very slow on most GPUs
+        work_dtype = torch.promote_types(input_logprob.dtype, torch.float32)
 
         if not self.prox:
             phi = torch.abs(
-                torch.arange(self.num_classes, device=input.device).view(1, -1)
-                - target.double().view(-1, 1)
+                torch.arange(self.num_classes, device=input.device, dtype=work_dtype)
+                - target.to(work_dtype).view(-1, 1)
             )
         else:
+            # A no-op when the loss was moved with .to(); needed when it was not
+            prox_mat = self.prox_mat.to(device=input.device, dtype=work_dtype)
+            norm_prox_mat = self.norm_prox_mat.to(device=input.device, dtype=work_dtype)
             if self.ftype == "max":
-                phi = torch.max(self.prox_mat) - self.prox_mat[target]
+                phi = torch.max(prox_mat) - prox_mat[target]
             elif self.ftype == "norm_max":
-                phi = torch.max(self.norm_prox_mat) - self.norm_prox_mat[target]
+                phi = torch.max(norm_prox_mat) - norm_prox_mat[target]
             elif self.ftype == "norm_log":
-                phi = -torch.log(self.norm_prox_mat[target])
+                phi = -torch.log(norm_prox_mat[target])
             elif self.ftype == "log":
-                phi = -torch.log(self.prox_mat[target])
+                phi = -torch.log(prox_mat[target])
             elif self.ftype == "norm_division":
-                phi = 1.0 / (self.norm_prox_mat[target])
+                phi = 1.0 / (norm_prox_mat[target])
             elif self.ftype == "division":
-                phi = 1.0 / (self.prox_mat[target])
+                phi = 1.0 / (prox_mat[target])
 
         softmax_targets = F.softmax(-self.alpha * phi, dim=1)
 

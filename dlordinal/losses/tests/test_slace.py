@@ -350,3 +350,16 @@ def test_exact_value_computation(base_config, torch_device):
     assert torch.isclose(
         torch.tensor(loss), torch.tensor(expected), atol=1e-6
     ), f"Loss computation mismatch. Expected: {expected}, Got: {loss.item()}"
+
+
+def test_slace_uses_input_precision_and_matches_float64():
+    torch.manual_seed(0)
+    num_classes = 6
+    loss_fn = SLACELoss(alpha=1.0, num_classes=num_classes)
+    input = torch.randn(32, num_classes)
+    target = torch.randint(0, num_classes, (32,))
+    loss32 = loss_fn(input, target)
+    loss64 = loss_fn(input.double(), target)
+    assert loss32.dtype == torch.float32
+    assert loss64.dtype == torch.float64
+    assert loss32.item() == pytest.approx(loss64.item(), rel=1e-5)
