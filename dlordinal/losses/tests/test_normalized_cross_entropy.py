@@ -193,9 +193,9 @@ def test_class_weights_follow_module_precision_and_device(device):
         device=device, dtype=torch.float64
     )
     assert loss.weight.dtype == torch.float64
-    assert loss.weight.device == device
     assert "weight" in dict(loss.named_buffers())
     logits = torch.tensor([[0.1, 0.2, 0.3]], dtype=torch.float64, device=device)
+    assert loss.weight.device == logits.device
     target = torch.tensor([1], device=device)
     assert loss(logits, target).dtype == torch.float64
 
