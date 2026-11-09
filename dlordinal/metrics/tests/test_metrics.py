@@ -259,3 +259,65 @@ def test_write_array_to_file():
         data = json.load(f)
         assert data[id_str] == array.tolist()
     os.remove(path_str)
+
+
+def test_ranked_probability_score_matches_per_sample_definition():
+    rng = np.random.default_rng(0)
+    y_proba = rng.dirichlet(np.ones(5), size=200)
+    y_true = rng.integers(0, 5, size=200)
+    expected = np.mean(
+        [
+            np.sum((np.cumsum(p) - np.cumsum(np.eye(5)[y])) ** 2)
+            for y, p in zip(y_true, y_proba)
+        ]
+    )
+    assert ranked_probability_score(y_true, y_proba) == pytest.approx(expected)
+
+
+def test_ranked_probability_score_rejects_out_of_range_labels():
+    y_proba = np.full((2, 3), 1 / 3)
+    with pytest.raises(ValueError):
+        ranked_probability_score(np.array([0, 3]), y_proba)
+    with pytest.raises(ValueError):
+        ranked_probability_score(np.array([0, -1]), y_proba)
+
+
+def test_accuracy_off1_classes_absent_from_y_true():
+    # Class 1 is absent from y_true: classes 0 and 2 must not count as adjacent
+    run_metric_test(accuracy_off1, [0, 2, 2], [2, 2, 2], 2 / 3)
+    # The prediction 3 is absent from y_true: it must still count as an error
+    run_metric_test(accuracy_off1, [0, 0, 1], [0, 0, 3], 2 / 3)
+
+
+def test_accuracy_off1_explicit_labels():
+    labels = [0, 1, 2, 3]
+    assert accuracy_off1([0, 2, 2], [2, 2, 2], labels=labels) == pytest.approx(2 / 3)
+    # Adjacency follows the order of the labels list
+    assert accuracy_off1(["a", "c"], ["b", "b"], labels=["a", "b", "c"]) == 1.0
+    with pytest.raises(ValueError):
+        accuracy_off1([0, 1], [0, 5], labels=labels)
+
+
+def test_amae_mmae_use_label_distances():
+    # Class 2 is absent from both arrays: the error 1 -> 3 is 2, not 1
+    y_true = np.array([0, 1, 3, 3])
+    y_pred = np.array([0, 3, 3, 3])
+    run_metric_test(amae, y_true, y_pred, 2 / 3)
+    run_metric_test(mmae, y_true, y_pred, 2.0)
+
+
+def test_sensitivity_metrics_ignore_labels_absent_from_y_true():
+    # The prediction 2 never occurs in y_true and has no sensitivity
+    y_true = np.array([0, 0, 1, 1])
+    y_pred = np.array([0, 0, 1, 2])
+    run_metric_test(minimum_sensitivity, y_true, y_pred, 0.5)
+    run_metric_test(gmsec, y_true, y_pred, np.sqrt(0.5))
+    run_metric_test(mes, y_true, y_pred, 0.75)
+    run_metric_test(gmes, y_true, y_pred, np.sqrt(0.5))
+
+
+@pytest.mark.parametrize("metric", [mes, gmes, gmsec, minimum_sensitivity])
+def test_sensitivity_metrics_accept_probabilities(metric):
+    y_true = np.array([0, 1, 2])
+    y_proba = np.array([[0.8, 0.1, 0.1], [0.1, 0.8, 0.1], [0.1, 0.1, 0.8]])
+    run_metric_test(metric, y_true, y_proba, 1.0)
