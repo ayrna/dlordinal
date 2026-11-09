@@ -69,8 +69,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install .[dev]
 
+    # Every pytest-xdist worker creates its own CUDA context (~250-300 MB of GPU
+    # memory before any test runs). With -n auto (32 workers on the GPU runner) and
+    # several matrix jobs sharing the GPU, contexts alone exhausted its memory and
+    # tests failed with "CUDA error: out of memory" / CUBLAS_STATUS_ALLOC_FAILED.
+    # A fixed, small number of workers keeps each job at ~1 GB of contexts.
     - name: Run tests
-      run: gpu-run.sh python -m pytest -n auto -m "not no_gpu_ci"
+      run: gpu-run.sh python -m pytest -n 4 -m "not no_gpu_ci"
 
   tests-codecov:
     runs-on: ubuntu-22.04

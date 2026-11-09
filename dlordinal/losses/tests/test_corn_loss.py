@@ -238,3 +238,128 @@ def test_corn_loss_specific_mapping(corn_loss_fn, num_classes):
 
     # Final assertion
     assert torch.isclose(actual_loss, expected_loss, atol=ATOL)
+
+
+# --- Probabilistic targets (soft-CORN) ---
+
+
+def _corn_log_pmf(y_pred):
+    """log P(y = j) of the class probabilities defined by CORN logits:
+    P(y = j) = prod_{k < j} sigmoid(z_k) * (1 - sigmoid(z_j)); no last factor for the top class.
+    """
+    log_sig = nn.functional.logsigmoid(y_pred)
+    log_one_minus = nn.functional.logsigmoid(-y_pred)
+    zeros = torch.zeros_like(y_pred[:, :1])
+    cumulative = torch.cat([zeros, torch.cumsum(log_sig, dim=1)], dim=1)
+    return cumulative + torch.cat([log_one_minus, zeros], dim=1)
+
+
+def test_corn_loss_one_hot_targets_equal_hard_targets(
+    corn_loss_fn, num_classes, device
+):
+    """Probabilistic targets that are one-hot give exactly the loss of the class indices."""
+    torch.manual_seed(0)
+    y_pred = torch.randn(7, num_classes - 1, device=device)
+    y_true = torch.tensor([0, 4, 1, 2, 2, 3, 4], device=device)
+    one_hot = nn.functional.one_hot(y_true, num_classes).to(y_pred.dtype)
+
+    hard = corn_loss_fn.to(device)(y_pred, y_true)
+    soft = corn_loss_fn.to(device)(y_pred, one_hot)
+
+    assert torch.isclose(soft, hard, atol=ATOL)
+
+
+def test_corn_loss_probabilistic_targets_reference(corn_loss_fn, num_classes, device):
+    """The soft loss is the cross-entropy between the target distribution and the CORN
+    class probabilities, divided by the expected size of the conditional training sets.
+    """
+    torch.manual_seed(1)
+    y_pred = torch.randn(6, num_classes - 1, device=device)
+    p = torch.softmax(torch.randn(6, num_classes, device=device), dim=1)
+
+    cross_entropy = -(p * _corn_log_pmf(y_pred)).sum()
+    expected_set_sizes = torch.flip(
+        torch.cumsum(torch.flip(p, dims=[1]), dim=1), dims=[1]
+    )
+    expected = cross_entropy / expected_set_sizes[:, :-1].sum()
+
+    actual = corn_loss_fn.to(device)(y_pred, p)
+
+    assert torch.isclose(actual, expected, atol=ATOL)
+
+
+def test_corn_loss_uniform_over_set_targets(corn_loss_fn, num_classes, device):
+    """Hand computation for one example whose accepted set is {1, 2}: the conditional
+    tasks are k = 0 (P(y>=0) = 1, P(y>0) = 1), k = 1 (P(y>=1) = 1, P(y>1) = 0.5),
+    k = 2 (P(y>=2) = 0.5, P(y>2) = 0) and k = 3 (P(y>=3) = 0, P(y>3) = 0)."""
+    z = torch.tensor([[0.3, -0.7, 1.1, 0.2]], device=device)
+    p = torch.tensor([[0.0, 0.5, 0.5, 0.0, 0.0]], device=device)
+
+    log_sig = nn.functional.logsigmoid
+    numerator = -(
+        1.0 * log_sig(z[0, 0])  # task 0: positive weight 1
+        + 0.5 * log_sig(z[0, 1])
+        + 0.5 * log_sig(-z[0, 1])  # task 1: positive 0.5, negative 0.5
+        + 0.5 * log_sig(-z[0, 2])  # task 2: negative 0.5
+    )
+    expected = numerator / (1.0 + 1.0 + 0.5 + 0.0)
+
+    actual = corn_loss_fn.to(device)(z, p)
+
+    assert torch.isclose(actual, expected, atol=ATOL)
+
+
+def test_corn_loss_probabilistic_targets_perfect_prediction(device):
+    """With a point-mass target and saturated logits the soft loss is zero."""
+    loss_fn = CORNLoss(num_classes=3).to(device)
+    z = torch.tensor([[1e3, -1e3]], device=device)  # predicts class 1 with certainty
+    p = torch.tensor([[0.0, 1.0, 0.0]], device=device)
+
+    assert loss_fn(z, p).item() == pytest.approx(0.0, abs=1e-6)
+
+
+def test_corn_loss_probabilistic_targets_are_finite_and_differentiable(
+    corn_loss_fn, num_classes, device
+):
+    y_pred = (torch.randn(4, num_classes - 1, device=device) * 50).requires_grad_(True)
+    p = torch.softmax(torch.randn(4, num_classes, device=device), dim=1)
+
+    loss = corn_loss_fn.to(device)(y_pred, p)
+    loss.backward()
+
+    assert torch.isfinite(loss)
+    assert y_pred.grad is not None and torch.isfinite(y_pred.grad).all()
+
+
+def test_corn_loss_probabilistic_targets_gradient_descent_recovers_the_distribution(
+    device,
+):
+    """Minimising the loss on one example makes the CORN class probabilities match the
+    target distribution (the loss is the cross-entropy to it)."""
+    num_classes = 5
+    loss_fn = CORNLoss(num_classes).to(device)
+    p = torch.tensor([[0.1, 0.4, 0.3, 0.0, 0.2]], device=device)
+    z = torch.zeros(1, num_classes - 1, device=device, requires_grad=True)
+    optimizer = torch.optim.Adam([z], lr=0.1)
+
+    for _ in range(600):
+        optimizer.zero_grad()
+        loss_fn(z, p).backward()
+        optimizer.step()
+
+    pmf = _corn_log_pmf(z.detach()).exp()
+    assert torch.allclose(pmf, p, atol=2e-2)
+
+
+def test_corn_loss_probabilistic_targets_wrong_shapes(
+    corn_loss_fn, num_classes, device
+):
+    y_pred = torch.randn(3, num_classes - 1, device=device)
+    with pytest.raises(ValueError):
+        corn_loss_fn.to(device)(
+            y_pred, torch.full((3, num_classes + 1), 1.0 / (num_classes + 1))
+        )
+    with pytest.raises(ValueError):
+        corn_loss_fn.to(device)(
+            y_pred[:2], torch.full((3, num_classes), 1.0 / num_classes)
+        )
