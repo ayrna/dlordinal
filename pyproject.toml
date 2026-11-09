@@ -28,7 +28,9 @@ dependencies = [
     "torchvision>=0.13",
     "pandas>=1",
     "scipy>=1.7",
-    "scikit-image>=0.18",
+    # Python 3.15 wheels are available from scikit-image 0.27.
+    "scikit-image>=0.18; python_version < '3.15'",
+    "scikit-image>=0.27.0rc1; python_version >= '3.15'",
     "tqdm>=4",
     "Pillow>=8",
     "deprecated>=1.2",
