@@ -13,11 +13,21 @@ def get_general_triangular_params(J: int, alphas: np.ndarray, verbose: int = 0):
     general triangular distribution. The parameters are computed using
     the :math:`\\boldsymbol{\\alpha}` values and the number of classes
     :math:`J`. The :math:`\\boldsymbol{\\alpha}` vector contains two :math:`\\alpha`
-    values for each class or split. :math:`\\alpha_0` should always be 0, given that
-    the error on the left side of the first class is always 0. In the same way, the
-    :math:`\\alpha_{2J}` value should always be 0, given that the error on the right
-    side of the last class is always 0. The :math:`\\alpha` values for the other
-    classes should be between 0 and 1.
+    values for each class or split: class :math:`j` (:math:`j = 1, \\ldots, J`) is
+    defined by :math:`\\alpha_{2j-1}`, the error on its left side, and
+    :math:`\\alpha_{2j}`, the error on its right side.
+
+    The ``alphas`` array is indexed by these subscripts, so ``alphas[2 * j - 1]`` and
+    ``alphas[2 * j]`` are the left and right errors of class ``j``:
+
+    - ``alphas[0]`` is not used.
+    - ``alphas[1]`` (:math:`\\alpha_1`) is ignored, because there is no error on the
+      left side of the first class.
+    - :math:`\\alpha_{2J}` is not stored, because there is no error on the right side
+      of the last class. ``alphas[2 * J - 1]`` is the error on the *left* side of the
+      last class.
+
+    The used :math:`\\alpha` values should be between 0 and 1.
 
     The parameters :math:`a`, :math:`b` and :math:`c` for class :math:`j` are computed
     as described in :footcite:t:`vargas2023gentri`.
@@ -48,8 +58,8 @@ def get_general_triangular_params(J: int, alphas: np.ndarray, verbose: int = 0):
     Example
     -------
     >>> from dlordinal.soft_labelling import get_general_triangular_params
-    >>> get_general_triangular_params(5, [0, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0])
-    [{'alpha2j_1': 0, 'alpha2j': 0.05, 'a': 0, 'b': 0.25760143110525874, 'c': 0}, {'alpha2j_1': 0.05, 'alpha2j': 0.05, 'a': 0.153752470442574, 'b': 0.446247529557426, 'c': 0.3}, {'alpha2j_1': 0.05, 'alpha2j': 0.05, 'a': 0.353752470442574, 'b': 0.646247529557426, 'c': 0.5}, {'alpha2j_1': 0.05, 'alpha2j': 0.1, 'a': 0.550779686438060, 'b': 0.875486049708105, 'c': 0.7}, {'alpha2j_1': 0.0, 'alpha2j': 0, 'a': 0.8, 'b': 1, 'c': 1}]
+    >>> get_general_triangular_params(5, [0, 0, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1])
+    [{'alpha2j_1': 0, 'alpha2j': 0.1, 'a': 0, 'b': 0.2924950591148529, 'c': 0}, {'alpha2j_1': 0.05, 'alpha2j': 0.05, 'a': 0.153752470442574, 'b': 0.446247529557426, 'c': 0.3}, {'alpha2j_1': 0.05, 'alpha2j': 0.05, 'a': 0.353752470442574, 'b': 0.646247529557426, 'c': 0.5}, {'alpha2j_1': 0.05, 'alpha2j': 0.05, 'a': 0.553752470442574, 'b': 0.846247529557426, 'c': 0.7}, {'alpha2j_1': 0.1, 'alpha2j': 0, 'a': 0.707504940885147, 'b': 1, 'c': 1}]
 
     """
 
@@ -175,7 +185,11 @@ def get_general_triangular_soft_labels(J: int, alphas: np.ndarray, verbose: int 
     J : int
         Number of classes.
     alphas : np.ndarray
-        Array of alphas.
+        Array of shape :math:`(2J,)` indexed by the subscripts of
+        :math:`\\boldsymbol{\\alpha}`: ``alphas[2 * j - 1]`` and ``alphas[2 * j]`` are
+        the errors on the left and right side of class ``j`` (``j = 1, ..., J``).
+        ``alphas[0]`` and ``alphas[1]`` are not used. See
+        :func:`get_general_triangular_params`.
     verbose : int, optional
         Verbosity level, by default 0.
 
@@ -196,13 +210,13 @@ def get_general_triangular_soft_labels(J: int, alphas: np.ndarray, verbose: int 
     >>> from dlordinal.soft_labelling import get_general_triangular_soft_labels
     >>> get_general_triangular_soft_labels(
     ...     5,
-    ...     [0, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0]
+    ...     [0, 0, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1]
     ... )
-    array([[0.95, 0.05, 0.  , 0.  , 0.  ],
+    array([[0.9 , 0.1 , 0.  , 0.  , 0.  ],
            [0.05, 0.9 , 0.05, 0.  , 0.  ],
            [0.  , 0.05, 0.9 , 0.05, 0.  ],
-           [0.  , 0.  , 0.05, 0.85, 0.1 ],
-           [0.  , 0.  , 0.  , 0.  , 1.  ]], dtype=float32)
+           [0.  , 0.  , 0.05, 0.9 , 0.05],
+           [0.  , 0.  , 0.  , 0.1 , 0.9 ]], dtype=float32)
     """
 
     if J < 2:
@@ -214,7 +228,7 @@ def get_general_triangular_soft_labels(J: int, alphas: np.ndarray, verbose: int 
     if not isinstance(alphas, np.ndarray) or alphas.shape != (2 * J,):
         raise ValueError(
             "alphas must be a numpy array or list of shape (2 * n,),"
-            " but got {alphas.shape}"
+            f" but got {np.shape(alphas)}"
         )
 
     intervals = get_intervals(J)

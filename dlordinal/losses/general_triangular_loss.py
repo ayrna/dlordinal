@@ -33,7 +33,10 @@ class GeneralTriangularLoss(CustomTargetsLoss):
         A NumPy array containing the alpha parameters for the triangular distribution.
         The length of this array should be equal to `2 * num_classes`. The alpha parameters control
         the shape of the triangular distribution, influencing the weight given to each class
-        in the regularization.
+        in the regularization. ``alphas[2 * j - 1]`` and ``alphas[2 * j]`` are the errors on
+        the left and right side of class ``j`` (``j = 1, ..., num_classes``), so
+        ``alphas[0]`` and ``alphas[1]`` are not used; see
+        :func:`dlordinal.soft_labelling.get_general_triangular_params`.
 
     eta : float, default=1.0
         A regularization parameter that controls the influence of the regularization term.
